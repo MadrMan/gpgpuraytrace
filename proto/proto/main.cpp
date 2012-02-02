@@ -1,7 +1,20 @@
-#include <Windows.h>
+#define _USE_MATH_DEFINES
 
-struct color
+#include <Windows.h>
+#include <iostream>
+#include <d3dx9.h>
+
+#include <math.h>
+
+struct Color
 {
+	Color() 
+	{
+		r = g = b = 0;
+	}
+	Color(BYTE r, BYTE g, BYTE b) : r(r), g(g), b(b)
+	{
+	}
 	BYTE r;
 	BYTE g;
 	BYTE b;
@@ -9,20 +22,159 @@ struct color
 
 const int WINDOW_WIDTH = 500;
 const int WINDOW_HEIGHT = 500;
+bool leftButtonDown = false;
+bool rightButtonDown = false;
+float moveStep = 0.1f;
+bool quit = false;
 
-color imagedata[WINDOW_HEIGHT * WINDOW_WIDTH * 3];
+float timeConstant;
+DWORD tickCount;
+DWORD refresher;
+
+Color imagedata[WINDOW_HEIGHT * WINDOW_WIDTH * 3];
 HBITMAP memBitmap;
 HDC memHDC;
+
+D3DXMATRIX camProjection;
+D3DXMATRIX camView;
+D3DXMATRIX camVP;
+
+const int cubeTris = 12;
+
+const int cubeIndices[] = {
+	0, 1, 2,
+	1, 2, 3,
+	0, 1, 4,
+	1,4,5,
+	5,3,7,
+	4,5,7,
+	7,6,4,
+	0,4,2,
+	2,4,6,
+	2,6,3,
+	3,6,7
+
+};
+
+const D3DXVECTOR3 cube[] = {
+	D3DXVECTOR3(-0.5f, 0.5f, 0.5f),		//0
+	D3DXVECTOR3(0.5f, 0.5f, 0.5f),		//1
+	D3DXVECTOR3(-0.5f ,-0.5f , 0.5f),	//2
+	D3DXVECTOR3(0.5f, -0.5f, 0.5f),		//3
+
+	D3DXVECTOR3(-0.5f, 0.5f, -0.5f),	//4
+	D3DXVECTOR3(0.5f, 0.5f, -0.5f),		//5
+	D3DXVECTOR3(-0.5f, -0.5f, -0.5f),	//6
+	D3DXVECTOR3(0.5f, -0.5f, -0.5f),	//7
+};
 
 float xrotation;
 float yrotation;
 int xposition;
 int yposition;
+D3DXVECTOR3 camPosition(10.0f, 10.0f, 10.0f);
+D3DXVECTOR3 camDirection;
+
+
+
+void camera()
+{
+	const D3DXVECTOR3 camForward(0.0f, 0.0f, 1.0f);
+	const D3DXVECTOR3 camUp(0.0f, 1.0f, 0.0f);
+
+	D3DXMATRIX rotationMatrix;
+	D3DXVECTOR4 camDirection4;
+	
+	D3DXMatrixRotationYawPitchRoll(&rotationMatrix, xrotation, yrotation, 0.0f);
+	D3DXVec3Transform(&camDirection4, &camForward, &rotationMatrix);
+	camDirection.x = camDirection4.x;
+	camDirection.y = camDirection4.y;
+	camDirection.z = camDirection4.z;
+
+	if(leftButtonDown) camPosition += camDirection * moveStep * timeConstant;
+	if(rightButtonDown) camPosition -= camDirection * moveStep * timeConstant;
+
+
+	D3DXVec3Normalize(&camDirection, &camDirection);
+	D3DXVECTOR3 camLookat  = camPosition + camDirection;//(50.0f, 50.0f, 10.0f); // = camPosition + camDirection;
+
+	D3DXMatrixLookAtLH(&camView, &camPosition, &camLookat, &camUp);
+	D3DXMatrixMultiply(&camVP, &camView, &camProjection);
+}
+
+void setPixel(int x, int y, const Color& rgb)
+{
+	if(x < 0 || y < 0 || x >= WINDOW_WIDTH || y >= WINDOW_HEIGHT)
+		return;
+	imagedata[y * WINDOW_HEIGHT + x].r |= rgb.r;
+	imagedata[y * WINDOW_HEIGHT + x].g |= rgb.g;
+	imagedata[y * WINDOW_HEIGHT + x].b |= rgb.b;
+}
+
+void drawLine(int x1,int y1, int x2, int y2, const Color& rgb)
+{
+	float xdist = (float)(x2 - x1);
+	float ydist = (float)(y2 - y1);
+	float dist = sqrtf(xdist * xdist + ydist * ydist);
+	float xstep = xdist / dist;
+	float ystep = ydist / dist;
+
+	for(int d = 0; d < dist; d++)
+	{
+		setPixel((int)(x1 + xstep * d), (int)(y1 + ystep * d), rgb);
+	}
+}
 
 void fillImageData()
 {
-	color* i = imagedata;
-	for(int y = 0; y< WINDOW_HEIGHT; y++)
+	Color* i = imagedata;
+	ZeroMemory(i, WINDOW_HEIGHT * WINDOW_HEIGHT * sizeof(Color));
+
+	for(int x = 0; x < cubeTris; x++)
+	{
+		const D3DXVECTOR3& v1 = cube[cubeIndices[x * 3 + 0]];
+		const D3DXVECTOR3& v2 = cube[cubeIndices[x * 3 + 1]];
+		const D3DXVECTOR3& v3 = cube[cubeIndices[x * 3 + 2]];
+
+		D3DXVECTOR4 v1t, v2t, v3t;
+		D3DXVec3Transform(&v1t, &v1, &camVP);
+		D3DXVec3Transform(&v2t, &v2, &camVP);
+		D3DXVec3Transform(&v3t, &v3, &camVP);
+
+
+		v1t /= v1t.w;
+		v2t /= v2t.w;
+		v3t /= v3t.w;
+
+		v1t *= 0.5f;
+		v1t.x += 0.5f;
+		v1t.y += 0.5f;
+		v1t.x *= WINDOW_WIDTH; 
+		v1t.y *= WINDOW_HEIGHT;
+		
+		v2t *= 0.5f;
+		v2t.x += 0.5f;
+		v2t.y += 0.5f;
+		v2t.x *= WINDOW_WIDTH; 
+		v2t.y *= WINDOW_HEIGHT;
+
+		v3t *= 0.5f;
+		v3t.x += 0.5f;
+		v3t.y += 0.5f;
+		v3t.x *= WINDOW_WIDTH; 
+		v3t.y *= WINDOW_HEIGHT;
+
+		//-1.-1   1,1
+		//
+		drawLine((int)v1t.x, (int)v1t.y, (int)v2t.x, (int)v2t.y, Color(255, 0, 0));
+		drawLine((int)v2t.x, (int)v2t.y, (int)v3t.x, (int)v3t.y, Color(0, 255, 0));
+		drawLine((int)v3t.x, (int)v3t.y, (int)v1t.x, (int)v1t.y, Color(0, 0, 255));
+		//setPixel((int)v1t.x, (int)v1t.y, Color(255, 0, 0));
+		//setPixel((int)v2t.x, (int)v2t.y, Color(0, 255, 0));
+		//setPixel((int)v3t.x, (int)v3t.y, Color(0, 0, 255));
+	}
+
+	/*for(int y = 0; y< WINDOW_HEIGHT; y++)
 	{
 		for(int x =0; x<WINDOW_WIDTH; x++)
 		{
@@ -32,7 +184,13 @@ void fillImageData()
 			
 			i++;
 		}
-	}
+	}*/
+}
+
+void render()
+{
+	camera();
+	fillImageData();
 }
 
 void fillBitmap(HDC hdc, HBITMAP bitmap)
@@ -67,11 +225,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				HDC hdc = GetDC(hWnd);
 				memHDC = CreateCompatibleDC(hdc);
 				memBitmap = CreateCompatibleBitmap(hdc, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+				D3DXMatrixPerspectiveFovLH(&camProjection, (float)M_PI * 0.5f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 1000.0f);
 			 }
 			return 0;
 		case WM_CLOSE: 
 			PostQuitMessage(0); 
+			quit = true;
 			break;	
+		case WM_QUIT:
+			return 0;
 		case WM_ERASEBKGND:
 			return 0;
 		case WM_PAINT:
@@ -101,17 +264,35 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				xposition = xpos;
 				yposition = ypos;
 
-				xrotation += ((float)xmove) * 0.1f;
-				yrotation += ((float)ymove) * 0.1f;
-
-				fillImageData();
-				fillBitmap(memHDC, memBitmap);
-
-				InvalidateRect(hWnd, 0, TRUE);
-				UpdateWindow(hWnd);
+				if(!(wParam & MK_CONTROL))
+				{
+					xrotation += ((float)xmove) * 0.02f;
+					yrotation += ((float)ymove) * 0.02f;
+				}
 			}
 			return 0;
+		 case WM_LBUTTONDOWN:
+			 {
+				 leftButtonDown = true;
+			 }
+			 return 0;
+		 case WM_LBUTTONUP:
+			 {
+				 leftButtonDown = false;
+			 }
+			 return 0;
+		 case WM_RBUTTONUP:
+			 {
+				 rightButtonDown = false;
+			 }
+			 return 0;
+		 case WM_RBUTTONDOWN:
+			 {
+				 rightButtonDown = true;
+			 }
+			 return 0;
 
+	
 
 	}
 	
@@ -119,7 +300,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd,Msg,wParam,lParam);
 }
 
-void createWindow()
+HWND createWindow()
 {
 	WNDCLASSEX wcx; 
  
@@ -169,16 +350,39 @@ void createWindow()
     ShowWindow(hwnd, SW_SHOWDEFAULT); 
     UpdateWindow(hwnd); 
 
+	return hwnd;
 }
 
+const int fps = 1000 / 60;
 int main(char** argv, int argc)
 {
-	createWindow();
+	HWND hWnd = createWindow();
 	
 	MSG msg;
-    while (GetMessage(&msg, (HWND) NULL, 0, 0)) 
-    { 
-        TranslateMessage(&msg); 
-        DispatchMessage(&msg); 
-    } 
+	while(!quit)
+	{
+		DWORD newTickCount = GetTickCount();
+		DWORD tickDifference = newTickCount - tickCount;
+		tickCount = newTickCount;
+		refresher += tickDifference;
+		if(refresher >= fps)
+		{
+			InvalidateRect(hWnd, 0, TRUE);
+			UpdateWindow(hWnd);
+
+			refresher %= fps;
+		}
+
+		timeConstant = (float)tickDifference * 0.1f;
+		std::cout << timeConstant << std::endl;
+
+		render();
+		fillBitmap(memHDC, memBitmap);
+
+		while (PeekMessage(&msg, (HWND) NULL, 0, 0, PM_REMOVE)) 
+		{ 
+			TranslateMessage(&msg); 
+			DispatchMessage(&msg); 
+		} 
+	}
 }
