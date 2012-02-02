@@ -3,3 +3,4 @@
 *.vcxproj.user
 Debug
 Release
+ipch

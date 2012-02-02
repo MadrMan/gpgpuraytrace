@@ -9,8 +9,15 @@ struct color
 
 const int WINDOW_WIDTH = 500;
 const int WINDOW_HEIGHT = 500;
-HBITMAP hbitmap;
+
 color imagedata[WINDOW_HEIGHT * WINDOW_WIDTH * 3];
+HBITMAP memBitmap;
+HDC memHDC;
+
+float xrotation;
+float yrotation;
+int xposition;
+int yposition;
 
 void fillImageData()
 {
@@ -19,20 +26,16 @@ void fillImageData()
 	{
 		for(int x =0; x<WINDOW_WIDTH; x++)
 		{
-			
-			i->r = -x;
-			i->g = y;
+			i->r = -x + xrotation;
+			i->g = y + yrotation;
 			i->b = -y;
 			
 			i++;
 		}
 	}
-
 }
 
-
-
-void fillBitmap(HDC memhdc)
+void fillBitmap(HDC hdc, HBITMAP bitmap)
 {
 	 BITMAPINFO bmi;
      ZeroMemory(&bmi, sizeof(bmi));
@@ -49,53 +52,62 @@ void fillBitmap(HDC memhdc)
      bmi.bmiHeader.biClrUsed = 0;
      bmi.bmiHeader.biClrImportant = 0;
 
-     SetDIBits(memhdc, hbitmap, 0, WINDOW_HEIGHT, &imagedata, &bmi, 0);
+     SetDIBits(hdc, bitmap, 0, WINDOW_HEIGHT, &imagedata, &bmi, 0);
 }
-
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
 
-
 	switch(Msg)
 	{
 		case WM_CREATE:
 			 {
-					 // create the bitmap when the window is created
-					 HDC hdc = GetDC(hWnd);
-					 hbitmap = CreateCompatibleBitmap(hdc, WINDOW_WIDTH, WINDOW_HEIGHT);
+				// create the bitmap when the window is created
+				HDC hdc = GetDC(hWnd);
+				memHDC = CreateCompatibleDC(hdc);
+				memBitmap = CreateCompatibleBitmap(hdc, WINDOW_WIDTH, WINDOW_HEIGHT);
 			 }
 			return 0;
 		case WM_CLOSE: 
 			PostQuitMessage(0); 
 			break;	
+		case WM_ERASEBKGND:
+			return 0;
 		case WM_PAINT:
 			{
 				HDC hdc = BeginPaint(hWnd, &ps);
-				HDC memhdc = CreateCompatibleDC(hdc);
-
-				SelectObject(memhdc, hbitmap);
-				BitBlt(hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, memhdc, 0, 0, SRCCOPY);
-				SelectObject(memhdc, 0);
+				
+				HBITMAP oldMemBmp = (HBITMAP)SelectObject(memHDC, memBitmap);
+				BitBlt(hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, memHDC, 0, 0, SRCCOPY);
+				SelectObject(memHDC, oldMemBmp);
 
 				//DeleteDC(memhdc);
 				EndPaint(hWnd, &ps);
 
 				//HDC memhdc = CreateCompatibleDC(GetDC(hWnd));
 
-				SelectObject(memhdc, hbitmap);
-				fillBitmap(memhdc);
-				SelectObject(memhdc, 0);
-
-				DeleteDC(memhdc);
+				///SelectObject(memhdc, hbitmap);
+				//fillBitmap(memhdc);
+				//SelectObject(memhdc, oldMemBmp);
 			}
 			return 0;
 		 case WM_MOUSEMOVE:
 			{
+				int xpos = LOWORD(lParam);
+				int ypos = HIWORD(lParam);
+				int xmove = xpos - xposition;
+				int ymove = ypos - yposition;
+				xposition = xpos;
+				yposition = ypos;
 
+				xrotation += ((float)xmove) * 0.1f;
+				yrotation += ((float)ymove) * 0.1f;
 
-				InvalidateRect(hWnd,0,TRUE);
+				fillImageData();
+				fillBitmap(memHDC, memBitmap);
+
+				InvalidateRect(hWnd, 0, TRUE);
 				UpdateWindow(hWnd);
 			}
 			return 0;
@@ -162,15 +174,11 @@ void createWindow()
 int main(char** argv, int argc)
 {
 	createWindow();
-	fillImageData();
-
+	
 	MSG msg;
     while (GetMessage(&msg, (HWND) NULL, 0, 0)) 
     { 
         TranslateMessage(&msg); 
         DispatchMessage(&msg); 
     } 
-
-
-
 }
