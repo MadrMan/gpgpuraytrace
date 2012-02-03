@@ -25,7 +25,7 @@ const int WINDOW_HEIGHT = 500;
 bool leftButtonDown = false;
 bool rightButtonDown = false;
 bool isSpaceDown = true;
-float moveStep = 0.1f;
+float moveStep = 2.0f;
 bool quit = false;
 
 float timeConstant;
@@ -49,6 +49,7 @@ const int cubeIndices[] = {
 	0, 1, 4,
 	1,4,5,
 	5,3,7,
+	1, 5, 3,
 	4,5,7,
 	7,6,4,
 	0,4,2,
@@ -57,6 +58,9 @@ const int cubeIndices[] = {
 	3,6,7
 
 };
+
+const D3DXVECTOR3 camForward(0.0f, 0.0f, 1.0f);
+const D3DXVECTOR3 camUp(0.0f, 1.0f, 0.0f);
 
 const D3DXVECTOR3 cube[] = {
 	D3DXVECTOR3(-0.5f, 0.5f, 0.5f),		//0
@@ -91,11 +95,8 @@ void getRay(D3DXVECTOR3* rayStart, D3DXVECTOR3* rayDirection, const D3DXVECTOR2&
 	D3DXVec3Normalize(rayDirection, &rayVec);
 }
 
-void camera()
+void update()
 {
-	const D3DXVECTOR3 camForward(0.0f, 0.0f, 1.0f);
-	const D3DXVECTOR3 camUp(0.0f, 1.0f, 0.0f);
-
 	D3DXMATRIX rotationMatrix;
 	D3DXVECTOR4 camDirection4;
 	
@@ -107,7 +108,10 @@ void camera()
 
 	if(leftButtonDown) camPosition += camDirection * moveStep * timeConstant;
 	if(rightButtonDown) camPosition -= camDirection * moveStep * timeConstant;
+}
 
+void camera()
+{
 	D3DXVec3Normalize(&camDirection, &camDirection);
 	D3DXVECTOR3 camLookat  = camPosition + camDirection;
 
@@ -164,15 +168,18 @@ void fillImageData()
 			const D3DXVECTOR3& v2 = cube[cubeIndices[x * 3 + 1]];
 			const D3DXVECTOR3& v3 = cube[cubeIndices[x * 3 + 2]];
 
-			D3DXVECTOR4 v1t, v2t, v3t;
-			D3DXVec3Transform(&v1t, &v1, &camVP);
-			D3DXVec3Transform(&v2t, &v2, &camVP);
-			D3DXVec3Transform(&v3t, &v3, &camVP);
+			D3DXVECTOR3 v1t, v2t, v3t;
+			//D3DXVec3Transform(&v1t, &v1, &camVP);
+			//D3DXVec3Transform(&v2t, &v2, &camVP);
+			//D3DXVec3Transform(&v3t, &v3, &camVP);
 
+			//v1t /= v1t.w;
+			//v2t /= v2t.w;
+			//v3t /= v3t.w;
 
-			v1t /= v1t.w;
-			v2t /= v2t.w;
-			v3t /= v3t.w;
+			D3DXVec3TransformCoord(&v1t, &v1, &camVP);
+			D3DXVec3TransformCoord(&v2t, &v2, &camVP);
+			D3DXVec3TransformCoord(&v3t, &v3, &camVP);
 
 			v1t *= 0.5f;
 			v1t.x += 0.5f;
@@ -327,8 +334,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
 				if(!(wParam & MK_CONTROL))
 				{
-					xrotation += ((float)xmove) * 0.02f;
-					yrotation += ((float)ymove) * 0.02f;
+					xrotation += ((float)xmove) * 0.01f;
+					yrotation += ((float)ymove) * 0.01f;
 				}
 			}
 			return 0;
@@ -443,17 +450,19 @@ int main(char** argv, int argc)
 		refresher += tickDifference;
 		if(refresher >= fps)
 		{
+			render();
+			fillBitmap(memHDC, memBitmap);
+
 			InvalidateRect(hWnd, 0, TRUE);
 			UpdateWindow(hWnd);
 
 			refresher %= fps;
 		}
 
-		timeConstant = (float)tickDifference * 0.1f;
-		std::cout << timeConstant << std::endl;
+		update();
 
-		render();
-		fillBitmap(memHDC, memBitmap);
+		timeConstant = (float)tickDifference * 0.001f;
+		std::cout << timeConstant << std::endl;
 
 		while (PeekMessage(&msg, (HWND) NULL, 0, 0, PM_REMOVE)) 
 		{ 
