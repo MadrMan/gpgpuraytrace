@@ -24,6 +24,7 @@ const int WINDOW_WIDTH = 500;
 const int WINDOW_HEIGHT = 500;
 bool leftButtonDown = false;
 bool rightButtonDown = false;
+bool isSpaceDown = true;
 float moveStep = 0.1f;
 bool quit = false;
 
@@ -37,6 +38,7 @@ HDC memHDC;
 
 D3DXMATRIX camProjection;
 D3DXMATRIX camView;
+D3DXMATRIX camInvView;
 D3DXMATRIX camVP;
 
 const int cubeTris = 12;
@@ -75,7 +77,19 @@ int yposition;
 D3DXVECTOR3 camPosition(10.0f, 10.0f, 10.0f);
 D3DXVECTOR3 camDirection;
 
+void getRay(D3DXVECTOR3* rayStart, D3DXVECTOR3* rayDirection, const D3DXVECTOR2& screenPos)
+{
+	D3DXVECTOR3 screenPosScaled((screenPos.x / WINDOW_WIDTH - 0.5f) * 2.0f, (screenPos.y / WINDOW_HEIGHT - 0.5f) * 2.0f, 1.0f);
 
+	screenPosScaled.x /= camProjection._11;
+	screenPosScaled.y /= camProjection._22;
+
+	D3DXVECTOR4 rayPoint4;
+	D3DXVec3Transform(&rayPoint4, &screenPosScaled, &camInvView);
+	*rayStart = D3DXVECTOR3(rayPoint4.x, rayPoint4.y, rayPoint4.z);
+	D3DXVECTOR3 rayVec = *rayStart - camPosition;
+	D3DXVec3Normalize(rayDirection, &rayVec);
+}
 
 void camera()
 {
@@ -94,12 +108,12 @@ void camera()
 	if(leftButtonDown) camPosition += camDirection * moveStep * timeConstant;
 	if(rightButtonDown) camPosition -= camDirection * moveStep * timeConstant;
 
-
 	D3DXVec3Normalize(&camDirection, &camDirection);
-	D3DXVECTOR3 camLookat  = camPosition + camDirection;//(50.0f, 50.0f, 10.0f); // = camPosition + camDirection;
+	D3DXVECTOR3 camLookat  = camPosition + camDirection;
 
 	D3DXMatrixLookAtLH(&camView, &camPosition, &camLookat, &camUp);
 	D3DXMatrixMultiply(&camVP, &camView, &camProjection);
+	D3DXMatrixInverse(&camInvView, 0, &camView);
 }
 
 void setPixel(int x, int y, const Color& rgb)
@@ -125,66 +139,113 @@ void drawLine(int x1,int y1, int x2, int y2, const Color& rgb)
 	}
 }
 
+void getRayCollision(const D3DXVECTOR3& rayPoint, float* density)
+{
+	if(fabs(rayPoint.x) < 0.5f &&
+		fabs(rayPoint.y) < 0.5f &&
+		fabs(rayPoint.z) < 0.5f)
+	{
+		*density = 4.0f;
+	} else {
+		*density = 0.0f;
+	}
+}
+
 void fillImageData()
 {
 	Color* i = imagedata;
 	ZeroMemory(i, WINDOW_HEIGHT * WINDOW_HEIGHT * sizeof(Color));
 
-	for(int x = 0; x < cubeTris; x++)
+	if(isSpaceDown)
 	{
-		const D3DXVECTOR3& v1 = cube[cubeIndices[x * 3 + 0]];
-		const D3DXVECTOR3& v2 = cube[cubeIndices[x * 3 + 1]];
-		const D3DXVECTOR3& v3 = cube[cubeIndices[x * 3 + 2]];
-
-		D3DXVECTOR4 v1t, v2t, v3t;
-		D3DXVec3Transform(&v1t, &v1, &camVP);
-		D3DXVec3Transform(&v2t, &v2, &camVP);
-		D3DXVec3Transform(&v3t, &v3, &camVP);
-
-
-		v1t /= v1t.w;
-		v2t /= v2t.w;
-		v3t /= v3t.w;
-
-		v1t *= 0.5f;
-		v1t.x += 0.5f;
-		v1t.y += 0.5f;
-		v1t.x *= WINDOW_WIDTH; 
-		v1t.y *= WINDOW_HEIGHT;
-		
-		v2t *= 0.5f;
-		v2t.x += 0.5f;
-		v2t.y += 0.5f;
-		v2t.x *= WINDOW_WIDTH; 
-		v2t.y *= WINDOW_HEIGHT;
-
-		v3t *= 0.5f;
-		v3t.x += 0.5f;
-		v3t.y += 0.5f;
-		v3t.x *= WINDOW_WIDTH; 
-		v3t.y *= WINDOW_HEIGHT;
-
-		//-1.-1   1,1
-		//
-		drawLine((int)v1t.x, (int)v1t.y, (int)v2t.x, (int)v2t.y, Color(255, 0, 0));
-		drawLine((int)v2t.x, (int)v2t.y, (int)v3t.x, (int)v3t.y, Color(0, 255, 0));
-		drawLine((int)v3t.x, (int)v3t.y, (int)v1t.x, (int)v1t.y, Color(0, 0, 255));
-		//setPixel((int)v1t.x, (int)v1t.y, Color(255, 0, 0));
-		//setPixel((int)v2t.x, (int)v2t.y, Color(0, 255, 0));
-		//setPixel((int)v3t.x, (int)v3t.y, Color(0, 0, 255));
-	}
-
-	/*for(int y = 0; y< WINDOW_HEIGHT; y++)
-	{
-		for(int x =0; x<WINDOW_WIDTH; x++)
+		for(int x = 0; x < cubeTris; x++)
 		{
-			i->r = -x + xrotation;
-			i->g = y + yrotation;
-			i->b = -y;
-			
-			i++;
+			const D3DXVECTOR3& v1 = cube[cubeIndices[x * 3 + 0]];
+			const D3DXVECTOR3& v2 = cube[cubeIndices[x * 3 + 1]];
+			const D3DXVECTOR3& v3 = cube[cubeIndices[x * 3 + 2]];
+
+			D3DXVECTOR4 v1t, v2t, v3t;
+			D3DXVec3Transform(&v1t, &v1, &camVP);
+			D3DXVec3Transform(&v2t, &v2, &camVP);
+			D3DXVec3Transform(&v3t, &v3, &camVP);
+
+
+			v1t /= v1t.w;
+			v2t /= v2t.w;
+			v3t /= v3t.w;
+
+			v1t *= 0.5f;
+			v1t.x += 0.5f;
+			v1t.y += 0.5f;
+			v1t.x *= WINDOW_WIDTH; 
+			v1t.y *= WINDOW_HEIGHT;
+		
+			v2t *= 0.5f;
+			v2t.x += 0.5f;
+			v2t.y += 0.5f;
+			v2t.x *= WINDOW_WIDTH; 
+			v2t.y *= WINDOW_HEIGHT;
+
+			v3t *= 0.5f;
+			v3t.x += 0.5f;
+			v3t.y += 0.5f;
+			v3t.x *= WINDOW_WIDTH; 
+			v3t.y *= WINDOW_HEIGHT;
+
+			//-1.-1   1,1
+			//
+			drawLine((int)v1t.x, (int)v1t.y, (int)v2t.x, (int)v2t.y, Color(255, 0, 0));
+			drawLine((int)v2t.x, (int)v2t.y, (int)v3t.x, (int)v3t.y, Color(0, 255, 0));
+			drawLine((int)v3t.x, (int)v3t.y, (int)v1t.x, (int)v1t.y, Color(0, 0, 255));
+			//setPixel((int)v1t.x, (int)v1t.y, Color(255, 0, 0));
+			//setPixel((int)v2t.x, (int)v2t.y, Color(0, 255, 0));
+			//setPixel((int)v3t.x, (int)v3t.y, Color(0, 0, 255));
 		}
-	}*/
+	} else {
+		D3DXVECTOR3 rayPoint;
+		D3DXVECTOR3 rayDirection;
+
+		const float RAY_DISTANCE = 10.0f;
+		const float RAY_STEP = 0.01f;
+		const int RAY_STEPS = (int)(RAY_DISTANCE / RAY_STEP);
+
+		for(int y = 0; y < WINDOW_HEIGHT; y++)
+		{
+			for(int x = 0; x < WINDOW_WIDTH; x++)
+			{
+				/*i->r = -x + xrotation;
+				i->g = y + yrotation;
+				i->b = -y;*/
+
+				float density = 0.0f;
+				if(x > 100 && x < 400 && y > 100 && y < 400)
+				{
+					float rayDensity = 0.0f;
+
+					getRay(&rayPoint, &rayDirection, D3DXVECTOR2((float)x, (float)y));
+					for(int r = 0; r < RAY_STEPS; r++)
+					{
+						getRayCollision(rayPoint, &rayDensity);
+						density += rayDensity * RAY_STEP;
+
+						/*if(density > 1.0f) 
+						{
+							density = 1.0f;
+							break;
+						}*/
+
+						rayPoint += rayDirection * RAY_STEP;
+					}
+				}
+
+				i->r = min((int)(density * 10.0f), 255);
+				i->g = min((int)(density * 100.0f), 255);
+				i->b = min((int)(density * 300.0f), 255);
+
+				i++;
+			}
+		}
+	}
 }
 
 void render()
@@ -226,7 +287,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				memHDC = CreateCompatibleDC(hdc);
 				memBitmap = CreateCompatibleBitmap(hdc, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-				D3DXMatrixPerspectiveFovLH(&camProjection, (float)M_PI * 0.5f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 1000.0f);
+				D3DXMatrixPerspectiveFovLH(&camProjection, (float)M_PI * 0.25f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 1000.0f);
 			 }
 			return 0;
 		case WM_CLOSE: 
@@ -268,6 +329,21 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				{
 					xrotation += ((float)xmove) * 0.02f;
 					yrotation += ((float)ymove) * 0.02f;
+				}
+			}
+			return 0;
+		 case WM_KEYUP:
+		 case WM_KEYDOWN:
+			{
+				bool state = false;
+				if(Msg == WM_KEYDOWN)
+					state = true;
+
+				switch(wParam)
+				{
+				case VK_SPACE:
+					isSpaceDown = state;
+					break;
 				}
 			}
 			return 0;
