@@ -143,16 +143,18 @@ void drawLine(int x1,int y1, int x2, int y2, const Color& rgb)
 	}
 }
 
-void getRayCollision(const D3DXVECTOR3& rayPoint, float* density)
+void getRayCollision(const D3DXVECTOR3& rayPoint, float* densityOut, float step)
 {
+	float density;
 	if(fabs(rayPoint.x) < 0.5f &&
 		fabs(rayPoint.y) < 0.5f &&
 		fabs(rayPoint.z) < 0.5f)
 	{
-		*density = 4.0f;
+		density = 4.0f;
 	} else {
-		*density = 0.0f;
+		density = 0.0f;
 	}
+	*densityOut = density * step;
 }
 
 void fillImageData()
@@ -230,10 +232,12 @@ void fillImageData()
 					float rayDensity = 0.0f;
 
 					getRay(&rayPoint, &rayDirection, D3DXVECTOR2((float)x, (float)y));
+					rayDirection *= RAY_STEP;
+
 					for(int r = 0; r < RAY_STEPS; r++)
 					{
-						getRayCollision(rayPoint, &rayDensity);
-						density += rayDensity * RAY_STEP;
+						getRayCollision(rayPoint, &rayDensity, RAY_STEP);
+						density += rayDensity;
 
 						/*if(density > 1.0f) 
 						{
@@ -241,7 +245,7 @@ void fillImageData()
 							break;
 						}*/
 
-						rayPoint += rayDirection * RAY_STEP;
+						rayPoint += rayDirection;
 					}
 				}
 
