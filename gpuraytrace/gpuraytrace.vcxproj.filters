@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Raytracer.cpp" />
+    <ClCompile Include="WindowFactory.cpp">
+      <Filter>Factories</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceFactory.cpp">
+      <Filter>Factories</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowWinAPI.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceDirect3D.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Raytracer.h" />
+    <ClInclude Include="IDevice.h" />
+    <ClInclude Include="IWindow.h" />
+    <ClInclude Include="DeviceFactory.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowFactory.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowWinAPI.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceDirect3D.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Adapters">
+      <UniqueIdentifier>{d6b21d78-c539-4469-8c87-2347e49babbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Factories">
+      <UniqueIdentifier>{ce98ea0f-2151-4772-91ef-e2ec507a2af6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
