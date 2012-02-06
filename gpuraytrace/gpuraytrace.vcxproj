@@ -46,6 +46,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -64,6 +65,7 @@
   <ItemGroup>
     <ClCompile Include="DeviceDirect3D.cpp" />
     <ClCompile Include="DeviceFactory.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -75,6 +77,7 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="DeviceDirect3D.h" />
     <ClInclude Include="DeviceFactory.h" />
+    <ClInclude Include="Factory.h" />
     <ClInclude Include="IDevice.h" />
     <ClInclude Include="IWindow.h" />
     <ClInclude Include="Logger.h" />

@@ -20,11 +20,9 @@ IDevice* DeviceFactory::construct(DeviceAPI::T api, IWindow* window)
 
 	if(device)
 	{
-		if(!device->create())
-		{
-			delete device;
-			device = nullptr;
-		}
+		create(&device);
+	} else {
+		Logger() << "Not a valid option for " << __FUNCTION__;
 	}
 
 	return device;

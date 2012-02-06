@@ -20,11 +20,7 @@ IWindow* WindowFactory::construct(WindowAPI::T api)
 
 	if(window)
 	{
-		if(!window->create())
-		{
-			delete window;
-			window = nullptr;
-		}
+		create(&window);
 	}
 
 	return window;
