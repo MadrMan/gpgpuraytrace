@@ -6,5 +6,5 @@
 class WindowFactory : private Factory
 {
 public:
-	static IWindow* construct(WindowAPI::T api);
+	static IWindow* construct(WindowAPI::T api, const WindowSettings& windowSettings);
 };

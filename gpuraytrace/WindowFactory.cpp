@@ -3,14 +3,14 @@
 
 #include "WindowWinAPI.h"
 
-IWindow* WindowFactory::construct(WindowAPI::T api)
+IWindow* WindowFactory::construct(WindowAPI::T api, const WindowSettings& windowSettings)
 {
 	IWindow* window = nullptr;
 
 	switch(api)
 	{
 	case WindowAPI::WinAPI:
-		window = new WindowWinAPI();
+		window = new WindowWinAPI(windowSettings);
 		break;
 	case WindowAPI::X11:
 		break;

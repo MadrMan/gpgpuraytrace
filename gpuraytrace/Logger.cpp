@@ -25,11 +25,11 @@ LogStream::LogStream(LogBuffer& buffer) : std::ostream(&buffer)
 {
 }
 
-Logger::Logger() : stream(logStream)
+Logger::Logger() : stream(&logStream)
 {
 }
 
 Logger::~Logger()
 {
-	stream.flush();
+	stream->flush();
 }

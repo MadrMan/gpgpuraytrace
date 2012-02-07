@@ -5,6 +5,8 @@
 
 int main(int argc, char** argv)
 {
+	argc; argv;
+
 	Logger() << "Startup";
 
 	Raytracer* raytracer = new Raytracer();

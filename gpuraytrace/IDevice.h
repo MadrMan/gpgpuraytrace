@@ -4,9 +4,11 @@
 
 namespace DeviceAPI { enum T
 {
+	None,
 	Direct3D,
 	OpenGL
 };}
+
 
 class IDevice
 {
@@ -24,6 +26,9 @@ protected:
 	
 
 private:
+	IDevice(IDevice const&) : api(DeviceAPI::None), window(nullptr) {};         
+    IDevice& operator=(IDevice const&){};  
+
 	const DeviceAPI::T api;
 	IWindow* const window;
 };
