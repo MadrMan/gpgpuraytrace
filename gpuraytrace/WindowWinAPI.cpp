@@ -7,11 +7,12 @@ const int WINDOWLONG_THISPTR = 0;
 WindowWinAPI::WindowWinAPI(const WindowSettings& windowSettings) : IWindow(WindowAPI::WinAPI, windowSettings)
 {
 	closed = false;
+	hWnd = 0;
 }
 
 WindowWinAPI::~WindowWinAPI()
 {
-
+	
 }
 
 LRESULT CALLBACK WindowWinAPI::SMainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
