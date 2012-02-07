@@ -57,7 +57,7 @@ bool DeviceDirect3D::create()
 	sd.OutputWindow = static_cast<WindowWinAPI*>(getWindow())->getHandle();
 	sd.SampleDesc.Count = 1;
 	sd.SampleDesc.Quality = 0;
-	sd.Windowed = FALSE;
+	sd.Windowed = TRUE;
 	
 	HRESULT result = D3D11CreateDeviceAndSwapChain(0 , D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, featureLevels,
                         _countof(featureLevels), D3D11_SDK_VERSION, &sd, &swapChain, &device, &featureLevel, &context);
@@ -79,12 +79,12 @@ bool DeviceDirect3D::create()
     }
 
 	//D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;	
-	result = device->CreateShaderResourceView(swapBackBuffer, 0, &swapBackBufferSRV);
+	/*result = device->CreateShaderResourceView(swapBackBuffer, 0, &swapBackBufferSRV);
 
 	if(result != S_OK){
 		LOGERROR(result, "ID3D11Device::CreateShaderResourceView");
 		return false;
-	}
+	}*/
 
 	return true;
 }
