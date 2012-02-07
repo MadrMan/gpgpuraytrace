@@ -17,7 +17,7 @@ WindowWinAPI::~WindowWinAPI()
 
 LRESULT CALLBACK WindowWinAPI::SMainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	WindowWinAPI* window = (WindowWinAPI*) GetWindowLongPtr(hWnd,WINDOWLONG_THISPTR);
+	WindowWinAPI* window = reinterpret_cast<WindowWinAPI*>(GetWindowLongPtr(hWnd,WINDOWLONG_THISPTR));
 	if(window)
 		return window->MainWndProc(Msg, wParam, lParam);
 	else
@@ -34,36 +34,44 @@ LRESULT CALLBACK WindowWinAPI::MainWndProc(UINT Msg, WPARAM wParam, LPARAM lPara
 			break;	
 		case WM_QUIT:
 			return 0;
-		case WM_CREATE:
-			 {
-			 }
-			return 0;
 	}
 
 	return DefWindowProc(hWnd,Msg,wParam,lParam);
 }
 
-
+static ATOM WindowWinAPI_classAtom;
 bool WindowWinAPI::createWindow()
 {
-	WNDCLASSEX wcx = {0};
- 
-    // Fill in the window class structure with parameters 
-    // that describe the main window. 
-    wcx.cbSize = sizeof(wcx);          // size of structure 
-    wcx.style = CS_HREDRAW | CS_VREDRAW;
-    wcx.lpfnWndProc = SMainWndProc;
-    wcx.hInstance = GetModuleHandle(0);
-    wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    //wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wcx.lpszClassName = "RaytraceClass";	// name of window class 
-	wcx.cbWndExtra = sizeof(LONG) + sizeof(int);	//extra space for a pointer to Window
+	HMODULE hInstance = GetModuleHandle(0);
 
-    // Register the window class. 
-    RegisterClassEx(&wcx); 
+	if(!WindowWinAPI_classAtom)
+	{
+		WNDCLASSEX wcx = {0};
+ 
+		// Fill in the window class structure with parameters 
+		// that describe the main window. 
+		wcx.cbSize = sizeof(wcx);          // size of structure 
+		wcx.style = CS_HREDRAW | CS_VREDRAW;
+		wcx.lpfnWndProc = SMainWndProc;
+		wcx.hInstance = hInstance;
+		wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+		//wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wcx.lpszClassName = "RaytraceClass";	// name of window class 
+		wcx.cbWndExtra = sizeof(LONG) + sizeof(int);	//extra space for a pointer to Window
+
+		// Register the window class. 
+		WindowWinAPI_classAtom = RegisterClassEx(&wcx); 
+
+		if(!WindowWinAPI_classAtom)
+		{
+			DWORD error = GetLastError();
+			LOGERROR(error, "RegisterClassEx");
+			return false;
+		}
+	}
 
     hWnd = CreateWindow( 
-        wcx.lpszClassName,        // name of window class 
+        reinterpret_cast<LPCSTR>(WindowWinAPI_classAtom),        // name of window class 
         "Raytracer 1.0",            // title-bar string 
         WS_OVERLAPPEDWINDOW, // top-level window 
         CW_USEDEFAULT,       // default horizontal position 
@@ -72,16 +80,27 @@ bool WindowWinAPI::createWindow()
         getWindowSettings().height,       // default height 
         (HWND)0,         // no owner window 
         (HMENU)0,        // use class menu 
-		wcx.hInstance,   // handle to application instance 
-        (LPVOID)0);      // no window-creation data 
+		hInstance,   // handle to application instance 
+        (LPVOID)0);      // no window-creation data
+	if(!hWnd)
+	{
+		DWORD error = GetLastError();
+		LOGERROR(error, "CreateWindow");
+		return false;
+	}
 
 	SetLastError(0);
-	if(!SetWindowLongPtr(hWnd, WINDOWLONG_THISPTR, (LONG)this))
+	if(!SetWindowLongPtr(hWnd, WINDOWLONG_THISPTR, reinterpret_cast<LONG>(this)))
 	{
 		DWORD error = GetLastError();
 		if(error)
 		{
 			LOGERROR(error, "GetWindowLongPtr");
+
+			DestroyWindow(hWnd);
+			hWnd = 0;
+
+			return false;
 		}
 	}
 
