@@ -13,6 +13,9 @@ public:
 	virtual bool create() override;
 	virtual void show() override;
 	virtual bool update() override;
+
+	HWND getHandle() const { return hWnd; };
+
 private:
 	bool createWindow();
 	HWND hWnd;

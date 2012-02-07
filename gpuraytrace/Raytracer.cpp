@@ -32,7 +32,7 @@ void Raytracer::run()
 
 	for(;;)
 	{
-
+		device->present();
 
 		if(window->update()) break;
 	}
