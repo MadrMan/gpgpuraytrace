@@ -3,6 +3,7 @@
 #include "IDevice.h"
 
 #include <d3d11.h>
+#include <D3DX11.h>
 
 class DeviceDirect3D : public IDevice
 {
@@ -19,5 +20,6 @@ private:
 	ID3D11DeviceContext* context;
 	IDXGISwapChain* swapChain;
 	ID3D11Texture2D* swapBackBuffer;
+	ID3D11ShaderResourceView* swapBackBufferSRV;
 };
 
