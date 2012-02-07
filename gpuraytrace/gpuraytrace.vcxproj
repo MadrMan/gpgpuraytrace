@@ -72,6 +72,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ComputeDirect3D.cpp" />
     <ClCompile Include="DeviceDirect3D.cpp" />
     <ClCompile Include="DeviceFactory.cpp" />
     <ClCompile Include="Logger.cpp" />
@@ -83,10 +85,13 @@
     <ClCompile Include="WindowWinAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="ComputeDirect3D.h" />
     <ClInclude Include="DeviceDirect3D.h" />
     <ClInclude Include="DeviceFactory.h" />
     <ClInclude Include="Factory.h" />
+    <ClInclude Include="ICompute.h" />
     <ClInclude Include="IDevice.h" />
     <ClInclude Include="IWindow.h" />
     <ClInclude Include="Logger.h" />

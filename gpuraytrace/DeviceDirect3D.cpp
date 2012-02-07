@@ -3,9 +3,9 @@
 
 #include "WindowWinAPI.h"
 #include "Logger.h"
+#include "ComputeDirect3D.h"
 
 #include <D3Dcompiler.h>
-
 #include <fstream>
 
 DeviceDirect3D::DeviceDirect3D(IWindow* window) : IDevice(DeviceAPI::Direct3D, window)
@@ -86,40 +86,6 @@ bool DeviceDirect3D::create()
 		return false;
 	}
 
-	const std::string fileName("shader/csmain.hlsl");
-	std::ifstream file(fileName);
-	file.seekg(0, std::ios_base::end);
-	unsigned int pos = (unsigned int)file.tellg();
-	char* fileData;
-	fileData = new char[pos + 1];
-	file.seekg(0, std::ios_base::beg);
-	file.read(fileData, pos);
-	file.close();
-	fileData[pos] = 0;
-
-	UINT shaderFlags;
-#if defined(_DEBUG)
-	shaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
-#else
-	shaderFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
-#endif
-	
-	ID3D10Blob* shaderBlob;
-	ID3D10Blob* errorBlob;
-	result = D3DCompile(fileData, pos + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), "CSMain", "cs_5_0", 0, shaderFlags, &shaderBlob, &errorBlob);
-	if(result != S_OK)
-	{
-		errorBlob->Release();
-		return false;
-	}
-	
-	ID3D11ComputeShader* computeShader;
-	result = device->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &computeShader);
-	if(result != S_OK)
-	{
-		return false;
-	}
-
 	return true;
 }
 
@@ -128,4 +94,9 @@ void DeviceDirect3D::present()
 	
 		
 
+}
+
+ICompute* DeviceDirect3D::createCompute()
+{
+	return new ComputeDirect3D(this);
 }

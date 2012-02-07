@@ -14,6 +14,10 @@ public:
 	virtual bool create() override;
 	virtual void present() override;
 
+	virtual ICompute* createCompute() override;
+
+	ID3D11Device* getD3DDevice() const
+	{ return device; }
 
 private:
 	ID3D11Device* device;

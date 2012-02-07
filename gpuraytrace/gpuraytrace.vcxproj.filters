@@ -16,12 +16,16 @@
       <Filter>Adapters</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="Camera.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeDirect3D.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="Raytracer.h" />
-    <ClInclude Include="IDevice.h" />
-    <ClInclude Include="IWindow.h" />
     <ClInclude Include="DeviceFactory.h">
       <Filter>Factories</Filter>
     </ClInclude>
@@ -38,6 +42,21 @@
     <ClInclude Include="Factory.h">
       <Filter>Factories</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeDirect3D.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="IWindow.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="IDevice.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="ICompute.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Adapters">
@@ -45,6 +64,9 @@
     </Filter>
     <Filter Include="Factories">
       <UniqueIdentifier>{ce98ea0f-2151-4772-91ef-e2ec507a2af6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{5bdee977-68bb-44d2-967e-67dbeff07c60}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
