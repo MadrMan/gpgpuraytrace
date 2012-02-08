@@ -3,6 +3,7 @@
 
 #include "DeviceFactory.h"
 #include "WindowFactory.h"
+#include "ICompute.h"
 
 Raytracer::Raytracer()
 {
@@ -29,6 +30,15 @@ void Raytracer::run()
 	if(!device) return;
 
 	window->show();
+
+	ICompute* compute = device->createCompute();
+	if(!compute->create("shader/CSMain.hlsl", "CSMain"))
+	{
+		Logger() << "Could not create shader";
+
+		delete compute;
+		return;
+	}
 
 	for(;;)
 	{

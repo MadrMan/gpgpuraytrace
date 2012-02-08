@@ -39,8 +39,6 @@ bool DeviceDirect3D::create()
 #if defined(FYX_DEBUG)
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	D3D_FEATURE_LEVEL featureLevel;
- 
 
 	const D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
 	DXGI_SWAP_CHAIN_DESC sd;

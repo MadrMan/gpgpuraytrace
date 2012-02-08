@@ -7,6 +7,8 @@ public:
 	//! Destructor
 	virtual ~ICompute() { }
 
+	virtual bool create(const std::string& fileName, const std::string& main) = 0;
+
 protected:
 	ICompute() { }
 

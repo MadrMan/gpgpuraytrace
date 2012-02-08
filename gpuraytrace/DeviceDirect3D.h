@@ -19,11 +19,15 @@ public:
 	ID3D11Device* getD3DDevice() const
 	{ return device; }
 
+	D3D_FEATURE_LEVEL getFeatureLevel() const
+	{ return featureLevel; }
+
 private:
 	ID3D11Device* device;
 	ID3D11DeviceContext* context;
 	IDXGISwapChain* swapChain;
 	ID3D11Texture2D* swapBackBuffer;
 	ID3D11ShaderResourceView* swapBackBufferSRV;
+	D3D_FEATURE_LEVEL featureLevel;
 };
 

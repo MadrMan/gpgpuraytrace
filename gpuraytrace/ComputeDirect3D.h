@@ -9,7 +9,7 @@ public:
 	ComputeDirect3D(DeviceDirect3D* device);
 	virtual ~ComputeDirect3D();
 
-	virtual bool create(const std::string& fileName, const std::string& main);
+	virtual bool create(const std::string& fileName, const std::string& main) override;
 
 private:
 	DeviceDirect3D* device;
