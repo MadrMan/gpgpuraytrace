@@ -13,6 +13,8 @@ struct WindowSettings
 	int height;
 };
 
+class IInput;
+
 //! Interface inherited by all the windows
 class IWindow
 {
@@ -33,6 +35,10 @@ public:
 	//! Update the window and handle window messages
 	//! \return True when window is running normally, false when the window is closed
 	virtual bool update() = 0;
+
+	//! Get the input handler for the window
+	virtual IInput* getInput() = 0;
+
 protected:
 	//! Constructor
 	IWindow(WindowAPI::T api, const WindowSettings& windowSettings) : api(api), windowSettings(windowSettings) { }

@@ -77,6 +77,8 @@
     <ClCompile Include="ComputeDirect3D.cpp" />
     <ClCompile Include="DeviceDirect3D.cpp" />
     <ClCompile Include="DeviceFactory.cpp" />
+    <ClCompile Include="IInput.cpp" />
+    <ClCompile Include="InputWinAPI.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -94,6 +96,8 @@
     <ClInclude Include="Factory.h" />
     <ClInclude Include="ICompute.h" />
     <ClInclude Include="IDevice.h" />
+    <ClInclude Include="IInput.h" />
+    <ClInclude Include="InputWinAPI.h" />
     <ClInclude Include="IWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Raytracer.h" />

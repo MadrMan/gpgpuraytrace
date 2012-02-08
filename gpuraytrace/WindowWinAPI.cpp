@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "WindowWinAPI.h"
+
 #include "Logger.h"
 
 const int WINDOWLONG_THISPTR = 0;
@@ -8,6 +9,7 @@ WindowWinAPI::WindowWinAPI(const WindowSettings& windowSettings) : IWindow(Windo
 {
 	closed = false;
 	hWnd = 0;
+	input = nullptr;
 }
 
 WindowWinAPI::~WindowWinAPI()
@@ -26,6 +28,9 @@ LRESULT CALLBACK WindowWinAPI::SMainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, 
 
 LRESULT CALLBACK WindowWinAPI::MainWndProc(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+	if(input->handleWindowMessage(Msg, wParam, lParam))
+		return 0;
+
 	switch(Msg)
 	{
 		case WM_CLOSE: 
@@ -131,4 +136,10 @@ bool WindowWinAPI::update()
 	}
 
 	return closed;
+}
+
+IInput* WindowWinAPI::getInput()
+{
+	if(!input) input = new InputWinAPI();
+	return input;
 }

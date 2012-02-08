@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IWindow.h"
+#include "InputWinAPI.h"
 
 #include <Windows.h>
 
@@ -30,10 +31,15 @@ public:
 	//! \return A valid handle if the window was constructed, otherwise 0
 	HWND getHandle() const { return hWnd; };
 
+	//! Get the input handler for the window
+	virtual IInput* getInput() override;
+
 private:
 	bool createWindow();
 	HWND hWnd;
 	bool closed;
+
+	InputWinAPI* input;
 
 	static LRESULT CALLBACK SMainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK MainWndProc(UINT Msg, WPARAM wParam, LPARAM lParam);

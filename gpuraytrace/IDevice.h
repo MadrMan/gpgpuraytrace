@@ -39,7 +39,7 @@ protected:
 	
 private:
 	IDevice(IDevice const&) : api(DeviceAPI::None), window(nullptr) {};         
-    IDevice& operator=(IDevice const&){};  
+    IDevice& operator=(IDevice const&){};
 
 	const DeviceAPI::T api;
 	IWindow* const window;
