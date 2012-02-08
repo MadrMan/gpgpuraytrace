@@ -22,6 +22,9 @@ public:
 	D3D_FEATURE_LEVEL getFeatureLevel() const
 	{ return featureLevel; }
 
+	ID3D11DeviceContext* getImmediate() const
+	{ return context; }
+
 private:
 	ID3D11Device* device;
 	ID3D11DeviceContext* context;

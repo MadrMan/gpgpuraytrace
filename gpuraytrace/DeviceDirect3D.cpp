@@ -89,9 +89,7 @@ bool DeviceDirect3D::create()
 
 void DeviceDirect3D::present()
 {
-	
-		
-
+	swapChain->Present(0, 0);
 }
 
 ICompute* DeviceDirect3D::createCompute()

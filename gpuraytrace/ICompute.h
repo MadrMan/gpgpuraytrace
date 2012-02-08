@@ -9,6 +9,8 @@ public:
 
 	virtual bool create(const std::string& fileName, const std::string& main) = 0;
 
+	virtual void run() = 0;
+
 protected:
 	ICompute() { }
 

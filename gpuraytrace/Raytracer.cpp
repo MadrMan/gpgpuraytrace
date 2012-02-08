@@ -40,8 +40,10 @@ void Raytracer::run()
 		return;
 	}
 
+	Logger() << "Running";
 	for(;;)
 	{
+		compute->run();
 		device->present();
 
 		if(window->update()) break;

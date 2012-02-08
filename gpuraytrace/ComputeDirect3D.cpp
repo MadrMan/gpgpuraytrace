@@ -19,12 +19,12 @@ ComputeDirect3D::~ComputeDirect3D()
 bool ComputeDirect3D::create(const std::string& fileName, const std::string& main)
 {
 	//const std::string fileName("shader/csmain.hlsl");
-	std::ifstream file(fileName);
-	file.seekg(0, std::ios_base::end);
+	std::ifstream file(fileName, std::ios::binary);
+	file.seekg(0, std::ios::end);
 	unsigned int pos = (unsigned int)file.tellg();
 	char* fileData;
 	fileData = new char[pos + 1];
-	file.seekg(0, std::ios_base::beg);
+	file.seekg(0, std::ios::beg);
 	file.read(fileData, pos);
 	file.close();
 	fileData[pos] = 0;
@@ -64,6 +64,12 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		errorBlob->Release();
 		return false;
 	}
+
+	if(errorBlob)
+	{
+		Logger() << "The following warning occured while compiling:\n" << (const char*)errorBlob->GetBufferPointer();
+		errorBlob->Release();
+	}
 	
 	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &shader);
 	if(result != S_OK)
@@ -74,4 +80,9 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	}
 
 	return true;
+}
+
+void ComputeDirect3D::run()
+{
+	//device->getImmediate()->Dispatch(
 }

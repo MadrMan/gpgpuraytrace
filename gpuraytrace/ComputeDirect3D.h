@@ -11,6 +11,8 @@ public:
 
 	virtual bool create(const std::string& fileName, const std::string& main) override;
 
+	virtual void run() override;
+
 private:
 	DeviceDirect3D* device;
 	ID3D11ComputeShader* shader;
