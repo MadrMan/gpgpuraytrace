@@ -84,5 +84,9 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 
 void ComputeDirect3D::run()
 {
-	//device->getImmediate()->Dispatch(
+	//ID3D11DeviceContext* dc = device->getImmediate();
+	//dc->CSSetShader(shader, nullptr, 0);
+	//dc->CSSetUnorderedAccessViews(
+	//dc->
+	(800, 600, 1);
 }

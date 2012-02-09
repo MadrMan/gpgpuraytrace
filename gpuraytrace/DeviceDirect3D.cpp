@@ -36,7 +36,7 @@ bool DeviceDirect3D::create()
 	}
 
 	UINT createDeviceFlags = 0;
-#if defined(FYX_DEBUG)
+#if defined(_DEBUG)
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
@@ -51,7 +51,8 @@ bool DeviceDirect3D::create()
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; //_SRGB;
 	sd.BufferDesc.RefreshRate.Numerator = 60;	
 	sd.BufferDesc.RefreshRate.Denominator = 1;	
-	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_UNORDERED_ACCESS;
+	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	sd.OutputWindow = static_cast<WindowWinAPI*>(getWindow())->getHandle();
 	sd.SampleDesc.Count = 1;
 	sd.SampleDesc.Quality = 0;
@@ -67,7 +68,27 @@ bool DeviceDirect3D::create()
 		return false;
 	}
 
+	//D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;	
+	/*result = device->CreateShaderResourceView(swapBackBuffer, 0, &swapBackBufferSRV);
 
+	if(result != S_OK){
+		LOGERROR(result, "ID3D11Device::CreateShaderResourceView");
+		return false;
+	}*/
+
+	D3D11_FEATURE_DATA_D3D10_X_HARDWARE_OPTIONS dxHwOpt;
+	result = device->CheckFeatureSupport(D3D11_FEATURE_D3D10_X_HARDWARE_OPTIONS, &dxHwOpt, sizeof(dxHwOpt));
+	if(FAILED(result))
+	{
+		LOGERROR(result, "CheckFeatureSupport");
+		return false;
+	}
+	if(!dxHwOpt.ComputeShaders_Plus_RawAndStructuredBuffers_Via_Shader_4_x)
+	{
+		Logger() << "ComputeShaders are not supported on this device";
+		return false;
+	}
+	
 	//Get the buffer from the swapchain
 	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&swapBackBuffer);
 	if(result != S_OK)
@@ -76,13 +97,21 @@ bool DeviceDirect3D::create()
         return false;
     }
 
-	//D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;	
-	/*result = device->CreateShaderResourceView(swapBackBuffer, 0, &swapBackBufferSRV);
+	//Create the UAV for the swapbuffer
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+	ZeroMemory(&uavDesc, sizeof(uavDesc));
+	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	uavDesc.Buffer.FirstElement = 0;
+	uavDesc.Buffer.NumElements = sd.BufferDesc.Width * sd.BufferDesc.Height;
 
-	if(result != S_OK){
-		LOGERROR(result, "ID3D11Device::CreateShaderResourceView");
+	ID3D11UnorderedAccessView* uavSwapBuffer;
+	result = device->CreateUnorderedAccessView(swapBackBuffer, &uavDesc, &uavSwapBuffer);
+	if(FAILED(result))
+	{
+		LOGERROR(result, "CreateUnorderedAccessView");
 		return false;
-	}*/
+	}
 
 	return true;
 }

@@ -1,7 +1,7 @@
-cbuffer textureInfo
-{
-	int2 size;
-}
+//cbuffer textureInfo
+//{
+	static const int2 size = int2(800, 600);
+//}
 
 RWStructuredBuffer<float4> texOut : register(u0);
 
