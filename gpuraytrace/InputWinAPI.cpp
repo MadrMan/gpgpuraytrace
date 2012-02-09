@@ -1,6 +1,8 @@
 #include "Common.h"
 #include "InputWinAPI.h"
 
+#include "Logger.h"
+
 InputActionWinAPI::InputActionWinAPI(InputWinAPI* input) : input(input)
 { 
 }
@@ -40,9 +42,9 @@ void InputActionWinAPI::registerKeyboard(int key, float highValue)
 	keyboardKeys.push_back(kt);
 }
 
-void InputActionWinAPI::registerMouseButton(int button, float highValue)
+void InputActionWinAPI::registerMouseButton(MouseButtons::T button, float highValue)
 {
-	MouseTrigger mt = {button, highValue};
+	MouseTrigger mt = {(int)button, highValue};
 	mouseButtons.push_back(mt);
 }
 
@@ -50,11 +52,6 @@ void InputActionWinAPI::registerMouseAxis(int axis)
 {
 	mouseAxis.push_back(axis);
 }
-
-
-
-
-
 
 
 
@@ -80,8 +77,6 @@ void InputWinAPI::update()
 
 bool InputWinAPI::handleWindowMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	wParam;lParam;
-
 	switch(Msg)
 	{
 		case WM_KEYDOWN:
@@ -94,7 +89,6 @@ bool InputWinAPI::handleWindowMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 			keys[wParam] = 0;
 			return true;
 		}
-
 		case WM_MOUSEMOVE:
 		{
 			int xpos = LOWORD(lParam);
@@ -114,31 +108,24 @@ bool InputWinAPI::handleWindowMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 			return true;
 		}
 		case WM_LBUTTONDOWN:
-		case WM_RBUTTONDOWN:
-		case WM_MBUTTONDOWN:
-		case WM_RBUTTONUP:
-		case WM_MBUTTONUP:
-		case WM_LBUTTONUP:
-		{
-			if(wParam == MK_LBUTTON)
-				mouseButtons[LMOUSEBUTTON] = 1;
-			else
-				mouseButtons[LMOUSEBUTTON] = 0;
-			
-			if(wParam == MK_RBUTTON)
-				mouseButtons[RMOUSEBUTTON] = 1;
-			else
-				mouseButtons[RMOUSEBUTTON] = 0;
-			
-			if(wParam == MK_MBUTTON)
-				mouseButtons[MMOUSEBUTTON] = 1;
-			else
-				mouseButtons[MMOUSEBUTTON] = 0;
+			mouseButtons[MouseButtons::LeftButton] = 1;
 			return true;
-		}
-	
+		case WM_RBUTTONDOWN:
+			mouseButtons[MouseButtons::MiddleButton] = 1;
+			return true;
+		case WM_MBUTTONDOWN:
+			mouseButtons[MouseButtons::MiddleButton] = 1;
+			return true;
+		case WM_RBUTTONUP:
+			mouseButtons[MouseButtons::RightButton] = 0;
+			return true;
+		case WM_MBUTTONUP:
+			mouseButtons[MouseButtons::MiddleButton] = 0;
+			return true;
+		case WM_LBUTTONUP:
+			mouseButtons[MouseButtons::LeftButton] = 0;
+			return true;
 	}
-
 	return false;
 }
 

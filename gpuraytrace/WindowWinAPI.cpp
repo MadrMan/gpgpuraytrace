@@ -135,6 +135,8 @@ bool WindowWinAPI::update()
 		DispatchMessage(&msg); 
 	}
 
+	if(input) input->update();
+
 	return closed;
 }
 

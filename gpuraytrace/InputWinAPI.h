@@ -15,16 +15,6 @@ struct MouseTrigger
 	float value;
 };
 
-
-const int MOUSEBUTTONSAMOUNT = 3;
-enum MouseButtons
-{
-	LMOUSEBUTTON = 0, 
-	RMOUSEBUTTON = 1, 
-	MMOUSEBUTTON = 2
-};
-
-
 class InputWinAPI;
 class InputActionWinAPI : public IInputAction
 {
@@ -34,7 +24,7 @@ public:
 	virtual void update() override;
 
 	virtual void registerKeyboard(int key, float highValue) override;
-	virtual void registerMouseButton(int button, float highValue) override;
+	virtual void registerMouseButton(MouseButtons::T button, float highValue) override;
 	virtual void registerMouseAxis(int axis) override;
 
 private:
@@ -62,6 +52,6 @@ private:
 	int mouseXPos;
 	int mouseYPos;
 	int keys[256];
-	int mouseButtons[MOUSEBUTTONSAMOUNT];
+	int mouseButtons[MouseButtons::Size];
 	float mouseAxis[3];
 };
