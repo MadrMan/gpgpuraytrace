@@ -24,7 +24,7 @@ public:
 	virtual void update() override;
 
 	virtual void registerKeyboard(int key, float highValue) override;
-	virtual void registerMouseButton(int button, float highValue) override;
+	virtual void registerMouseButton(MouseButtons::T button, float highValue) override;
 	virtual void registerMouseAxis(int axis) override;
 
 private:
@@ -49,8 +49,9 @@ public:
 
 private:
 	friend class InputActionWinAPI;
-
+	int mouseXPos;
+	int mouseYPos;
 	int keys[256];
-	int mouseButtons[10];
+	int mouseButtons[MouseButtons::Size];
 	float mouseAxis[3];
 };

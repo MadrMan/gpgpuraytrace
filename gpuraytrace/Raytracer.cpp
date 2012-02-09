@@ -4,6 +4,7 @@
 #include "DeviceFactory.h"
 #include "WindowFactory.h"
 #include "ICompute.h"
+#include "IInput.h"
 
 Raytracer::Raytracer()
 {
@@ -40,8 +41,11 @@ void Raytracer::run()
 		return;
 	}
 
+	IInputAction* action = window->getInput()->createAction();
+	action->registerKeyboard(VK_ESCAPE, 1.0f);
+
 	Logger() << "Running";
-	for(;;)
+	while(action->getState() < 0.5f)
 	{
 		compute->run();
 		device->present();
@@ -49,5 +53,6 @@ void Raytracer::run()
 		if(window->update()) break;
 	}
 
+	window->getInput()->destroyAction(action);
 	Logger() << "Raytracer exit";
 }

@@ -28,7 +28,7 @@ LRESULT CALLBACK WindowWinAPI::SMainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, 
 
 LRESULT CALLBACK WindowWinAPI::MainWndProc(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	if(input->handleWindowMessage(Msg, wParam, lParam))
+	if(input && input->handleWindowMessage(Msg, wParam, lParam))
 		return 0;
 
 	switch(Msg)
@@ -134,6 +134,8 @@ bool WindowWinAPI::update()
 		TranslateMessage(&msg); 
 		DispatchMessage(&msg); 
 	}
+
+	if(input) input->update();
 
 	return closed;
 }
