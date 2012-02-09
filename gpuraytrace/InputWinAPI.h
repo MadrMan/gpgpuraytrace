@@ -15,6 +15,16 @@ struct MouseTrigger
 	float value;
 };
 
+
+const int MOUSEBUTTONSAMOUNT = 3;
+enum MouseButtons
+{
+	LMOUSEBUTTON = 0, 
+	RMOUSEBUTTON = 1, 
+	MMOUSEBUTTON = 2
+};
+
+
 class InputWinAPI;
 class InputActionWinAPI : public IInputAction
 {
@@ -49,8 +59,9 @@ public:
 
 private:
 	friend class InputActionWinAPI;
-
+	int mouseXPos;
+	int mouseYPos;
 	int keys[256];
-	int mouseButtons[10];
+	int mouseButtons[MOUSEBUTTONSAMOUNT];
 	float mouseAxis[3];
 };

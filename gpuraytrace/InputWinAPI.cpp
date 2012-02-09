@@ -51,9 +51,20 @@ void InputActionWinAPI::registerMouseAxis(int axis)
 	mouseAxis.push_back(axis);
 }
 
+
+
+
+
+
+
+
 InputWinAPI::InputWinAPI()
 {
-
+	ZeroMemory(keys, sizeof(keys));
+	ZeroMemory(mouseButtons, sizeof(mouseButtons));
+	ZeroMemory(mouseAxis, sizeof(mouseAxis));
+	mouseXPos = 0;
+	mouseYPos = 0;
 }
 
 InputWinAPI::~InputWinAPI()
@@ -66,20 +77,72 @@ void InputWinAPI::update()
 	IInput::update();
 }
 
+
 bool InputWinAPI::handleWindowMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	wParam;lParam;
 
 	switch(Msg)
 	{
-	case WM_KEYDOWN:
-		return true;
-	case WM_KEYUP:
-		return true;
+		case WM_KEYDOWN:
+		{
+			keys[wParam] = 1;
+			return true;
+		}
+		case WM_KEYUP:
+		{
+			keys[wParam] = 0;
+			return true;
+		}
+
+		case WM_MOUSEMOVE:
+		{
+			int xpos = LOWORD(lParam);
+			int ypos = HIWORD(lParam);
+			int xDelta = xpos - mouseXPos;
+			int yDelta = ypos - mouseYPos;
+			mouseXPos = xpos;
+			mouseYPos = ypos;
+			mouseAxis[0] = (float)xDelta;
+			mouseAxis[1] = (float)yDelta;
+			return true;
+		}
+		case WM_MOUSEWHEEL:
+		{
+			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+			mouseAxis[2] = (float)zDelta;
+			return true;
+		}
+		case WM_LBUTTONDOWN:
+		case WM_RBUTTONDOWN:
+		case WM_MBUTTONDOWN:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONUP:
+		case WM_LBUTTONUP:
+		{
+			if(wParam == MK_LBUTTON)
+				mouseButtons[LMOUSEBUTTON] = 1;
+			else
+				mouseButtons[LMOUSEBUTTON] = 0;
+			
+			if(wParam == MK_RBUTTON)
+				mouseButtons[RMOUSEBUTTON] = 1;
+			else
+				mouseButtons[RMOUSEBUTTON] = 0;
+			
+			if(wParam == MK_MBUTTON)
+				mouseButtons[MMOUSEBUTTON] = 1;
+			else
+				mouseButtons[MMOUSEBUTTON] = 0;
+			return true;
+		}
+	
 	}
 
 	return false;
 }
+
+
 
 IInputAction* InputWinAPI::createAction()
 {
