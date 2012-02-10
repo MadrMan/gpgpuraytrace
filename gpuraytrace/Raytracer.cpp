@@ -10,6 +10,7 @@ Raytracer::Raytracer()
 {
 	device = nullptr;
 	window = nullptr;
+	compute = nullptr;
 }
 
 Raytracer::~Raytracer()
@@ -32,14 +33,8 @@ void Raytracer::run()
 
 	window->show();
 
-	ICompute* compute = device->createCompute();
-	if(!compute->create("shader/CSMain.hlsl", "CSMain"))
-	{
-		Logger() << "Could not create shader";
-
-		delete compute;
-		return;
-	}
+	compute = device->createCompute();
+	loadComputeShader();
 
 	IInputAction* action = window->getInput()->createAction();
 	action->registerKeyboard(VK_ESCAPE, 1.0f);
@@ -55,4 +50,12 @@ void Raytracer::run()
 
 	window->getInput()->destroyAction(action);
 	Logger() << "Raytracer exit";
+}
+
+void Raytracer::loadComputeShader()
+{
+	if(!compute->create("shader/CSMain.hlsl", "CSMain"))
+	{
+		Logger() << "Could not create shader";
+	}
 }

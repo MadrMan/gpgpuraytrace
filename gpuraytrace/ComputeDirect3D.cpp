@@ -18,7 +18,6 @@ ComputeDirect3D::~ComputeDirect3D()
 
 bool ComputeDirect3D::create(const std::string& fileName, const std::string& main)
 {
-	//const std::string fileName("shader/csmain.hlsl");
 	std::ifstream file(fileName, std::ios::binary);
 	file.seekg(0, std::ios::end);
 	unsigned int pos = (unsigned int)file.tellg();
@@ -71,7 +70,8 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		errorBlob->Release();
 	}
 	
-	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &shader);
+	ID3D11ComputeShader* newShader = nullptr;
+	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &newShader);
 	if(result != S_OK)
 	{
 		LOGERROR(result, "CreateComputeShader");
@@ -84,6 +84,18 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 
 void ComputeDirect3D::run()
 {
+	if(newShader)
+	{
+		Logger() << "Replacing ComputeShader with updated file";
+
+		if(shader) 
+		{
+			shader->Release();
+			shader = nullptr;
+		}
+		shader = newShader;
+	}
+
 	//ID3D11DeviceContext* dc = device->getImmediate();
 	//dc->CSSetShader(shader, nullptr, 0);
 	//dc->CSSetUnorderedAccessViews(

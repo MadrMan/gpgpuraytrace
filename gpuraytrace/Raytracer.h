@@ -17,7 +17,11 @@ public:
 	//! Blocks until the raytracer exits
 	void run();
 
+	//! Reload the compute shader
+	void loadComputeShader();
+
 private:
 	IDevice* device;
 	IWindow* window;
+	ICompute* compute;
 };

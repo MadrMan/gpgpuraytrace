@@ -16,4 +16,5 @@ public:
 private:
 	DeviceDirect3D* device;
 	ID3D11ComputeShader* shader;
+	ID3D11ComputeShader* newShader;
 };
