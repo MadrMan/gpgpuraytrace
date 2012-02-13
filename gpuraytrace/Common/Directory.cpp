@@ -2,7 +2,7 @@
 #include "Directory.h"
 #include "Logger.h"
 
-#include "./Adapters/DirectoryWinAPI.h"
+#include "../Adapters/DirectoryWinAPI.h"
 
 Directory* Directory::directory;
 Directory* Directory::get()

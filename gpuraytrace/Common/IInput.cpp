@@ -1,7 +1,7 @@
 #include <Common.h>
 #include "IInput.h"
 
-#include "./Adapters/InputWinAPI.h"
+#include "../Adapters/InputWinAPI.h"
 
 IInput::IInput()
 {

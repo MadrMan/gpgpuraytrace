@@ -1,7 +1,7 @@
-#include "Common.h"
+#include <Common.h>
 
 #include "Raytracer.h"
-#include "Logger.h"
+#include "./Common/Logger.h"
 
 int main(int argc, char** argv)
 {

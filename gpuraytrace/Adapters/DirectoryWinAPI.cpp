@@ -1,7 +1,7 @@
 #include <Common.h>
 #include "DirectoryWinAPI.h"
 
-#include "../Logger.h"
+#include "../Common/Logger.h"
 
 #include <process.h>
 

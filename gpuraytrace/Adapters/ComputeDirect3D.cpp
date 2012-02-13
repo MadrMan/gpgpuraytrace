@@ -2,7 +2,7 @@
 #include "ComputeDirect3D.h"
 
 #include "DeviceDirect3D.h"
-#include "../Logger.h"
+#include "../Common/Logger.h"
 
 #include <fstream>
 #include <D3Dcompiler.h>
