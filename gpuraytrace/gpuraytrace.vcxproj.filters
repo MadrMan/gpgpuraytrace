@@ -28,6 +28,12 @@
     <ClCompile Include="IInput.cpp">
       <Filter>Factories</Filter>
     </ClCompile>
+    <ClCompile Include="Directory.cpp">
+      <Filter>Factories</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectoryWinAPI.cpp">
+      <Filter>Factories</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -68,6 +74,12 @@
     </ClInclude>
     <ClInclude Include="InputWinAPI.h">
       <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="Directory.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectoryWinAPI.h">
+      <Filter>Factories</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

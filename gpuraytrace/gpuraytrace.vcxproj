@@ -77,6 +77,8 @@
     <ClCompile Include="ComputeDirect3D.cpp" />
     <ClCompile Include="DeviceDirect3D.cpp" />
     <ClCompile Include="DeviceFactory.cpp" />
+    <ClCompile Include="Directory.cpp" />
+    <ClCompile Include="DirectoryWinAPI.cpp" />
     <ClCompile Include="IInput.cpp" />
     <ClCompile Include="InputWinAPI.cpp" />
     <ClCompile Include="Logger.cpp" />
@@ -93,6 +95,8 @@
     <ClInclude Include="ComputeDirect3D.h" />
     <ClInclude Include="DeviceDirect3D.h" />
     <ClInclude Include="DeviceFactory.h" />
+    <ClInclude Include="Directory.h" />
+    <ClInclude Include="DirectoryWinAPI.h" />
     <ClInclude Include="Factory.h" />
     <ClInclude Include="ICompute.h" />
     <ClInclude Include="IDevice.h" />
