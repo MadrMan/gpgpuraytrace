@@ -15,7 +15,7 @@ DirectoryWinAPI::~DirectoryWinAPI()
 {
 	for(auto it = callbacks.begin(); it != callbacks.end(); ++it)
 	{
-		UnregisterWait(it->second.waitHandle);
+		UnregisterWaitEx(it->second.waitHandle,  INVALID_HANDLE_VALUE);
 		FindCloseChangeNotification(it->first);
 		delete it->second.cb;
 	}
@@ -50,7 +50,7 @@ bool DirectoryWinAPI::setWatch(const std::string& path, IDirectoryCallbackBase* 
 	return true;
 }
 
-void __stdcall DirectoryWinAPI::onEventTriggered(void* args, BOOLEAN timeout)
+void __stdcall DirectoryWinAPI::onEventTriggered(void* args, BOOLEAN /*timeout*/)
 {
 	HANDLE handle = (HANDLE)args;
 	static_cast<DirectoryWinAPI*>(Directory::get())->callbacks[handle].cb->run();
