@@ -4,12 +4,15 @@
 
 #include <map>
 
+//! Struct used by DirectoryWinAPI to contain the callbacks
 struct DirWinAPIWait
 {
 	IDirectoryCallbackBase* cb;
 	HANDLE waitHandle;
 };
 
+//! Directory handler for windows
+//! Uses the windows thread pool to receive events from the filesystem
 class DirectoryWinAPI : public Directory
 {
 public:
