@@ -1,7 +1,7 @@
-#include "Common.h"
+#include <Common.h>
 #include "InputWinAPI.h"
 
-#include "Logger.h"
+#include "../Logger.h"
 
 InputActionWinAPI::InputActionWinAPI(InputWinAPI* input) : input(input)
 { 

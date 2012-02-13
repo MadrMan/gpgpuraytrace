@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ICompute.h"
+#include "../Factories/ICompute.h"
 
 class DeviceDirect3D;
 class ComputeDirect3D : public ICompute

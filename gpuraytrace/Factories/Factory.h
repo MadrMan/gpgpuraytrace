@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Logger.h"
+#include "../Logger.h"
 
 //! Class inherited by all the factories, contains helper functions
 class Factory

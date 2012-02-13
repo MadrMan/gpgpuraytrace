@@ -1,7 +1,7 @@
-#include "Common.h"
+#include <Common.h>
 #include "WindowWinAPI.h"
 
-#include "Logger.h"
+#include "../Logger.h"
 
 const int WINDOWLONG_THISPTR = 0;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDevice.h"
+#include "./Factories/IDevice.h"
 
 //! Main class for the raytrace project
 //! Calling run on this class will block and run the raytracing program

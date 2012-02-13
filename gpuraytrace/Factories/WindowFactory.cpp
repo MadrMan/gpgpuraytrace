@@ -1,7 +1,7 @@
-#include "Common.h"
+#include <Common.h>
 #include "WindowFactory.h"
 
-#include "WindowWinAPI.h"
+#include "../Adapters/WindowWinAPI.h"
 
 IWindow* WindowFactory::construct(WindowAPI::T api, const WindowSettings& windowSettings)
 {

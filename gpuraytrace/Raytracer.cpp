@@ -1,9 +1,9 @@
-#include "Common.h"
+#include <Common.h>
 #include "Raytracer.h"
 
-#include "DeviceFactory.h"
-#include "WindowFactory.h"
-#include "ICompute.h"
+#include "./Factories/DeviceFactory.h"
+#include "./Factories/WindowFactory.h"
+#include "./Factories/ICompute.h"
 #include "IInput.h"
 #include "Directory.h"
 

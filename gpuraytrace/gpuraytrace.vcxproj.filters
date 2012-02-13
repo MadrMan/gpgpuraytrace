@@ -3,83 +3,75 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Raytracer.cpp" />
-    <ClCompile Include="WindowFactory.cpp">
-      <Filter>Factories</Filter>
-    </ClCompile>
-    <ClCompile Include="DeviceFactory.cpp">
-      <Filter>Factories</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowWinAPI.cpp">
-      <Filter>Adapters</Filter>
-    </ClCompile>
-    <ClCompile Include="DeviceDirect3D.cpp">
-      <Filter>Adapters</Filter>
-    </ClCompile>
     <ClCompile Include="Logger.cpp" />
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="Factories\WindowFactory.cpp">
+      <Filter>Factories</Filter>
+    </ClCompile>
+    <ClCompile Include="Factories\DeviceFactory.cpp">
+      <Filter>Factories</Filter>
+    </ClCompile>
+    <ClCompile Include="IInput.cpp" />
+    <ClCompile Include="Directory.cpp" />
+    <ClCompile Include="Adapters\DeviceDirect3D.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
+    <ClCompile Include="Adapters\DirectoryWinAPI.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
+    <ClCompile Include="Adapters\InputWinAPI.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
+    <ClCompile Include="Adapters\WindowWinAPI.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
+    <ClCompile Include="Adapters\ComputeDirect3D.cpp">
+      <Filter>Adapters</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Camera.cpp">
       <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeDirect3D.cpp">
-      <Filter>Adapters</Filter>
-    </ClCompile>
-    <ClCompile Include="InputWinAPI.cpp">
-      <Filter>Adapters</Filter>
-    </ClCompile>
-    <ClCompile Include="IInput.cpp">
-      <Filter>Factories</Filter>
-    </ClCompile>
-    <ClCompile Include="Directory.cpp">
-      <Filter>Factories</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectoryWinAPI.cpp">
-      <Filter>Factories</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="Raytracer.h" />
-    <ClInclude Include="DeviceFactory.h">
-      <Filter>Factories</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowFactory.h">
-      <Filter>Factories</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowWinAPI.h">
-      <Filter>Adapters</Filter>
-    </ClInclude>
-    <ClInclude Include="DeviceDirect3D.h">
-      <Filter>Adapters</Filter>
-    </ClInclude>
     <ClInclude Include="Logger.h" />
-    <ClInclude Include="Factory.h">
+    <ClInclude Include="Factories\Factory.h">
       <Filter>Factories</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="Factories\ICompute.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="Factories\IDevice.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="Factories\IWindow.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="Factories\WindowFactory.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="Factories\DeviceFactory.h">
+      <Filter>Factories</Filter>
+    </ClInclude>
+    <ClInclude Include="IInput.h" />
+    <ClInclude Include="Directory.h" />
+    <ClInclude Include="Adapters\ComputeDirect3D.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="Adapters\DeviceDirect3D.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="Adapters\DirectoryWinAPI.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="Adapters\InputWinAPI.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="Adapters\WindowWinAPI.h">
+      <Filter>Adapters</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Camera.h">
       <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeDirect3D.h">
-      <Filter>Adapters</Filter>
-    </ClInclude>
-    <ClInclude Include="IWindow.h">
-      <Filter>Factories</Filter>
-    </ClInclude>
-    <ClInclude Include="IDevice.h">
-      <Filter>Factories</Filter>
-    </ClInclude>
-    <ClInclude Include="ICompute.h">
-      <Filter>Factories</Filter>
-    </ClInclude>
-    <ClInclude Include="IInput.h">
-      <Filter>Factories</Filter>
-    </ClInclude>
-    <ClInclude Include="InputWinAPI.h">
-      <Filter>Adapters</Filter>
-    </ClInclude>
-    <ClInclude Include="Directory.h">
-      <Filter>Factories</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectoryWinAPI.h">
-      <Filter>Factories</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDevice.h"
+#include "../Factories/IDevice.h"
 
 #include <d3d11.h>
 #include <D3DX11.h>

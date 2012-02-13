@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IInput.h"
+#include "../IInput.h"
 #include <vector>
 
 struct KeyboardTrigger

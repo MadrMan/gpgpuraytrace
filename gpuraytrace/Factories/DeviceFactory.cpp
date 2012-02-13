@@ -1,7 +1,7 @@
-#include "Common.h"
+#include <Common.h>
 #include "DeviceFactory.h"
 
-#include "DeviceDirect3D.h"
+#include "../Adapters/DeviceDirect3D.h"
 
 IDevice* DeviceFactory::construct(DeviceAPI::T api, IWindow* window)
 {

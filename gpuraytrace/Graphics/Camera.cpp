@@ -1,7 +1,7 @@
-#include "Common.h"
+#include <Common.h>
 #include "Camera.h"
 
-#include "IWindow.h"
+#include "../Factories/IWindow.h"
 
 Camera::Camera()
 {

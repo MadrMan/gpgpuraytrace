@@ -1,8 +1,8 @@
-#include "Common.h"
+#include <Common.h>
 #include "Directory.h"
 #include "Logger.h"
 
-#include "DirectoryWinAPI.h"
+#include "./Adapters/DirectoryWinAPI.h"
 
 Directory* Directory::directory;
 Directory* Directory::get()

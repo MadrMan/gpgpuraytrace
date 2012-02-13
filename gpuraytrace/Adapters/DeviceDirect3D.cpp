@@ -1,8 +1,8 @@
-#include "Common.h"
+#include <Common.h>
 #include "DeviceDirect3D.h"
 
 #include "WindowWinAPI.h"
-#include "Logger.h"
+#include "../Logger.h"
 #include "ComputeDirect3D.h"
 
 #include <D3Dcompiler.h>

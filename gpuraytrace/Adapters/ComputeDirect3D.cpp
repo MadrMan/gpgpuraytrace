@@ -1,8 +1,8 @@
-#include "Common.h"
+#include <Common.h>
 #include "ComputeDirect3D.h"
 
 #include "DeviceDirect3D.h"
-#include "Logger.h"
+#include "../Logger.h"
 
 #include <fstream>
 #include <D3Dcompiler.h>

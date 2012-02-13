@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IWindow.h"
+#include "../Factories/IWindow.h"
 #include "InputWinAPI.h"
 
 #include <Windows.h>

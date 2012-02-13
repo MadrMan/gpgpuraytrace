@@ -73,40 +73,40 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="ComputeDirect3D.cpp" />
-    <ClCompile Include="DeviceDirect3D.cpp" />
-    <ClCompile Include="DeviceFactory.cpp" />
+    <ClCompile Include="Adapters\ComputeDirect3D.cpp" />
+    <ClCompile Include="Adapters\DeviceDirect3D.cpp" />
+    <ClCompile Include="Adapters\DirectoryWinAPI.cpp" />
+    <ClCompile Include="Adapters\InputWinAPI.cpp" />
+    <ClCompile Include="Adapters\WindowWinAPI.cpp" />
     <ClCompile Include="Directory.cpp" />
-    <ClCompile Include="DirectoryWinAPI.cpp" />
+    <ClCompile Include="Factories\DeviceFactory.cpp" />
+    <ClCompile Include="Factories\WindowFactory.cpp" />
+    <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="IInput.cpp" />
-    <ClCompile Include="InputWinAPI.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Raytracer.cpp" />
-    <ClCompile Include="WindowFactory.cpp" />
-    <ClCompile Include="WindowWinAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Adapters\ComputeDirect3D.h" />
+    <ClInclude Include="Adapters\DeviceDirect3D.h" />
+    <ClInclude Include="Adapters\DirectoryWinAPI.h" />
+    <ClInclude Include="Adapters\InputWinAPI.h" />
+    <ClInclude Include="Adapters\WindowWinAPI.h" />
     <ClInclude Include="Common.h" />
-    <ClInclude Include="ComputeDirect3D.h" />
-    <ClInclude Include="DeviceDirect3D.h" />
-    <ClInclude Include="DeviceFactory.h" />
     <ClInclude Include="Directory.h" />
-    <ClInclude Include="DirectoryWinAPI.h" />
-    <ClInclude Include="Factory.h" />
-    <ClInclude Include="ICompute.h" />
-    <ClInclude Include="IDevice.h" />
+    <ClInclude Include="Factories\DeviceFactory.h" />
+    <ClInclude Include="Factories\Factory.h" />
+    <ClInclude Include="Factories\ICompute.h" />
+    <ClInclude Include="Factories\IDevice.h" />
+    <ClInclude Include="Factories\IWindow.h" />
+    <ClInclude Include="Factories\WindowFactory.h" />
+    <ClInclude Include="Graphics\Camera.h" />
     <ClInclude Include="IInput.h" />
-    <ClInclude Include="InputWinAPI.h" />
-    <ClInclude Include="IWindow.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Raytracer.h" />
-    <ClInclude Include="WindowFactory.h" />
-    <ClInclude Include="WindowWinAPI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
