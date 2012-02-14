@@ -10,6 +10,7 @@
 ComputeDirect3D::ComputeDirect3D(DeviceDirect3D* device) : device(device)
 {
 	shader = nullptr;
+	newShader = nullptr;
 }
 
 ComputeDirect3D::~ComputeDirect3D()
@@ -94,6 +95,7 @@ void ComputeDirect3D::run()
 			shader = nullptr;
 		}
 		shader = newShader;
+		newShader = nullptr;
 	}
 
 	//ID3D11DeviceContext* dc = device->getImmediate();

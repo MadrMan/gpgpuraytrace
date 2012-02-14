@@ -3,33 +3,24 @@
 #include "../Common/IInput.h"
 #include <vector>
 
-struct KeyboardTrigger
-{
-	int key;
-	float value;
-};
-
-struct MouseTrigger
-{
-	int key;
-	float value;
-};
-
 class InputWinAPI;
 class InputActionWinAPI : public IInputAction
 {
 public:
 	InputActionWinAPI(InputWinAPI* input);
-	virtual float getState() override;
+	virtual float getState() const override;
 	virtual void update() override;
+	virtual bool isTriggered() const override;
 
-	virtual void registerKeyboard(int key, float highValue) override;
-	virtual void registerMouseButton(MouseButtons::T button, float highValue) override;
+	virtual void registerKeyboard(int key, float highValue, TriggerType::T trigger) override;
+	virtual void registerMouseButton(MouseButtons::T button, float highValue, TriggerType::T trigger) override;
 	virtual void registerMouseAxis(int axis) override;
 
 private:
 	float state;
-	InputWinAPI* input;
+	InputWinAPI const* input;
+	bool triggeredState;
+	bool triggered;
 
 	std::vector<KeyboardTrigger> keyboardKeys;
 	std::vector<MouseTrigger> mouseButtons;

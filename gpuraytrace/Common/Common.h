@@ -12,3 +12,11 @@
 #include <ostream>
 #include <vector>
 #include <fstream>
+#include <cmath>
+
+#define finline __forceinline
+
+finline bool isnull(float f)
+{
+	return (std::fabs(f) < 0.00001f);
+}

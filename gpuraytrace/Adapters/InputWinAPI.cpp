@@ -4,12 +4,20 @@
 #include "../Common/Logger.h"
 
 InputActionWinAPI::InputActionWinAPI(InputWinAPI* input) : input(input)
-{ 
+{
+	state = 0.0f;
+	triggered = 0;
+	triggeredState = 0;
 }
 
-float InputActionWinAPI::getState()
+float InputActionWinAPI::getState() const
 {
 	return state;
+}
+
+bool InputActionWinAPI::isTriggered() const
+{
+	return triggered;
 }
 
 void InputActionWinAPI::update()
@@ -23,6 +31,7 @@ void InputActionWinAPI::update()
 			state += it->value;
 		}
 	}
+
 	for(auto it = mouseButtons.begin(); it != mouseButtons.end(); ++it)
 	{
 		if(input->mouseButtons[it->key])
@@ -30,21 +39,38 @@ void InputActionWinAPI::update()
 			state += it->value;
 		}
 	}
+
 	for(auto it = mouseAxis.begin(); it != mouseAxis.end(); ++it)
 	{
 		state += input->mouseAxis[*it];
 	}
+
+	/*if(isnull(state))
+	{
+		if(!triggered)
+		{
+			triggered = false;
+			triggeredState = TriggerType::OnRelease;
+		} else {
+			triggeredState = TriggerType::;
+		}
+	} else {
+		if(!triggered)
+		{
+			triggered = true;
+		}
+	}*/
 }
 
-void InputActionWinAPI::registerKeyboard(int key, float highValue)
+void InputActionWinAPI::registerKeyboard(int key, float highValue, TriggerType::T trigger)
 {
-	KeyboardTrigger kt = {key, highValue};
+	KeyboardTrigger kt = {key, highValue, trigger};
 	keyboardKeys.push_back(kt);
 }
 
-void InputActionWinAPI::registerMouseButton(MouseButtons::T button, float highValue)
+void InputActionWinAPI::registerMouseButton(MouseButtons::T button, float highValue, TriggerType::T trigger)
 {
-	MouseTrigger mt = {(int)button, highValue};
+	MouseTrigger mt = {(int)button, highValue, trigger};
 	mouseButtons.push_back(mt);
 }
 

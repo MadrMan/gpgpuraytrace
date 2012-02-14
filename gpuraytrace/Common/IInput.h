@@ -10,13 +10,35 @@ namespace MouseButtons { enum T
 	Size
 };}
 
+namespace TriggerType { enum T
+{
+	OnTrigger,
+	OnHold,
+	OnRelease
+};}
+
+struct KeyboardTrigger
+{
+	int key;
+	float value;
+	TriggerType::T trigger;
+};
+
+struct MouseTrigger
+{
+	int key;
+	float value;
+	TriggerType::T trigger;
+};
+
 class IInputAction
 {
 public:
-	virtual float getState() = 0;
+	virtual float getState() const = 0;
+	virtual bool isTriggered() const = 0;
 
-	virtual void registerKeyboard(int key, float highValue) = 0;
-	virtual void registerMouseButton(MouseButtons::T button, float highValue) = 0;
+	virtual void registerKeyboard(int key, float highValue, TriggerType::T trigger = TriggerType::OnTrigger) = 0;
+	virtual void registerMouseButton(MouseButtons::T button, float highValue, TriggerType::T trigger = TriggerType::OnTrigger) = 0;
 	virtual void registerMouseAxis(int axis) = 0;
 
 protected:
