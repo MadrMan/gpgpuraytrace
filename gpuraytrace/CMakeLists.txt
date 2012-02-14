@@ -65,6 +65,7 @@ source_group(Adapters FILES ${PROJ_ADAPTER})
 source_group(Factories FILES ${PROJ_FACTORY})
 source_group(Common FILES ${PROJ_COMMON})
 source_group(Graphics FILES ${PROJ_GRAPHICS})
+source_group("" FILES ${PROJ_SOURCES})
 
 include_directories("${gpgpuraytrace_SOURCE_DIR}/Common")
 
