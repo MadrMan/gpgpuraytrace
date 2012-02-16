@@ -69,4 +69,6 @@ void Raytracer::loadComputeShader()
 	{
 		Logger() << "Could not create shader";
 	}
+
+
 }

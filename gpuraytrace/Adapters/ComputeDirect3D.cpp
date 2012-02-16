@@ -1,9 +1,10 @@
 #include <Common.h>
 #include "ComputeDirect3D.h"
-
+#include "VariableManager.h"
 #include "DeviceDirect3D.h"
 #include "../Common/Logger.h"
 
+#include "D3D11Shader.h"
 #include <fstream>
 #include <D3Dcompiler.h>
 
@@ -57,11 +58,11 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		if(errorBlob)
 		{
 			Logger() << "The following errors occured while trying to compile:\n" << (const char*)errorBlob->GetBufferPointer();
+			errorBlob->Release();
 		} else {
 			Logger() << "No error message";
 		}
 
-		errorBlob->Release();
 		return false;
 	}
 
@@ -71,12 +72,63 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		errorBlob->Release();
 	}
 	
-	ID3D11ComputeShader* newShader = nullptr;
+
+	//check the shader file for mutable variables
+	
+	ID3D11ShaderReflection* reflection = nullptr; 
+	result = D3DReflect(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection); 
+	if(result != S_OK)
+	{
+		LOGERROR(result, "D3DReflect");
+		return false;
+	}
+	ID3D11ShaderReflectionConstantBuffer* reflectionBuffer = nullptr;
+	reflectionBuffer = reflection->GetConstantBufferByName("GlobalVariables");
+	//TODO errorcheck
+
+	D3D11_SHADER_BUFFER_DESC* reflectionBufferDesc = nullptr;
+	result = reflectionBuffer->GetDesc(reflectionBufferDesc);
+	if(result != S_OK)
+	{
+		LOGERROR(result, "reflectionBuffer->GetDesc");
+		return false;
+	}
+
+	//create buffer   	reflectionBufferDesc->Size
+
+	ID3D11ShaderReflectionVariable* shaderReflectionVar = nullptr;
+	ID3D11ShaderReflectionType* shaderReflectionVarType = nullptr;
+	D3D11_SHADER_VARIABLE_DESC shaderVarDesc;
+	D3D11_SHADER_TYPE_DESC shaderTypeDesc;
+	for(unsigned int i =0; i < reflectionBufferDesc->Variables; i++)
+	{
+		shaderReflectionVar = reflectionBuffer->GetVariableByIndex(i);
+		shaderReflectionVar->GetDesc(&shaderVarDesc);		//TODO errorcheck
+
+		shaderReflectionVarType = shaderReflectionVar->GetType();
+		shaderReflectionVarType->GetDesc(&shaderTypeDesc);
+	
+		Variable v;
+		v.name = shaderVarDesc.Name;
+		v.sizeInBytes = shaderVarDesc.Size;
+		v.type = shaderTypeDesc.Name;			//can be NULL!
+
+		VariableManager::get()->registerVariable(v);
+	}
+	
+
+	//release 
+	reflection->Release();
+
+	
+
+
+
 	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &newShader);
+
 	if(result != S_OK)
 	{
 		LOGERROR(result, "CreateComputeShader");
-
 		return false;
 	}
 
