@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="variableclient.Widget"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" Loaded="UserControl_Loaded">
+    <Grid>
+        <Grid HorizontalAlignment="Stretch" Name="grid" VerticalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20" />
+                <RowDefinition Height="280*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="200" />
+            </Grid.ColumnDefinitions>
+            <Label Content="Label" HorizontalAlignment="Stretch" Margin="5,2" Name="lblName" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Panel.ZIndex="1" VerticalContentAlignment="Center" />
+            <Rectangle HorizontalAlignment="Stretch" Name="rectangle1" Stroke="Black" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Fill="{StaticResource HorizontalSliderBorderBrush}" />
+        </Grid>
+    </Grid>
+</UserControl>
