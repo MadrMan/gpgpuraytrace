@@ -74,7 +74,7 @@ include_directories("${gpgpuraytrace_SOURCE_DIR}/Common")
 if(MSVC)
 	include_directories("$ENV{DXSDK_DIR}/include")
 	link_directories("$ENV{DXSDK_DIR}/lib/x86")
-	link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib)
+	link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib)
 endif()
 
 add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON})

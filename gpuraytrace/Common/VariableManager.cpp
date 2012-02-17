@@ -1,5 +1,9 @@
 #include <Common.h>
 #include "VariableManager.h"
+#include "Logger.h"
+
+#include <WS2tcpip.h>
+#include <process.h>
 
 
 VariableManager* VariableManager::variableManager;
@@ -20,4 +24,107 @@ void VariableManager::registerVariable(const Variable& var)
 void VariableManager::clear()
 {
 	variables.clear();
+}
+
+void VariableManager::start()
+{
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(2, 2),&wsaData);
+
+	_beginthreadex(0, 0, netLoopStatic, this, 0, 0);
+}
+
+unsigned int VariableManager::netLoopStatic(void* args)
+{
+	static_cast<VariableManager*>(args)->netLoop();
+	return 0;
+}
+
+bool VariableManager::readBytes(char* outBuffer, int length)
+{
+	if(bufferAmount < length)
+	{
+		memmove(buffer, buffer + bufferPosition, bufferAmount);
+		bufferPosition = 0;
+
+		int readLength = recv(client, buffer + bufferAmount, bufferSize - bufferAmount, 0);
+		if(!readLength) return false;
+
+		bufferAmount += readLength;
+	}
+
+	memcpy(outBuffer, buffer + bufferPosition, length);
+	bufferPosition += length;
+	bufferAmount -= length;
+
+	return true;
+}
+
+void VariableManager::sendVariable(Variable* var)
+{
+	unsigned char length;
+
+	//identifier
+	unsigned char type = 1;
+	send(client, (char*)&type, 1, 0);
+
+	//name of var
+	length = var->name.size();
+	send(client,(char*)&length, 1, 0);		
+	send(client,var->name.data(), length, 0);
+
+	//type of var
+	length = var->type.size();
+	send(client,(char*)&length, 1, 0);	
+	send(client,var->type.data(), length, 0);
+
+	//content of var
+	unsigned short lengthShort = (unsigned short) var->sizeInBytes;
+	send(client, (char*)&lengthShort, 2, 0);		
+	send(client, (char*)var->pointer, lengthShort, 0);
+}
+
+void VariableManager::netLoop()
+{
+	int result;
+	SOCKET listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		
+	sockaddr_in service;
+	service.sin_family = AF_INET;
+	service.sin_addr.s_addr = INADDR_ANY;
+	service.sin_port = htons(10666);
+
+	result = bind(listener, (SOCKADDR*)&service, sizeof(service));
+	if(FAILED(result))
+	{
+		int error = WSAGetLastError();
+		LOGERROR(error, "bind");
+		return;
+	}
+
+	listen(listener, 5);
+
+	while(true)
+	{
+		client = accept(listener, 0, 0);
+		Logger() << "Client connected";
+
+		for(auto it = variables.begin(); it != variables.end(); ++it)
+			sendVariable(&*it);
+
+		bufferAmount = 0;
+		bufferPosition = 0;
+		while(true)
+		{
+			unsigned char stringLength;
+			if(!readBytes((char*)&stringLength, 1)) break;
+
+			std::string variableName;
+			variableName.resize(stringLength);
+			if(!readBytes((char*)variableName.data(), stringLength)) break;
+
+			Logger() << "Client send variable " << variableName;
+		}
+		Logger() << "Client disconnected";
+	}
 }
