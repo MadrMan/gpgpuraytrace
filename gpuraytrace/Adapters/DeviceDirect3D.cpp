@@ -101,7 +101,7 @@ bool DeviceDirect3D::create()
 	//Create the UAV for the swapbuffer
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
 	ZeroMemory(&uavDesc, sizeof(uavDesc));
-	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+	uavDesc.Format = DXGI_FORMAT_UNKNOWN;					
 	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
 	uavDesc.Buffer.FirstElement = 0;
 	uavDesc.Buffer.NumElements = sd.BufferDesc.Width * sd.BufferDesc.Height;

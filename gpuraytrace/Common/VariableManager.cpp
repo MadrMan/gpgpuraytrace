@@ -42,13 +42,19 @@ unsigned int VariableManager::netLoopStatic(void* args)
 
 bool VariableManager::readBytes(char* outBuffer, int length)
 {
-	if(bufferAmount < length)
+	while(bufferAmount < length)
 	{
 		memmove(buffer, buffer + bufferPosition, bufferAmount);
 		bufferPosition = 0;
 
 		int readLength = recv(client, buffer + bufferAmount, bufferSize - bufferAmount, 0);
 		if(!readLength) return false;
+		if(readLength == SOCKET_ERROR)
+		{
+			int error = WSAGetLastError();
+			LOGERROR(error, "recv");
+			return false;
+		}
 
 		bufferAmount += readLength;
 	}
@@ -60,6 +66,19 @@ bool VariableManager::readBytes(char* outBuffer, int length)
 	return true;
 }
 
+
+
+/// <summary>
+/// Run the variable manager which handles the networking
+/// 
+/// -Packet format-
+/// TO server:
+/// [var:s][data:x]
+///
+/// FROM server:
+/// [add(1)][var:s][type:s][length:2][data:x]
+/// [remove(0)][var:s]
+/// </summary>
 void VariableManager::sendVariable(Variable* var)
 {
 	unsigned char length;
@@ -83,6 +102,9 @@ void VariableManager::sendVariable(Variable* var)
 	send(client, (char*)&lengthShort, 2, 0);		
 	send(client, (char*)var->pointer, lengthShort, 0);
 }
+
+
+
 
 void VariableManager::netLoop()
 {
@@ -123,7 +145,28 @@ void VariableManager::netLoop()
 			variableName.resize(stringLength);
 			if(!readBytes((char*)variableName.data(), stringLength)) break;
 
-			Logger() << "Client send variable " << variableName;
+			Variable* var = nullptr;
+			for(auto it = variables.begin(); it != variables.end(); ++it)
+			{
+				if(it->name == variableName)
+				{
+					var = &*it;
+					break;
+				}
+			}
+
+			if(var)
+			{
+				if(!readBytes((char*)var->pointer, var->sizeInBytes)) break;
+			}
+			else
+			{
+				Logger() << "Var not found: " << variableName;
+				closesocket(client);
+				break;
+			}
+
+			Logger() << "Client send variable: " << variableName;
 		}
 		Logger() << "Client disconnected";
 	}
