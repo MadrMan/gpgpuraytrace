@@ -1,6 +1,6 @@
 ﻿<Window x:Class="variableclient.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded" Background="{StaticResource WindowBackgroundBrush}" Closing="Window_Closing">
+        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded" Background="{StaticResource WindowBackgroundBrush}">
     <WrapPanel Name="wrapPanel1" Orientation="Vertical" />
 </Window>

@@ -22,6 +22,7 @@ namespace variableclient
         VariableManager varman;
         Dictionary<Variable, Widget> widgets;
         ConnectBox connectBox = new ConnectBox();
+        bool closing = false;
 
         public MainWindow()
         {
@@ -32,6 +33,8 @@ namespace variableclient
         {
             varman = new VariableManager();
             widgets = new Dictionary<Variable, Widget>();
+
+            this.Closing += new System.ComponentModel.CancelEventHandler(MainWindow_Closing);
 
             varman.OnVariableAdded += new VariableManager.DlgVariableEvent(VariableAdded);
             varman.OnVariableRemoved += new VariableManager.DlgVariableEvent(VariableRemoved);
@@ -46,9 +49,19 @@ namespace variableclient
             varman.Start();
         }
 
+        void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            closing = true;
+
+            varman.Stop();
+        }
+
         void connectBox_Closed(object sender, EventArgs e)
         {
-            this.Close();
+            if (!closing)
+            {
+                this.Close();
+            }
         }
 
         void varman_OnConnectionFailed()
@@ -61,10 +74,13 @@ namespace variableclient
 
         void varman_OnConnected()
         {
-            if (connectBox.Visibility == Visibility.Visible)
+            Dispatcher.Invoke(new Action(() =>
             {
-                connectBox.Hide();
-            }
+                if (connectBox.Visibility == Visibility.Visible)
+                {
+                    connectBox.Hide();
+                }
+            }), null);
         }
 
         void connectBox_OnSetAddress(string address)
@@ -75,39 +91,42 @@ namespace variableclient
 
         void varman_OnConnectionLost()
         {
-            Dispatcher.Invoke(new Action(() =>
+            if (!closing)
             {
-                connectBox.IsConnecting = false;
-                connectBox.Owner = this;
-                connectBox.Show();
-            }), null);
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    connectBox.IsConnecting = false;
+                    connectBox.Show();
+                }), null);
+            }
         }
 
-        Widget CreateWidget(Variable variable)
+        void widget_OnChangeVariable(Variable v)
         {
-            Widget widget = null;
-            Dispatcher.Invoke(new Action<MainWindow>((sender) =>
-            {
-                widget = new Widget(variable);
-                wrapPanel1.Children.Add(widget);
-                widgets[variable] = widget;
-            }), this);
-            return widget;
+            varman.SendVariable(v);
         }
 
         void VariableAdded(Variable variable)
         {
-            Widget widget = CreateWidget(variable);
+            Dispatcher.Invoke(new Action<MainWindow>((sender) =>
+            {
+                Widget widget = new Widget(variable);
+                widget.OnChangeVariable += new Action<Variable>(widget_OnChangeVariable);
+
+                wrapPanel1.Children.Add(widget);
+                widgets[variable] = widget;
+            }), this); 
         }
 
         void VariableRemoved(Variable variable)
         {
-            Widget widget = widgets[variable];
-        }
+            Dispatcher.Invoke(new Action<MainWindow>((sender) =>
+            {
+                Widget widget = widgets[variable];
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            varman.Stop();
+                wrapPanel1.Children.Remove(widget);
+                widgets.Remove(variable);
+            }), this);
         }
     }
 }

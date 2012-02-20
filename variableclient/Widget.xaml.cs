@@ -26,10 +26,17 @@ namespace variableclient
         Brush colorModified = Brushes.White;
         Brush colorIncorrect = Brushes.PaleVioletRed;
 
+        public event Action<Variable> OnChangeVariable;
+
         class WidgetVariable
         {
             public Variable variable;
             public FieldInfo field;
+        }
+
+        public Variable Variable
+        {
+            get { return variable; }
         }
 
         public Widget(Variable variable)
@@ -41,7 +48,7 @@ namespace variableclient
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            lblName.Content = variable.name;
+            lblName.Content = variable.Name;
             FieldInfo[] fields = variable.data.GetType().GetFields();
 
             int rowIndex = 0;
@@ -73,6 +80,7 @@ namespace variableclient
                     tb.TextChanged += new TextChangedEventHandler(tb_TextChanged);
                     tb.Tag = wv;
                     tb.Background = colorCurrent;
+                    tb.Text = ((float)m.GetValue(variable.data)).ToString();
 
                     control = tb;
                 }
@@ -107,7 +115,7 @@ namespace variableclient
                 float value;
                 if(!float.TryParse(tb.Text, out value))
                 {
-                    MessageBox.Show("Invalid value for " + wv.variable.name + "." + wv.field.Name);
+                    MessageBox.Show("Invalid value for " + wv.variable.Name + "." + wv.field.Name);
                     tb.Background = colorIncorrect;
 
                     return;
@@ -115,6 +123,8 @@ namespace variableclient
 
                 tb.Background = colorCurrent;
                 wv.field.SetValue(wv.variable.data, value);
+
+                OnChangeVariable(wv.variable);
             }
         }
     }

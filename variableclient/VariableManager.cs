@@ -12,11 +12,52 @@ using System.Windows;
 
 namespace variableclient
 {
-    public class Variable
+    public unsafe class Variable
     {
-        public String name;
-        public String type;
         public Object data;
+        private byte[] dataArray;
+        private IntPtr dataPointer;
+        private Type type;
+        private String name;
+
+        public byte[] DataArray
+        {
+            get { return dataArray; }
+        }
+
+        /*public Type Type
+        {
+            get { return type; }
+        }*/
+
+        public String Name
+        {
+            get { return name; }
+        }
+
+        public Variable(Type type, String name)
+        {
+            this.type = type;
+            this.name = name;
+
+            dataPointer = Marshal.AllocHGlobal(Marshal.SizeOf(type));
+        }
+
+        public void StructToData()
+        {
+            Marshal.StructureToPtr(data, dataPointer, false);
+            Marshal.Copy(dataPointer, dataArray, 0, dataArray.Length);
+        }
+
+        public void DataToStruct(byte[] array)
+        {
+            dataArray = array;
+
+            fixed (byte* d = dataArray)
+            {
+                data = Marshal.PtrToStructure((IntPtr)d, type);
+            }
+        }
     }
 
     public class VariableManager
@@ -32,6 +73,7 @@ namespace variableclient
 
         private TcpClient client;
         private BinaryReader clientReader;
+        private BinaryWriter clientWriter;
         private AutoResetEvent eventConnected = new AutoResetEvent(false);
 
         List<Variable> variables;
@@ -48,27 +90,12 @@ namespace variableclient
 
         unsafe void dataToVariable(Variable v, byte[] data)
         {
-            Type[] types = typeof(Native).GetNestedTypes();
-            Type native = types.Where(t => t.Name == "_" + v.type).SingleOrDefault();
 
-            if (native == null)
-            {
-                throw new Exception("Unsupported type send from server");
-            }
-
-            unsafe
-            {
-                fixed (byte* d = data)
-                {
-                    v.data = Marshal.PtrToStructure((IntPtr)d, native);
-                }
-            }
         }
 
         public VariableManager()
         {
             variables = new List<Variable>();
-            client = new TcpClient();
         }
 
         bool stopping;
@@ -82,21 +109,29 @@ namespace variableclient
         {
             stopping = true;
             eventConnected.Set();
+            if (client != null) client.Close();
         }
 
         private void AddVariable(string name, string type, byte[] data)
         {
-            Variable v = new Variable();
-            v.name = name;
-            v.type = type;
-            dataToVariable(v, data);
+            Type[] types = typeof(Native).GetNestedTypes();
+            Type native = types.Where(t => t.Name == "_" + type).SingleOrDefault();
+
+            if (native == null)
+            {
+                throw new Exception("Unsupported type send from server");
+            }
+
+            Variable v = new Variable(native, name);
+            v.DataToStruct(data);
+
             variables.Add(v);
             OnVariableAdded(v);
         }
 
         private void RemoveVariable(string name)
         {
-            Variable variable = variables.Find((v) => v.name == name);
+            Variable variable = variables.Find((v) => v.Name == name);
             variables.Remove(variable);
             OnVariableRemoved(variable);
         }
@@ -134,39 +169,55 @@ namespace variableclient
 
             while (!stopping)
             {
-                if (!client.Connected)
+                if (client == null)
                 {
                     eventConnected.WaitOne();
                 }
                 else
                 {
-                    int packet = clientReader.ReadByte();
-                    int length;
-                    string variable, type;
-                    byte[] data;
-
-                    switch (packet)
+                    int packet = -1;
+                    try
                     {
-                        case 0:
-                            break;
-                        case 1:
-                            length = clientReader.ReadByte();
-                            variable = System.Text.ASCIIEncoding.ASCII.GetString(clientReader.ReadBytes(length));
-                            length = clientReader.ReadByte();
-                            type = System.Text.ASCIIEncoding.ASCII.GetString(clientReader.ReadBytes(length));
-                            int dataLength = clientReader.ReadInt16();
-                            data = clientReader.ReadBytes(dataLength);
+                        packet = clientReader.ReadByte();
 
-                            AddVariable(variable, type, data);
-                            break;
-                        default:
-                            length = clientReader.ReadByte();
-                            variable = System.Text.ASCIIEncoding.ASCII.GetString(clientReader.ReadBytes(length));
-                            RemoveVariable(variable);
-                            break;
+                        int length;
+                        string variable, type;
+                        byte[] data;
+
+                        switch (packet)
+                        {
+                            case 0:
+                                length = clientReader.ReadByte();
+                                variable = System.Text.ASCIIEncoding.ASCII.GetString(clientReader.ReadBytes(length));
+                                RemoveVariable(variable);
+                                break;
+                            case 1:
+                                length = clientReader.ReadByte();
+                                variable = System.Text.ASCIIEncoding.ASCII.GetString(clientReader.ReadBytes(length));
+                                length = clientReader.ReadByte();
+                                type = System.Text.ASCIIEncoding.ASCII.GetString(clientReader.ReadBytes(length));
+                                int dataLength = clientReader.ReadInt16();
+                                data = clientReader.ReadBytes(dataLength);
+
+                                AddVariable(variable, type, data);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        client.Close();
+                        client = null;
                     }
 
-                    if (!client.Connected) OnConnectionLost();
+                    if (client == null)
+                    {
+                        foreach (Variable v in variables)
+                            OnVariableRemoved(v);
+                        variables.Clear();
+                        OnConnectionLost();
+                    }
                 }
             }
         }
@@ -174,6 +225,7 @@ namespace variableclient
         internal void Connect(string address)
         {
             Address = address;
+            client = new TcpClient();
             client.BeginConnect(address, port, (ar) =>
             {
                 try
@@ -190,6 +242,7 @@ namespace variableclient
                     OnConnected();
 
                     clientReader = new BinaryReader(client.GetStream());
+                    clientWriter = new BinaryWriter(client.GetStream());
                     eventConnected.Set();
                 }
                 else
@@ -197,6 +250,19 @@ namespace variableclient
                     OnConnectionFailed();
                 }
             }, null);
+        }
+
+        internal void SendVariable(Variable v)
+        {
+            v.StructToData();
+
+            lock (clientWriter)
+            {
+                clientWriter.Write((byte)v.Name.Length);
+                clientWriter.Write(System.Text.ASCIIEncoding.ASCII.GetBytes(v.Name));
+                clientWriter.Write(v.DataArray, 0, v.DataArray.Length);
+                client.GetStream().Flush();
+            }
         }
     }
 }
