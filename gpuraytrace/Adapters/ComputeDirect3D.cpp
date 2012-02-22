@@ -21,6 +21,12 @@ ComputeDirect3D::~ComputeDirect3D()
 bool ComputeDirect3D::create(const std::string& fileName, const std::string& main)
 {
 	std::ifstream file(fileName, std::ios::binary);
+	
+	if(!file.is_open()){
+		Logger() << "Could not find shader file: " << fileName;
+		return false;
+	}
+	
 	file.seekg(0, std::ios::end);
 	unsigned int pos = (unsigned int)file.tellg();
 	char* fileData;
@@ -29,7 +35,7 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	file.read(fileData, pos);
 	file.close();
 	fileData[pos] = 0;
-
+	
 	UINT shaderFlags;
 #if defined(_DEBUG)
 	shaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
@@ -92,7 +98,6 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	}
 	
 	//loop needed to get index of constant buffer
-
 	bool foundConstantBuffer = false;
 	ID3D11ShaderReflectionConstantBuffer* reflectionBuffer = nullptr;
 	D3D11_SHADER_BUFFER_DESC reflectionBufferDesc;
@@ -115,25 +120,18 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		}
 	}
 
-	if(!foundConstantBuffer)
-	{
-		LOGERROR(result, "Could not find ConstantBuffer");
-		return false;
-	}
-
-	
 	ID3D11Buffer* buff;
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory( &bufferDesc, sizeof(bufferDesc) );
 	bufferDesc.ByteWidth = reflectionBufferDesc.Size;
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
-	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	bufferDesc.CPUAccessFlags = 0;
 	
 	result = device->getD3DDevice()->CreateBuffer(&bufferDesc, 0 ,&buff);
 	if(result != S_OK)
 	{
-		LOGERROR(result, "ID3D11Device::Createbuffer");
+		LOGERROR(result, "ID3D11Device::CreateBuffer");
 		return false;
 	}
 
