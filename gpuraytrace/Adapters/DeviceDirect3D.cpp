@@ -114,6 +114,8 @@ bool DeviceDirect3D::create()
 		return false;
 	}
 
+	context->CSSetUnorderedAccessViews(0, 1, &uavSwapBuffer, 0);
+
 	return true;
 }
 

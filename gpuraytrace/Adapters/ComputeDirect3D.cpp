@@ -120,53 +120,58 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		}
 	}
 
-	ID3D11Buffer* buff;
-	D3D11_BUFFER_DESC bufferDesc;
-	ZeroMemory( &bufferDesc, sizeof(bufferDesc) );
-	bufferDesc.ByteWidth = reflectionBufferDesc.Size;
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
-	bufferDesc.CPUAccessFlags = 0;
-	
-	result = device->getD3DDevice()->CreateBuffer(&bufferDesc, 0 ,&buff);
-	if(result != S_OK)
+	if(foundConstantBuffer)
 	{
-		LOGERROR(result, "ID3D11Device::CreateBuffer");
-		return false;
-	}
-
+		ID3D11Buffer* buff;
+		D3D11_BUFFER_DESC bufferDesc;
+		ZeroMemory( &bufferDesc, sizeof(bufferDesc) );
+		bufferDesc.ByteWidth = reflectionBufferDesc.Size;
+		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
+		bufferDesc.CPUAccessFlags = 0;
 	
-	device->getImmediate()->CSSetConstantBuffers(constantBufferPlace, reflectionDesc.ConstantBuffers, &buff);
-
-	shaderConstBufferSize = reflectionBufferDesc.Size;
-	shaderConstBuffer = new char[shaderConstBufferSize];	//TODO cleanup
-
-	ID3D11ShaderReflectionVariable* shaderReflectionVar = nullptr;
-	ID3D11ShaderReflectionType* shaderReflectionVarType = nullptr;
-	D3D11_SHADER_VARIABLE_DESC shaderVarDesc;
-	D3D11_SHADER_TYPE_DESC shaderTypeDesc;
-	VariableManager::get()->clear();			//clear buffer
-	
-	for(unsigned int i =0; i < reflectionBufferDesc.Variables; i++)
-	{
-		shaderReflectionVar = reflectionBuffer->GetVariableByIndex(i);
-		result = shaderReflectionVar->GetDesc(&shaderVarDesc);		//TODO errorcheck
+		result = device->getD3DDevice()->CreateBuffer(&bufferDesc, 0 ,&buff);
 		if(result != S_OK)
 		{
-			LOGERROR(result, "ID3D11ShaderReflectionVariable::GetDesc");
+			LOGERROR(result, "ID3D11Device::CreateBuffer");
 			return false;
 		}
 
-		shaderReflectionVarType = shaderReflectionVar->GetType();
-		shaderReflectionVarType->GetDesc(&shaderTypeDesc);
+		device->getImmediate()->CSSetConstantBuffers(constantBufferPlace, reflectionDesc.ConstantBuffers, &buff);
+
+		shaderConstBufferSize = reflectionBufferDesc.Size;
+		shaderConstBuffer = new char[shaderConstBufferSize];	//TODO cleanup
+
+		ID3D11ShaderReflectionVariable* shaderReflectionVar = nullptr;
+		ID3D11ShaderReflectionType* shaderReflectionVarType = nullptr;
+		D3D11_SHADER_VARIABLE_DESC shaderVarDesc;
+		D3D11_SHADER_TYPE_DESC shaderTypeDesc;
+		VariableManager::get()->clear();			//clear buffer
 	
-		Variable v;
-		v.name = shaderVarDesc.Name;
-		v.sizeInBytes = shaderVarDesc.Size;
-		v.type = shaderTypeDesc.Name;			//can be NULL
-		v.pointer = shaderConstBuffer + shaderTypeDesc.Offset;
-		VariableManager::get()->registerVariable(v);
+		for(unsigned int i =0; i < reflectionBufferDesc.Variables; i++)
+		{
+			shaderReflectionVar = reflectionBuffer->GetVariableByIndex(i);
+			result = shaderReflectionVar->GetDesc(&shaderVarDesc);		//TODO errorcheck
+			if(result != S_OK)
+			{
+				LOGERROR(result, "ID3D11ShaderReflectionVariable::GetDesc");
+				return false;
+			}
+
+			shaderReflectionVarType = shaderReflectionVar->GetType();
+			shaderReflectionVarType->GetDesc(&shaderTypeDesc);
+	
+			Variable v;
+			v.name = shaderVarDesc.Name;
+			v.sizeInBytes = shaderVarDesc.Size;
+			v.type = shaderTypeDesc.Name;			//can be NULL
+			v.pointer = shaderConstBuffer + shaderTypeDesc.Offset;
+			VariableManager::get()->registerVariable(v);
+		}
+
+		device->getImmediate()->UpdateSubresource(buff,0,0,shaderConstBuffer,shaderConstBufferSize,0);
 	}
+	reflection->Release();
 	
 	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &newShader);
 	if(result != S_OK)
@@ -175,9 +180,6 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		return false;
 	}
 	
-	device->getImmediate()->UpdateSubresource(buff,0,0,shaderConstBuffer,shaderConstBufferSize,0);
-
-	reflection->Release();
 	return true;
 }
 
@@ -196,9 +198,13 @@ void ComputeDirect3D::run()
 		newShader = nullptr;
 	}
 
-	//ID3D11DeviceContext* dc = device->getImmediate();
+
+
+	ID3D11DeviceContext* dc = device->getImmediate();
+	dc->CSSetShader(shader, 0, 0);
+	dc->Dispatch(device->getWindow()->getWindowSettings().width, device->getWindow()->getWindowSettings().height, 1);
+	
 	//dc->CSSetShader(shader, nullptr, 0);
 	//dc->CSSetUnorderedAccessViews(
 	//dc->
-	(800, 600, 1);
 }
