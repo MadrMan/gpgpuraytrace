@@ -21,7 +21,7 @@ DirectoryWinAPI::~DirectoryWinAPI()
 	}
 }
 
-bool DirectoryWinAPI::setWatch(const std::string& path, IDirectoryCallbackBase* cb)
+bool DirectoryWinAPI::setWatch(const std::string& path, ICallbackBase<void>* cb)
 {
 	if(callbacks.size() > MAXIMUM_WAIT_OBJECTS)
 	{

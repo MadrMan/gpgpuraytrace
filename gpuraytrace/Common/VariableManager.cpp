@@ -103,9 +103,6 @@ void VariableManager::sendVariable(Variable* var)
 	send(client, (char*)var->pointer, lengthShort, 0);
 }
 
-
-
-
 void VariableManager::netLoop()
 {
 	int result;
@@ -158,6 +155,7 @@ void VariableManager::netLoop()
 			if(var)
 			{
 				if(!readBytes((char*)var->pointer, var->sizeInBytes)) break;
+				var->callback->run(*var);
 			}
 			else
 			{

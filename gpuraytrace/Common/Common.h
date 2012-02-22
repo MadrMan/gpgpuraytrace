@@ -23,3 +23,47 @@ finline bool isnull(float f)
 {
 	return (std::fabs(f) < 0.00001f);
 }
+
+//! Callback base class
+template<class T>
+class ICallbackBase
+{
+public:
+	virtual void run(T) = 0;
+};
+
+//! Generic callback class for callbacks with a single parameter
+template<class T, class P>
+class ICallback : public ICallbackBase<P>
+{
+public:
+	typedef void (T::*Fptr)(P x);
+
+	ICallback(T* obj, Fptr fptr) : obj(obj), fptr(fptr) 
+	{ }
+
+	virtual void run(P p) override
+	{ (obj->*fptr)(p); }
+
+private:
+	T* obj;
+	Fptr fptr;
+};
+
+//! Generic callback class for callbacks without any parameters
+template<class T>
+class ICallback<T, void> : public ICallbackBase<void>
+{
+public:
+	typedef void (T::*Fptr)();
+
+	ICallback(T* obj, Fptr fptr) : obj(obj), fptr(fptr) 
+	{ }
+
+	virtual void run() override
+	{ (obj->*fptr)(); }
+
+private:
+	T* obj;
+	Fptr fptr;
+};

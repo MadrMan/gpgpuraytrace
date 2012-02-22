@@ -7,7 +7,7 @@
 //! Struct used by DirectoryWinAPI to contain the callbacks
 struct DirWinAPIWait
 {
-	IDirectoryCallbackBase* cb;
+	ICallbackBase<void>* cb;
 	HANDLE waitHandle;
 };
 
@@ -20,7 +20,7 @@ public:
 	virtual ~DirectoryWinAPI();
 
 private:
-	virtual bool setWatch(const std::string& path, IDirectoryCallbackBase* cb);
+	virtual bool setWatch(const std::string& path, ICallbackBase<void>* cb);
 	std::map<void*, DirWinAPIWait> callbacks;
 
 	static unsigned int __stdcall threadEntry(void* args);

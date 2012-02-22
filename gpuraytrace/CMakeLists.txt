@@ -27,6 +27,8 @@ set(PROJ_ADAPTER
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/ComputeDirect3D.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/InputWinAPI.h
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/InputWinAPI.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/ShaderVariableDirect3D.h
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/ShaderVariableDirect3D.cpp
 )
 
 set(PROJ_FACTORY
@@ -43,6 +45,7 @@ set(PROJ_FACTORY
 set (PROJ_GRAPHICS
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Camera.h
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Camera.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Graphics/IShaderVariable.h
 )
 
 set(PROJ_SOURCES

@@ -19,6 +19,9 @@ class IInput;
 class IWindow
 {
 public:
+	//! Destructor
+	virtual ~IWindow() { }
+
 	//! Get the API used to create this window with
 	WindowAPI::T getAPI() const { return api; }
 

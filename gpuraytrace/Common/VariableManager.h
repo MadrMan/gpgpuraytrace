@@ -9,6 +9,8 @@ struct Variable
 	std::string name;
 	std::string type;
 	int sizeInBytes;
+	ICallbackBase<const Variable&>* callback;
+	void* tag;
 };
 
 class VariableManager
