@@ -32,5 +32,6 @@ private:
 	ID3D11Texture2D* swapBackBuffer;
 	ID3D11ShaderResourceView* swapBackBufferSRV;
 	D3D_FEATURE_LEVEL featureLevel;
+	ID3D11UnorderedAccessView* uavSwapBuffer;
 };
 

@@ -16,10 +16,12 @@ DeviceDirect3D::DeviceDirect3D(IWindow* window) : IDevice(DeviceAPI::Direct3D, w
 	swapChain = nullptr;
 	swapBackBuffer = nullptr;
 	swapBackBufferSRV = nullptr;
+	uavSwapBuffer = nullptr;
 }
 
 DeviceDirect3D::~DeviceDirect3D()
 {
+	if(uavSwapBuffer) uavSwapBuffer->Release();
 	if(device) device->Release();
 	if(context) context->Release();
 	if(swapChain) swapChain->Release();
@@ -106,7 +108,6 @@ bool DeviceDirect3D::create()
 	uavDesc.Buffer.FirstElement = 0; 
 	uavDesc.Buffer.NumElements = sd.BufferDesc.Width * sd.BufferDesc.Height;
 
-	ID3D11UnorderedAccessView* uavSwapBuffer;
 	result = device->CreateUnorderedAccessView(swapBackBuffer, &uavDesc, &uavSwapBuffer);
 	if(FAILED(result))
 	{

@@ -16,6 +16,7 @@ Raytracer::Raytracer()
 
 Raytracer::~Raytracer()
 {
+	delete compute;
 	delete device;
 	delete window;
 }

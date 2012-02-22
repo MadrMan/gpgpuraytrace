@@ -16,26 +16,45 @@ ComputeDirect3D::ComputeDirect3D(DeviceDirect3D* device) : device(device)
 
 ComputeDirect3D::~ComputeDirect3D()
 {
+	if(shader) shader->Release();
+	if(newShader) newShader->Release();
 }
 
 bool ComputeDirect3D::create(const std::string& fileName, const std::string& main)
 {
-	std::ifstream file(fileName, std::ios::binary);
-	
-	if(!file.is_open()){
-		Logger() << "Could not find shader file: " << fileName;
+	BY_HANDLE_FILE_INFORMATION shaderFileInfo = {0};
+	DWORD shaderFileBytesRead = 0;
+
+	HANDLE hShaderFile = nullptr;
+	while((hShaderFile = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr)) == INVALID_HANDLE_VALUE)
+	{
+		DWORD err = GetLastError();
+		if(err != ERROR_SHARING_VIOLATION)
+		{
+			LOGERROR(err, "CreateFile");
+			return false;
+		}
+		Sleep(10);
+	}
+
+	GetFileInformationByHandle(hShaderFile, &shaderFileInfo);
+	DWORD shaderFileBytes = shaderFileInfo.nFileSizeLow;
+
+	if(!shaderFileBytes)
+	{
+		Logger() << "Error getting shader file info: " << fileName;
+
+		CloseHandle(hShaderFile);
 		return false;
 	}
-	
-	file.seekg(0, std::ios::end);
-	unsigned int pos = (unsigned int)file.tellg();
-	char* fileData;
-	fileData = new char[pos + 1];
-	file.seekg(0, std::ios::beg);
-	file.read(fileData, pos);
-	file.close();
-	fileData[pos] = 0;
-	
+
+	char* fileData = new char[shaderFileBytes + 1];
+	fileData[shaderFileInfo.nFileSizeLow] = 0;
+
+	ReadFile(hShaderFile, fileData, shaderFileInfo.nFileSizeLow, &shaderFileBytesRead, nullptr);
+	CloseHandle(hShaderFile);
+
 	UINT shaderFlags;
 #if defined(_DEBUG)
 	shaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
@@ -53,7 +72,7 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 
 	ID3D10Blob* shaderBlob;
 	ID3D10Blob* errorBlob;
-	HRESULT result = D3DCompile(fileData, pos + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), main.c_str(), csProfile.c_str(), 0, shaderFlags, &shaderBlob, &errorBlob);
+	HRESULT result = D3DCompile(fileData, shaderFileInfo.nFileSizeLow + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), main.c_str(), csProfile.c_str(), 0, shaderFlags, &shaderBlob, &errorBlob);
 	if(result != S_OK)
 	{
 		if(result != E_FAIL)
@@ -173,11 +192,19 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	}
 	reflection->Release();
 	
-	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &newShader);
+	ID3D11ComputeShader* createdShader = nullptr;
+	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &createdShader);
 	if(result != S_OK)
 	{
 		LOGERROR(result, "CreateComputeShader");
 		return false;
+	}
+
+	if(!shader)
+	{
+		shader = createdShader;
+	} else {
+		newShader = createdShader;
 	}
 	
 	return true;
