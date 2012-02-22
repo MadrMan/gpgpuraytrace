@@ -79,8 +79,6 @@ void InputActionWinAPI::registerMouseAxis(int axis)
 	mouseAxis.push_back(axis);
 }
 
-
-
 InputWinAPI::InputWinAPI()
 {
 	ZeroMemory(keys, sizeof(keys));
@@ -98,6 +96,11 @@ InputWinAPI::~InputWinAPI()
 void InputWinAPI::update()
 {
 	IInput::update();
+
+	for(int x = 0; x < _countof(mouseAxis); x++)
+	{
+		mouseAxis[x] = 0.0f;
+	}
 }
 
 

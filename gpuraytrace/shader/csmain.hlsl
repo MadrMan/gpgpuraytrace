@@ -19,7 +19,7 @@ cbuffer PerFrame
 
 RWTexture2D<float4> texOut : register(u0);
 
-[numthreads(1, 1, 1)]
+[numthreads(10, 10, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
 	test1;
