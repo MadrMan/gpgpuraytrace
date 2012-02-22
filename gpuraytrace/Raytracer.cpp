@@ -5,6 +5,7 @@
 #include "./Factories/WindowFactory.h"
 #include "./Factories/ICompute.h"
 #include "./Graphics/Camera.h"
+#include "./Graphics/IShaderVariable.h"
 
 #include "IInput.h"
 #include "Directory.h"
@@ -68,6 +69,8 @@ void Raytracer::run()
 	rotateUD->registerMouseAxis(1);
 
 	float cameraRotation[3] = {0};
+	IShaderVariable* varView = compute->getVariable("View");
+	IShaderVariable* varProjection = compute->getVariable("Projection");
 
 	//Run while not exiting
 	Logger() << "Running";
@@ -86,7 +89,14 @@ void Raytracer::run()
 
 		//Update
 		camera->update();
-		
+
+		//Set variables
+		if(varView && varProjection)
+		{
+			varView->write(&camera->matView);
+			varProjection->write(&camera->matProjection);
+		}
+
 		//Run shader
 		compute->run();
 
