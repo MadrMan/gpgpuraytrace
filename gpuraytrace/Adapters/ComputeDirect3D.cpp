@@ -225,11 +225,9 @@ void ComputeDirect3D::run()
 		newShader = nullptr;
 	}
 
-
-
 	ID3D11DeviceContext* dc = device->getImmediate();
 	dc->CSSetShader(shader, 0, 0);
-	dc->Dispatch(device->getWindow()->getWindowSettings().width, device->getWindow()->getWindowSettings().height, 1);
+	dc->Dispatch(device->getWindow()->getWindowSettings().width / 10, device->getWindow()->getWindowSettings().height / 10, 1);
 	
 	//dc->CSSetShader(shader, nullptr, 0);
 	//dc->CSSetUnorderedAccessViews(
