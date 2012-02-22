@@ -15,9 +15,6 @@ int main(int argc, char** argv)
 	Raytracer* raytracer = new Raytracer();
 	raytracer->run();
 
-	for(;;){
-		Sleep(100);
-	}
 	delete raytracer;
 	return 0;
 }
