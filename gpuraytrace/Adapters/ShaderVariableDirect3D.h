@@ -11,6 +11,8 @@ public:
 	std::vector<IShaderVariable*> variables;
 	bool dirty;
 	ID3D11Buffer* gpuBuffer;
+	
+	virtual ~ConstantBufferD3D();
 };
 
 class ShaderVariableDirect3D : public IShaderVariable

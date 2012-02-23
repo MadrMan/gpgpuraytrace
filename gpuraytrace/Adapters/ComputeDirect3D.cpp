@@ -8,24 +8,36 @@
 #include <fstream>
 #include <D3Dcompiler.h>
 
-ComputeDirect3D::ComputeDirect3D(DeviceDirect3D* device) : device(device)
+//!ComputeShader
+ComputeShader3D::ComputeShader3D(ID3D11ComputeShader* shader) : shader(shader) 
 {
-	shader = nullptr;
-	newShader = nullptr;
-}
+	
 
-ComputeDirect3D::~ComputeDirect3D()
-{
+}
+ComputeShader3D::~ComputeShader3D()
+{	
 	if(shader) shader->Release();
-	if(newShader) newShader->Release();
-}
-
-IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
-{
-	for(auto it = buffers.begin(); it != buffers.end(); ++it)
+	
+	//clear buffers
+	for(auto it = constantBuffers.begin(); it != constantBuffers.end(); ++it)
 	{
 		ConstantBufferD3D* buffer = *it;
-		for(auto var = buffer->variables.begin(); var != buffer->variables.end(); ++var)
+		delete buffer;
+	}
+
+	//clear buffers
+	for(int i = 0 ; i < constantBuffers.size(); i++)
+	{
+		gpubuffers[i]->Release();
+	}
+}
+
+IShaderVariable* ComputeShader3D::getVariable(const std::string& name)
+{
+	for(auto it = constantBuffers.begin(); it != constantBuffers.end(); ++it)
+	{
+		ConstantBufferD3D* constBuff = *it;
+		for(auto var = constBuff->variables.begin(); var != constBuff->variables.end(); ++var)
 		{
 			if(name == (*var)->getName())
 			{
@@ -34,9 +46,29 @@ IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
 		}
 	}
 	return nullptr;
+}	
+		
+
+//!computeDirect3D
+ComputeDirect3D::ComputeDirect3D(DeviceDirect3D* device) : device(device)
+{
+	shader = nullptr;
+	newShader = nullptr;
 }
 
-void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index)
+ComputeDirect3D::~ComputeDirect3D()
+{
+	delete shader;
+	delete newShader;
+}
+
+IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
+{
+	return shader->getVariable(name);
+}
+
+
+void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader)
 {
 	HRESULT result;
 	ID3D11ShaderReflectionConstantBuffer* reflectionBuffer = nullptr;
@@ -64,7 +96,7 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		LOGERROR(result, "ID3D11Device::CreateBuffer");
 		return ;
 	}
-	bufferArray[index] = newBuffer->gpuBuffer;
+	createdShader->getGpuBuffers()[index] = newBuffer->gpuBuffer;
 		
 	ID3D11ShaderReflectionVariable* shaderReflectionVar = nullptr;
 	ID3D11ShaderReflectionType* shaderReflectionVarType = nullptr;
@@ -94,9 +126,7 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		shaderReflectionVarType->GetDesc(&shaderTypeDesc);
 		ShaderVariableDirect3D* shaderVariable = new ShaderVariableDirect3D(shaderVarDesc.Name, shaderVarDesc.StartOffset,  shaderVarDesc.Size, newBuffer);
 		newBuffer->variables.push_back(shaderVariable);
-		
-		//doNT FORget to clear variablemanager
-		//to register var	
+	
 		Variable v;
 		v.name = shaderVarDesc.Name;
 		v.sizeInBytes = shaderVarDesc.Size;
@@ -106,7 +136,7 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		v.tag = shaderVariable;
 		VariableManager::get()->registerVariable(v);
 	}
-	buffers.push_back(newBuffer);
+	createdShader->getConstantBuffers().push_back(newBuffer);
 }
 
 void ComputeDirect3D::onVariableChangedCallback(const Variable& var)
@@ -115,8 +145,9 @@ void ComputeDirect3D::onVariableChangedCallback(const Variable& var)
 	shaderVariable->getBuffer()->dirty = true;
 }
 
-void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob)
+void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader)
 {
+
 	ID3D11ShaderReflection* reflection = nullptr; 
 
 	HRESULT result = D3DReflect(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection); 
@@ -134,12 +165,11 @@ void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob)
 		return ;
 	}
 
-	//loop needed to get index of constant buffer
-
+	//loop to find all constant shader buffers
 	unsigned int index;
 	for(index = 0; index < reflectionDesc.ConstantBuffers; index++)
 	{
-		addBuffer(reflection, reflectionDesc, index);
+		addBuffer(reflection, reflectionDesc, index, createdShader);
 	}
 
 	reflection->Release();
@@ -222,15 +252,16 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 		errorBlob->Release();
 	}
 
-	reflect(shaderBlob);
-
-	ID3D11ComputeShader* createdShader = nullptr;
-	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &createdShader);
+	ID3D11ComputeShader* shaderCS;
+	result = device->getD3DDevice()->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &shaderCS);
 	if(result != S_OK)
 	{
 		LOGERROR(result, "CreateComputeShader");
 		return false;
 	}
+
+	ComputeShader3D* createdShader = new ComputeShader3D(shaderCS);
+	reflect(shaderBlob, createdShader);
 
 	if(!shader)
 	{
@@ -238,11 +269,11 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	} else {
 		newShader = createdShader;
 	}
-
+	
 	return true;
 }
 
-void ComputeDirect3D::run()
+void ComputeDirect3D::swapShader()
 {
 	if(newShader)
 	{
@@ -250,14 +281,24 @@ void ComputeDirect3D::run()
 
 		if(shader) 
 		{
-			shader->Release();
+			//clear variables in variablemanager
+			VariableManager::get()->clear();
+
+			delete shader;
 			shader = nullptr;
 		}
 		shader = newShader;
 		newShader = nullptr;
 	}
 
-	for(auto it = buffers.begin(); it != buffers.end(); ++it)
+}
+
+void ComputeDirect3D::run()
+{
+	//Swap to new shader if one is available
+	swapShader();
+
+	for(auto it = shader->getConstantBuffers().begin(); it != shader->getConstantBuffers().end(); ++it)
 	{
 		ConstantBufferD3D* buffer = *it;
 		if(buffer->dirty)
@@ -267,12 +308,10 @@ void ComputeDirect3D::run()
 		}
 	}
 
-
-	device->getImmediate()->CSSetConstantBuffers(0, buffers.size(), bufferArray);
-
+	device->getImmediate()->CSSetConstantBuffers(0, shader->getConstantBuffers().size(), shader->getGpuBuffers());
 
 	ID3D11DeviceContext* dc = device->getImmediate();
-	dc->CSSetShader(shader, 0, 0);
+	dc->CSSetShader(shader->getShader(), 0, 0);
 	dc->Dispatch(device->getWindow()->getWindowSettings().width / 10, device->getWindow()->getWindowSettings().height / 10, 1);
 	
 	//dc->CSSetShader(shader, nullptr, 0);
