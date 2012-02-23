@@ -9,6 +9,7 @@
 
 #include "IInput.h"
 #include "Directory.h"
+#include "Timer.h"
 
 Raytracer::Raytracer()
 {
@@ -69,11 +70,17 @@ void Raytracer::run()
 	rotateUD->registerMouseAxis(1);
 
 	float cameraRotation[3] = {0};
-	IShaderVariable* varView = compute->getVariable("View");
+	IShaderVariable* varView = compute->getVariable("ViewInverse");
 	IShaderVariable* varProjection = compute->getVariable("Projection");
+
+	Timer* timer = Timer::get();
+	timer->update(); timer->update();
 
 	//Run while not exiting
 	Logger() << "Running";
+
+	float frameTime = 0.0f;
+	int frames = 0;
 	while(escape->getState() < 0.5f)
 	{
 		//Rotate camera
@@ -93,7 +100,9 @@ void Raytracer::run()
 		//Set variables
 		if(varView && varProjection)
 		{
-			varView->write(&camera->matView);
+			XMVECTOR determinant;
+			XMMATRIX invView = XMMatrixInverse(&determinant, camera->matView);
+			varView->write(&invView);
 			varProjection->write(&camera->matProjection);
 		}
 
@@ -105,6 +114,19 @@ void Raytracer::run()
 
 		//Update input and check if window still open
 		if(window->update()) break;
+
+		timer->update();
+
+		frameTime += timer->getConstant();
+		frames++;
+		if(frameTime > 1.0f)
+		{
+			Logger() << "FPS: " << frames / frameTime;
+			//Logger() << "FPS: " << timer->getTime();
+
+			frameTime = fmod(frameTime, 1.0f);
+			frames = 0;
+		}
 	}
 
 	//Cleanup
