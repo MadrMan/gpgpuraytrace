@@ -29,7 +29,7 @@ private:
 	static unsigned int WINAPI netLoopStatic(void* args);
 	void netLoop();
 	void sendVariable(Variable* var);
-
+	void sendClearAllVariables();
 	bool readBytes(char* outBuffer, int length);
 	static const int bufferSize = 40192; 
 	int bufferAmount;
