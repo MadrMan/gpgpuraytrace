@@ -15,6 +15,8 @@ public:
 
 	virtual IShaderVariable* getVariable(const std::string& name) = 0;
 
+	virtual bool swap() = 0;
+
 protected:
 	ICompute() { }
 };

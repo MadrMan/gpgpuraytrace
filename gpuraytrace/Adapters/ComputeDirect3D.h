@@ -35,8 +35,9 @@ public:
 
     virtual IShaderVariable* getVariable(const std::string& name) override;
 
+	virtual bool swap() override;
+
 private:
-	void swapShader();
 	void createBuffer(ID3D10Blob* shaderBlob);
 	void reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader);
 	void addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader);

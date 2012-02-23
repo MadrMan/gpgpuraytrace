@@ -12,8 +12,8 @@
 ComputeShader3D::ComputeShader3D(ID3D11ComputeShader* shader) : shader(shader) 
 {
 	
-
 }
+
 ComputeShader3D::~ComputeShader3D()
 {	
 	if(shader) shader->Release();
@@ -26,7 +26,7 @@ ComputeShader3D::~ComputeShader3D()
 	}
 
 	//clear buffers
-	for(int i = 0 ; i < constantBuffers.size(); i++)
+	for(size_t i = 0; i < constantBuffers.size(); i++)
 	{
 		gpubuffers[i]->Release();
 	}
@@ -64,6 +64,7 @@ ComputeDirect3D::~ComputeDirect3D()
 
 IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
 {
+	if(!shader) return nullptr;
 	return shader->getVariable(name);
 }
 
@@ -230,7 +231,7 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 
 	ID3D10Blob* shaderBlob;
 	ID3D10Blob* errorBlob;
-	HRESULT result = D3DCompile(fileData, shaderFileInfo.nFileSizeLow + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), main.c_str(), csProfile.c_str(), 0, shaderFlags, &shaderBlob, &errorBlob);
+	HRESULT result = D3DCompile(fileData, shaderFileInfo.nFileSizeLow + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), main.c_str(), csProfile.c_str(), shaderFlags, 0, &shaderBlob, &errorBlob);
 	if(result != S_OK)
 	{
 		if(result != E_FAIL)
@@ -272,11 +273,13 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	} else {
 		newShader = createdShader;
 	}
+
+	Logger() << "Compiled new shader";
 	
 	return true;
 }
 
-void ComputeDirect3D::swapShader()
+bool ComputeDirect3D::swap()
 {
 	if(newShader)
 	{
@@ -290,16 +293,19 @@ void ComputeDirect3D::swapShader()
 			delete shader;
 			shader = nullptr;
 		}
+
 		shader = newShader;
 		newShader = nullptr;
+
+		return true;
 	}
 
+	return false;
 }
 
 void ComputeDirect3D::run()
 {
-	//Swap to new shader if one is available
-	swapShader();
+	if(!shader) return;
 
 	for(auto it = shader->getConstantBuffers().begin(); it != shader->getConstantBuffers().end(); ++it)
 	{
@@ -315,7 +321,7 @@ void ComputeDirect3D::run()
 
 	ID3D11DeviceContext* dc = device->getImmediate();
 	dc->CSSetShader(shader->getShader(), 0, 0);
-	dc->Dispatch(device->getWindow()->getWindowSettings().width / 10, device->getWindow()->getWindowSettings().height / 10, 1);
+	dc->Dispatch(device->getWindow()->getWindowSettings().width / 20, device->getWindow()->getWindowSettings().height / 20, 1);
 	
 	//dc->CSSetShader(shader, nullptr, 0);
 	//dc->CSSetUnorderedAccessViews(
