@@ -29,6 +29,8 @@ set(PROJ_ADAPTER
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/InputWinAPI.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/ShaderVariableDirect3D.h
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/ShaderVariableDirect3D.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/TimerWinAPI.h
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/TimerWinAPI.cpp
 )
 
 set(PROJ_FACTORY
@@ -56,6 +58,7 @@ set(PROJ_SOURCES
 
 set(PROJ_COMMON
 	${gpgpuraytrace_SOURCE_DIR}/Common/Common.h
+	${gpgpuraytrace_SOURCE_DIR}/Common/Types.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/Directory.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/Directory.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Common/IInput.h
@@ -64,6 +67,8 @@ set(PROJ_COMMON
 	${gpgpuraytrace_SOURCE_DIR}/Common/Logger.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Common/VariableManager.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/VariableManager.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Common/Timer.h
+	${gpgpuraytrace_SOURCE_DIR}/Common/Timer.cpp
 )
 
 source_group(Adapters FILES ${PROJ_ADAPTER})
