@@ -1,6 +1,10 @@
 #pragma once
 
-#include "./Factories/IDevice.h"
+class IShaderVariable;
+class IDevice;
+class IWindow;
+class ICompute;
+class Camera;
 
 //! Main class for the raytrace project
 //! Calling run on this class will block and run the raytracing program
@@ -20,8 +24,15 @@ public:
 	//! Reload the compute shader
 	void loadComputeShader();
 
+	void updateCompute();
+
 private:
 	IDevice* device;
 	IWindow* window;
 	ICompute* compute;
+	Camera* camera;
+
+	IShaderVariable* varView;
+	IShaderVariable* varProjection;
+	IShaderVariable* varEye;
 };

@@ -26,9 +26,10 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	float3 rayDirection = rayStart - Eye.xyz;
 	
 	float density = 0.0f;
-	for(int d = 0; d < RAY_STEPS; d++)
+	float maxDist = RAY_STEP * RAY_STEPS;
+	for(float d = 0.0f; d < maxDist; d += RAY_STEP)
 	{
-		float3 rayPosition = rayStart + rayDirection * RAY_STEP * d;
+		float3 rayPosition = rayStart + rayDirection * d;
 		
 		float3 blobpos = float3(0.0f, 0.0f, 0.0f);
 		density += 1.0f - saturate(length(blobpos - rayPosition));

@@ -4,6 +4,8 @@
 #include <xnamath.h>
 
 class IWindow;
+class IInputAction;
+class IInput;
 
 static const XMVECTOR XM_UP = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 static const XMVECTOR XM_FRONT = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
@@ -18,6 +20,7 @@ public:
 	virtual ~Camera();
 
 	void setWindow(IWindow* window);
+	void setInput(IInput* input);
 
 	void update();
 
@@ -27,4 +30,12 @@ public:
 	XMMATRIX matView;
 	XMMATRIX matProjection;
 	XMMATRIX matViewProjection;
+
+	IInputAction* moveSide;
+	IInputAction* moveForward;
+	IInputAction* rotateLR;
+	IInputAction* rotateUD;
+	IInput* input;
+
+	float rotationEuler[3];
 };

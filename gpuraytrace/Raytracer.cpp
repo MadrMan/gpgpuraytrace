@@ -16,6 +16,11 @@ Raytracer::Raytracer()
 	device = nullptr;
 	window = nullptr;
 	compute = nullptr;
+	camera = nullptr;
+
+	varView = nullptr;
+	varProjection = nullptr;
+	varEye = nullptr;
 }
 
 Raytracer::~Raytracer()
@@ -54,25 +59,8 @@ void Raytracer::run()
 	escape->registerKeyboard(VK_ESCAPE, 1.0f);
 
 	//Create camera
-	Camera* camera = new Camera();
+	camera = new Camera();
 	camera->setWindow(window);
-
-	//Register camera input
-	IInputAction* moveSide = window->getInput()->createAction();
-	IInputAction* moveForward = window->getInput()->createAction();
-	IInputAction* rotateLR = window->getInput()->createAction();
-	IInputAction* rotateUD = window->getInput()->createAction();
-	moveSide->registerKeyboard('A', -1.0f, TriggerType::OnHold);
-	moveSide->registerKeyboard('D', 1.0f, TriggerType::OnHold);
-	moveForward->registerKeyboard('W', 1.0f, TriggerType::OnHold);
-	moveForward->registerKeyboard('S', -1.0f, TriggerType::OnHold);
-	rotateLR->registerMouseAxis(0);
-	rotateUD->registerMouseAxis(1);
-
-	float cameraRotation[3] = {0};
-	IShaderVariable* varView = compute->getVariable("ViewInverse");
-	IShaderVariable* varProjection = compute->getVariable("Projection");
-	IShaderVariable* varEye = compute->getVariable("Eye");
 
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
@@ -84,37 +72,8 @@ void Raytracer::run()
 	int frames = 0;
 	while(escape->getState() < 0.5f)
 	{
-		//Rotate camera
-		cameraRotation[0] += rotateUD->getState() * 0.01f;
-		cameraRotation[1] += rotateLR->getState() * 0.01f;
-		camera->rotation = XMQuaternionRotationRollPitchYaw(cameraRotation[0], cameraRotation[1], cameraRotation[2]);
-
-		float moveSpeed = timer->getConstant() * 10.0f;
-
-		//Move camera
-		XMVECTOR front = XMVector3Rotate(XM_FRONT, camera->rotation);
-	    camera->position = XMVectorAdd(camera->position, front * moveForward->getState() * moveSpeed);
-		XMVECTOR right = XMVector3Rotate(front, XMQuaternionRotationRollPitchYaw(0.0f, XM_PIDIV2, 0.0f));
-		camera->position = XMVectorAdd(camera->position, right * moveSide->getState() * moveSpeed);
-
-		//Update
 		camera->update();
-
-		//Set variables
-		if(varView && varProjection && varEye)
-		{
-			XMVECTOR determinant;
-			XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
-			varView->write(&invTransView);
-			XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
-			varProjection->write(&transProjection);
-			varEye->write(&camera->position);
-		} else {
-			//Logger() << "Not all variables are found";
-		}
-
-		//Run shader
-		compute->run();
+		updateCompute();
 
 		//And present on screen
 		device->present();
@@ -135,13 +94,38 @@ void Raytracer::run()
 		}
 	}
 
-	//Cleanup
-	delete camera;
-	window->getInput()->destroyAction(moveSide);
-	window->getInput()->destroyAction(moveForward);
 	window->getInput()->destroyAction(escape);
 
+	//Cleanup
+	delete camera;
+
 	Logger() << "Raytracer exit";
+}
+
+void Raytracer::updateCompute()
+{
+
+
+	//if(compute->swap())
+	//{
+		varView = compute->getVariable("ViewInverse");
+		varProjection = compute->getVariable("Projection");
+		varEye = compute->getVariable("Eye");
+	//}
+
+	//Set variables
+	if(varView && varProjection && varEye)
+	{
+		XMVECTOR determinant;
+		XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
+		varView->write(&invTransView);
+		XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
+		varProjection->write(&transProjection);
+		varEye->write(&camera->position);
+	}
+
+	//Run shader
+	compute->run();
 }
 
 void Raytracer::loadComputeShader()
@@ -150,6 +134,4 @@ void Raytracer::loadComputeShader()
 	{
 		Logger() << "Could not create shader";
 	}
-
-
 }
