@@ -37,6 +37,13 @@ LRESULT CALLBACK WindowWinAPI::MainWndProc(UINT Msg, WPARAM wParam, LPARAM lPara
 			PostQuitMessage(0); 
 			closed = true;
 			break;	
+		case WM_ERASEBKGND:
+			return 0;
+		case WM_PAINT:
+			return 0;
+		//case WM_SETCURSOR:
+		//	SetCursor(nullptr);
+		//	return TRUE;
 		case WM_QUIT:
 			return 0;
 	}
@@ -60,7 +67,7 @@ bool WindowWinAPI::createWindow()
 		wcx.lpfnWndProc = SMainWndProc;
 		wcx.hInstance = hInstance;
 		wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-		//wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wcx.lpszClassName = "RaytraceClass";	// name of window class 
 		wcx.cbWndExtra = sizeof(LONG) + sizeof(int);	//extra space for a pointer to Window
 
@@ -77,7 +84,7 @@ bool WindowWinAPI::createWindow()
 
     hWnd = CreateWindow( 
         reinterpret_cast<LPCSTR>(WindowWinAPI_classAtom),        // name of window class 
-        "Raytracer 1.0",            // title-bar string 
+        "Raytracer",            // title-bar string 
         WS_OVERLAPPEDWINDOW, // top-level window 
         CW_USEDEFAULT,       // default horizontal position 
         CW_USEDEFAULT,       // default vertical position 
