@@ -1,3 +1,8 @@
+cbuffer CBTweakable
+{
+	float3 SunDirection;
+}
+
 cbuffer CBFrame
 {
 	float4 Eye;
@@ -10,21 +15,25 @@ cbuffer CBPermanent
 	
 }
 
-cbuffer CBTweakable : register(c0)
-{
-
-}
-
 const static float2 ScreenSize = float2(800.0f, 600.0f);
 const static float RAY_STEP = 0.1f;
 const static int RAY_STEPS = 100000;
-const static float RAY_FINISH = RAY_STEP * 0.5f;
 
 RWTexture2D<float4> texOut : register(u0);
 
 float getHeight(float2 position)
 {
 	return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
+}
+
+float4 getSky(float3 direction)
+{
+	float4 c = float4(0.0f, 0.0f, 1.0f - direction.y * 0.6f, 0.0f);
+	c.rg += (c.b - 0.6f) * 1.0f;
+	
+	float hemi = saturate(dot(direction, normalize(SunDirection)));
+	c.rgb += pow(hemi, 14.0f);
+	return c;
 }
 
 float4 getPoint(float3 position)
@@ -37,28 +46,29 @@ float4 getPoint(float3 position)
 [numthreads(20, 20, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
-	float3 result = float3(0.0f, 0.0f, 0.0f);
+	float4 result = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	float4 screenLocation = float4((DTid.xy / ScreenSize.xy - 0.5f) * 2.0f, 1.0f, 1.0f);
 	screenLocation.x /= Projection._m11;
 	screenLocation.y /= Projection._m22;
 	
 	float3 rayStart = mul(screenLocation, ViewInverse).xyz;
-	float3 rayDirection = rayStart - Eye.xyz;
+	float3 rayDirection = normalize(rayStart - Eye.xyz);
 
 	float maxDist = RAY_STEP * RAY_STEPS;
 	
 	float step = RAY_STEP;
 	float d = 0.0f;
 	
-	[loop] while(d < maxDist && step > RAY_FINISH)
+	//[loop] while(d < maxDist && step > (d * 0.001f))
+	[loop] while(d < maxDist && step > RAY_STEP * 0.1f)
 	{
 		float3 rayPosition = rayStart + rayDirection * d;
 		float4 color = getPoint(rayPosition);
 
 		if(color.a >= 0.1)
 		{
-			result = color.rgb;
+			result = color;
 		
 			d -= step;
 			step *= 0.25f;
@@ -67,6 +77,11 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 			d += step;
 		}
 	}
+	
+	if(result.a < 0.1)
+	{
+		result = getSky(rayDirection);
+	}
 
-	texOut[DTid.xy] = float4(result, 0.0f);
+	texOut[DTid.xy] = result;
 }
