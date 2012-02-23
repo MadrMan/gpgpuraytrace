@@ -17,14 +17,14 @@ Camera::~Camera()
 
 void Camera::setWindow(IWindow* window)
 {
-	//matProjection = XMMatrixPerspectiveFovLH(XM_PIDIV2, 
-	//	(FLOAT)window->getWindowSettings().width / (FLOAT)window->getWindowSettings().height, 0.1f, 1000.0f);
+	matProjection = XMMatrixPerspectiveFovLH(XM_PIDIV2, 
+		(FLOAT)window->getWindowSettings().width / (FLOAT)window->getWindowSettings().height, 0.1f, 1000.0f);
 }
 
 void Camera::update()
 {
-	//XMVECTOR direction = XMVectorSet(-0.5f, -0.5f, -0.5f, 0.0f);
-	//matView = XMMatrixLookToLH(position, direction, XM_UP);
+	XMVECTOR direction = XMVector3Rotate(XM_FRONT, rotation);
+	matView = XMMatrixLookToLH(position, direction, XM_UP);
 
-	//matViewProjection = XMMatrixMultiply(matView, matProjection);
+	matViewProjection = XMMatrixMultiply(matView, matProjection);
 }

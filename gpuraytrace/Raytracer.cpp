@@ -5,9 +5,11 @@
 #include "./Factories/WindowFactory.h"
 #include "./Factories/ICompute.h"
 #include "./Graphics/Camera.h"
+#include "./Graphics/IShaderVariable.h"
 
 #include "IInput.h"
 #include "Directory.h"
+#include "Timer.h"
 
 Raytracer::Raytracer()
 {
@@ -68,25 +70,49 @@ void Raytracer::run()
 	rotateUD->registerMouseAxis(1);
 
 	float cameraRotation[3] = {0};
+	IShaderVariable* varView = compute->getVariable("ViewInverse");
+	IShaderVariable* varProjection = compute->getVariable("Projection");
+	IShaderVariable* varEye = compute->getVariable("Eye");
+
+	Timer* timer = Timer::get();
+	timer->update(); timer->update();
 
 	//Run while not exiting
 	Logger() << "Running";
+
+	float frameTime = 0.0f;
+	int frames = 0;
 	while(escape->getState() < 0.5f)
 	{
 		//Rotate camera
-		cameraRotation[0] += rotateLR->getState() * 0.01f;
-		cameraRotation[1] += rotateUD->getState() * 0.01f;
+		cameraRotation[0] += rotateUD->getState() * 0.01f;
+		cameraRotation[1] += rotateLR->getState() * 0.01f;
 		camera->rotation = XMQuaternionRotationRollPitchYaw(cameraRotation[0], cameraRotation[1], cameraRotation[2]);
+
+		float moveSpeed = timer->getConstant() * 10.0f;
 
 		//Move camera
 		XMVECTOR front = XMVector3Rotate(XM_FRONT, camera->rotation);
-	    camera->position = XMVectorAdd(camera->position, front * moveForward->getState());
+	    camera->position = XMVectorAdd(camera->position, front * moveForward->getState() * moveSpeed);
 		XMVECTOR right = XMVector3Rotate(front, XMQuaternionRotationRollPitchYaw(0.0f, XM_PIDIV2, 0.0f));
-		camera->position = XMVectorAdd(camera->position, right * moveSide->getState());
+		camera->position = XMVectorAdd(camera->position, right * moveSide->getState() * moveSpeed);
 
 		//Update
 		camera->update();
-		
+
+		//Set variables
+		if(varView && varProjection && varEye)
+		{
+			XMVECTOR determinant;
+			XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
+			varView->write(&invTransView);
+			XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
+			varProjection->write(&transProjection);
+			varEye->write(&camera->position);
+		} else {
+			//Logger() << "Not all variables are found";
+		}
+
 		//Run shader
 		compute->run();
 
@@ -95,6 +121,18 @@ void Raytracer::run()
 
 		//Update input and check if window still open
 		if(window->update()) break;
+
+		timer->update();
+
+		frameTime += timer->getConstant();
+		frames++;
+		if(frameTime > 1.0f)
+		{
+			Logger() << "FPS: " << frames / frameTime;
+
+			frameTime = fmod(frameTime, 1.0f);
+			frames = 0;
+		}
 	}
 
 	//Cleanup
