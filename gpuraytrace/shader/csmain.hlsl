@@ -1,19 +1,40 @@
-cbuffer PerFrame
+cbuffer CBFrame
 {
 	float4 Eye;
 	float4x4 ViewInverse;
 	float4x4 Projection;
 }
 
-const static float2 ScreenSize = float2(800.0f, 600.0f);
+cbuffer CBPermanent
+{
+	
+}
 
-const static float RAY_DISTANCE = 10.0f;
-const static float RAY_STEP = 0.04f;
-const static int RAY_STEPS = 1000;
+cbuffer CBTweakable : register(c0)
+{
+
+}
+
+const static float2 ScreenSize = float2(800.0f, 600.0f);
+const static float RAY_STEP = 0.1f;
+const static int RAY_STEPS = 100000;
+const static float RAY_FINISH = RAY_STEP * 0.5f;
 
 RWTexture2D<float4> texOut : register(u0);
 
-[numthreads(10, 10, 1)]
+float getHeight(float2 position)
+{
+	return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
+}
+
+float4 getPoint(float3 position)
+{
+	float h = getHeight(position.xz);
+	if(h < position.y) return float4(0.0f, 0.0f, 0.0f, 0.0f);
+	return float4(h * 0.05f, h * 0.1f, saturate(-h) + h * 0.03f, 1.0f);
+}
+
+[numthreads(20, 20, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
 	float3 result = float3(0.0f, 0.0f, 0.0f);
@@ -24,17 +45,28 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	
 	float3 rayStart = mul(screenLocation, ViewInverse).xyz;
 	float3 rayDirection = rayStart - Eye.xyz;
-	
-	float density = 0.0f;
+
 	float maxDist = RAY_STEP * RAY_STEPS;
-	for(float d = 0.0f; d < maxDist; d += RAY_STEP)
+	
+	float step = RAY_STEP;
+	float d = 0.0f;
+	
+	[loop] while(d < maxDist && step > RAY_FINISH)
 	{
 		float3 rayPosition = rayStart + rayDirection * d;
+		float4 color = getPoint(rayPosition);
+
+		if(color.a >= 0.1)
+		{
+			result = color.rgb;
 		
-		float3 blobpos = float3(0.0f, 0.0f, 0.0f);
-		density += 1.0f - saturate(length(blobpos - rayPosition));
+			d -= step;
+			step *= 0.25f;
+		} else {
+			step *= 1.02;
+			d += step;
+		}
 	}
-	
-	result = density.xxx * float3(0.01f, 0.1f, 1.0f);
+
 	texOut[DTid.xy] = float4(result, 0.0f);
 }
