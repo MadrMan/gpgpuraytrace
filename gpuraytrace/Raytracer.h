@@ -25,6 +25,7 @@ public:
 	void loadComputeShader();
 
 	void updateCompute();
+	void updateComputeVars();
 
 private:
 	IDevice* device;

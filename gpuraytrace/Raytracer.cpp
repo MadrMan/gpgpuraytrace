@@ -50,6 +50,7 @@ void Raytracer::run()
 	//Create a new compute shader instance
 	compute = device->createCompute();
 	loadComputeShader();
+	updateComputeVars();
 
 	//Watch shader directory for changes
 	Directory::get()->watch("shader", this, &Raytracer::loadComputeShader);
@@ -104,14 +105,7 @@ void Raytracer::run()
 
 void Raytracer::updateCompute()
 {
-
-
-	//if(compute->swap())
-	//{
-		varView = compute->getVariable("ViewInverse");
-		varProjection = compute->getVariable("Projection");
-		varEye = compute->getVariable("Eye");
-	//}
+	if(compute->swap()) updateComputeVars();
 
 	//Set variables
 	if(varView && varProjection && varEye)
@@ -126,6 +120,13 @@ void Raytracer::updateCompute()
 
 	//Run shader
 	compute->run();
+}
+
+void Raytracer::updateComputeVars()
+{
+		varView = compute->getVariable("ViewInverse");
+		varProjection = compute->getVariable("Projection");
+		varEye = compute->getVariable("Eye");
 }
 
 void Raytracer::loadComputeShader()

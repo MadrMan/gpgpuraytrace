@@ -273,7 +273,7 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	return true;
 }
 
-void ComputeDirect3D::swapShader()
+bool ComputeDirect3D::swap()
 {
 	if(newShader)
 	{
@@ -287,17 +287,18 @@ void ComputeDirect3D::swapShader()
 			delete shader;
 			shader = nullptr;
 		}
+
 		shader = newShader;
 		newShader = nullptr;
+
+		return true;
 	}
 
+	return false;
 }
 
 void ComputeDirect3D::run()
 {
-	//Swap to new shader if one is available
-	swapShader();
-
 	for(auto it = shader->getConstantBuffers().begin(); it != shader->getConstantBuffers().end(); ++it)
 	{
 		ConstantBufferD3D* buffer = *it;
