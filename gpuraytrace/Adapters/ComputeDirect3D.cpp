@@ -64,6 +64,7 @@ ComputeDirect3D::~ComputeDirect3D()
 
 IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
 {
+	if(!shader) return nullptr;
 	return shader->getVariable(name);
 }
 
@@ -227,7 +228,7 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 
 	ID3D10Blob* shaderBlob;
 	ID3D10Blob* errorBlob;
-	HRESULT result = D3DCompile(fileData, shaderFileInfo.nFileSizeLow + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), main.c_str(), csProfile.c_str(), 0, shaderFlags, &shaderBlob, &errorBlob);
+	HRESULT result = D3DCompile(fileData, shaderFileInfo.nFileSizeLow + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), main.c_str(), csProfile.c_str(), shaderFlags, 0, &shaderBlob, &errorBlob);
 	if(result != S_OK)
 	{
 		if(result != E_FAIL)
@@ -269,6 +270,8 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	} else {
 		newShader = createdShader;
 	}
+
+	Logger() << "Compiled new shader";
 	
 	return true;
 }
@@ -299,6 +302,8 @@ bool ComputeDirect3D::swap()
 
 void ComputeDirect3D::run()
 {
+	if(!shader) return;
+
 	for(auto it = shader->getConstantBuffers().begin(); it != shader->getConstantBuffers().end(); ++it)
 	{
 		ConstantBufferD3D* buffer = *it;
@@ -313,7 +318,7 @@ void ComputeDirect3D::run()
 
 	ID3D11DeviceContext* dc = device->getImmediate();
 	dc->CSSetShader(shader->getShader(), 0, 0);
-	dc->Dispatch(device->getWindow()->getWindowSettings().width / 10, device->getWindow()->getWindowSettings().height / 10, 1);
+	dc->Dispatch(device->getWindow()->getWindowSettings().width / 20, device->getWindow()->getWindowSettings().height / 20, 1);
 	
 	//dc->CSSetShader(shader, nullptr, 0);
 	//dc->CSSetUnorderedAccessViews(

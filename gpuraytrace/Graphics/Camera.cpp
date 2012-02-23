@@ -47,9 +47,11 @@ void Camera::setWindow(IWindow* window)
 void Camera::update()
 {
 	//Rotate camera
-	rotationEuler[0] += rotateUD->getState() * 0.01f;
-	rotationEuler[1] += rotateLR->getState() * 0.01f;
-	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], rotationEuler[2]);
+	rotationEuler[0] -= rotateUD->getState() * 0.01f;
+	rotationEuler[1] -= rotateLR->getState() * 0.01f;
+	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
+	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
+	//rotation = XMQuaternionMultiply(extraRotation, rotation);
 
 	float moveSpeed = Timer::get()->getConstant() * 10.0f;
 

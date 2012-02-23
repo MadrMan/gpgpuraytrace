@@ -93,6 +93,8 @@ void Raytracer::run()
 			frameTime = fmod(frameTime, 1.0f);
 			frames = 0;
 		}
+
+		//Logger() << "Y: " << XMVectorGetY(camera->position);
 	}
 
 	window->getInput()->destroyAction(escape);
