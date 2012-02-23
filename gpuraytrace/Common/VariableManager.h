@@ -19,8 +19,8 @@ public:
 	static VariableManager* get();
 	void registerVariable(const Variable& var);
 	void clear();
+	void sendAllVariables();
 	void start();
-	
 private:
 	VariableManager() : variables() { };
 	static VariableManager* variableManager;
@@ -29,7 +29,7 @@ private:
 	static unsigned int WINAPI netLoopStatic(void* args);
 	void netLoop();
 	void sendVariable(Variable* var);
-
+	void sendClearAllVariables();
 	bool readBytes(char* outBuffer, int length);
 	static const int bufferSize = 40192; 
 	int bufferAmount;

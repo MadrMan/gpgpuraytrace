@@ -21,5 +21,10 @@ namespace variableclient
         {
             public float x, y, z;
         }
+
+        public struct _float4
+        {
+            public float x, y, z, w;
+        }
     }
 }

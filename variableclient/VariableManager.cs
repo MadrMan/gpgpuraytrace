@@ -136,6 +136,13 @@ namespace variableclient
             OnVariableRemoved(variable);
         }
 
+        private void ClearVariables()
+        {
+            foreach (Variable v in variables)
+                OnVariableRemoved(v);
+            variables.Clear();
+        }
+
         /// <summary>
         /// Run the variable manager which handles the networking
         /// 
@@ -201,6 +208,9 @@ namespace variableclient
 
                                 AddVariable(variable, type, data);
                                 break;
+                            case 2:
+                                ClearVariables();
+                                break;
                             default:
                                 break;
                         }
@@ -213,9 +223,7 @@ namespace variableclient
 
                     if (client == null)
                     {
-                        foreach (Variable v in variables)
-                            OnVariableRemoved(v);
-                        variables.Clear();
+                        ClearVariables();
                         OnConnectionLost();
                     }
                 }

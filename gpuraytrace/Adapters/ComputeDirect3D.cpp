@@ -128,14 +128,17 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		ShaderVariableDirect3D* shaderVariable = new ShaderVariableDirect3D(shaderVarDesc.Name, shaderVarDesc.StartOffset,  shaderVarDesc.Size, newBuffer);
 		newBuffer->variables.push_back(shaderVariable);
 	
-		Variable v;
-		v.name = shaderVarDesc.Name;
-		v.sizeInBytes = shaderVarDesc.Size;
-		v.type = shaderTypeDesc.Name;			//can be NULL
-		v.pointer = newBuffer->data + shaderVarDesc.StartOffset;
-		v.callback = new ICallback<ComputeDirect3D, const Variable&>(this, &ComputeDirect3D::onVariableChangedCallback);
-		v.tag = shaderVariable;
-		VariableManager::get()->registerVariable(v);
+		if(index == 0)
+		{
+			Variable v;
+			v.name = shaderVarDesc.Name;
+			v.sizeInBytes = shaderVarDesc.Size;
+			v.type = shaderTypeDesc.Name;			//can be NULL
+			v.pointer = newBuffer->data + shaderVarDesc.StartOffset;
+			v.callback = new ICallback<ComputeDirect3D, const Variable&>(this, &ComputeDirect3D::onVariableChangedCallback);
+			v.tag = shaderVariable;
+			VariableManager::get()->registerVariable(v);
+		}
 	}
 	createdShader->getConstantBuffers().push_back(newBuffer);
 }
@@ -148,7 +151,6 @@ void ComputeDirect3D::onVariableChangedCallback(const Variable& var)
 
 void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader)
 {
-
 	ID3D11ShaderReflection* reflection = nullptr; 
 
 	HRESULT result = D3DReflect(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection); 
@@ -178,6 +180,9 @@ void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 
 bool ComputeDirect3D::create(const std::string& fileName, const std::string& main)
 {
+	//clear variables in variablemanager, this also tells the client (if there is one) to clear their variables
+	VariableManager::get()->clear();
+	
 	BY_HANDLE_FILE_INFORMATION shaderFileInfo = {0};
 	DWORD shaderFileBytesRead = 0;
 
@@ -272,7 +277,9 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 	}
 
 	Logger() << "Compiled new shader";
-	
+
+	//tell the variable manager to resend the variables
+	VariableManager::get()->sendAllVariables();
 	return true;
 }
 
@@ -284,11 +291,7 @@ bool ComputeDirect3D::swap()
 
 		if(shader) 
 		{
-			//clear variables in variablemanager
-			VariableManager::get()->clear();
-
 			delete shader;
-			shader = nullptr;
 		}
 
 		shader = newShader;

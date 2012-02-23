@@ -23,6 +23,9 @@ void VariableManager::registerVariable(const Variable& var)
 
 void VariableManager::clear()
 {
+	if(client) 
+		sendClearAllVariables();
+
 	variables.clear();
 }
 
@@ -30,7 +33,6 @@ void VariableManager::start()
 {
 	WSADATA wsaData;
 	WSAStartup(MAKEWORD(2, 2),&wsaData);
-
 	_beginthreadex(0, 0, netLoopStatic, this, 0, 0);
 }
 
@@ -76,8 +78,9 @@ bool VariableManager::readBytes(char* outBuffer, int length)
 /// [var:s][data:x]
 ///
 /// FROM server:
-/// [add(1)][var:s][type:s][length:2][data:x]
-/// [remove(0)][var:s]
+/// [add(1):1][var:s][type:s][length:2][data:x]
+/// [remove(0):1][var:s]
+/// [removeAll(2):1]
 /// </summary>
 void VariableManager::sendVariable(Variable* var)
 {
@@ -101,6 +104,22 @@ void VariableManager::sendVariable(Variable* var)
 	unsigned short lengthShort = (unsigned short) var->sizeInBytes;
 	send(client, (char*)&lengthShort, 2, 0);		
 	send(client, (char*)var->pointer, lengthShort, 0);
+}
+
+
+void VariableManager::sendAllVariables()
+{
+	if(client)
+	{
+		for(auto it = variables.begin(); it != variables.end(); ++it)
+			sendVariable(&*it);
+	}
+}
+
+void VariableManager::sendClearAllVariables()
+{
+	unsigned char type = 2;
+	send(client, (char*)&type, 1, 0);
 }
 
 void VariableManager::netLoop()
@@ -128,8 +147,7 @@ void VariableManager::netLoop()
 		client = accept(listener, 0, 0);
 		Logger() << "Client connected";
 
-		for(auto it = variables.begin(); it != variables.end(); ++it)
-			sendVariable(&*it);
+		sendAllVariables();
 
 		bufferAmount = 0;
 		bufferPosition = 0;
