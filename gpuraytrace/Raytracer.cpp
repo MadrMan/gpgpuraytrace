@@ -72,6 +72,7 @@ void Raytracer::run()
 	float cameraRotation[3] = {0};
 	IShaderVariable* varView = compute->getVariable("ViewInverse");
 	IShaderVariable* varProjection = compute->getVariable("Projection");
+	IShaderVariable* varEye = compute->getVariable("Eye");
 
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
@@ -84,26 +85,32 @@ void Raytracer::run()
 	while(escape->getState() < 0.5f)
 	{
 		//Rotate camera
-		cameraRotation[0] += rotateLR->getState() * 0.01f;
-		cameraRotation[1] += rotateUD->getState() * 0.01f;
+		cameraRotation[0] += rotateUD->getState() * 0.01f;
+		cameraRotation[1] += rotateLR->getState() * 0.01f;
 		camera->rotation = XMQuaternionRotationRollPitchYaw(cameraRotation[0], cameraRotation[1], cameraRotation[2]);
+
+		float moveSpeed = timer->getConstant() * 10.0f;
 
 		//Move camera
 		XMVECTOR front = XMVector3Rotate(XM_FRONT, camera->rotation);
-	    camera->position = XMVectorAdd(camera->position, front * moveForward->getState());
+	    camera->position = XMVectorAdd(camera->position, front * moveForward->getState() * moveSpeed);
 		XMVECTOR right = XMVector3Rotate(front, XMQuaternionRotationRollPitchYaw(0.0f, XM_PIDIV2, 0.0f));
-		camera->position = XMVectorAdd(camera->position, right * moveSide->getState());
+		camera->position = XMVectorAdd(camera->position, right * moveSide->getState() * moveSpeed);
 
 		//Update
 		camera->update();
 
 		//Set variables
-		if(varView && varProjection)
+		if(varView && varProjection && varEye)
 		{
 			XMVECTOR determinant;
-			XMMATRIX invView = XMMatrixInverse(&determinant, camera->matView);
-			varView->write(&invView);
-			varProjection->write(&camera->matProjection);
+			XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
+			varView->write(&invTransView);
+			XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
+			varProjection->write(&transProjection);
+			varEye->write(&camera->position);
+		} else {
+			//Logger() << "Not all variables are found";
 		}
 
 		//Run shader
@@ -122,7 +129,6 @@ void Raytracer::run()
 		if(frameTime > 1.0f)
 		{
 			Logger() << "FPS: " << frames / frameTime;
-			//Logger() << "FPS: " << timer->getTime();
 
 			frameTime = fmod(frameTime, 1.0f);
 			frames = 0;

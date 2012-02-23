@@ -23,7 +23,7 @@ void Camera::setWindow(IWindow* window)
 
 void Camera::update()
 {
-	XMVECTOR direction = XMVectorSet(-0.5f, -0.5f, -0.5f, 0.0f);
+	XMVECTOR direction = XMVector3Rotate(XM_FRONT, rotation);
 	matView = XMMatrixLookToLH(position, direction, XM_UP);
 
 	matViewProjection = XMMatrixMultiply(matView, matProjection);
