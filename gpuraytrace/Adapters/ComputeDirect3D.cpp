@@ -12,8 +12,8 @@
 ComputeShader3D::ComputeShader3D(ID3D11ComputeShader* shader) : shader(shader) 
 {
 	
-
 }
+
 ComputeShader3D::~ComputeShader3D()
 {	
 	if(shader) shader->Release();
@@ -26,7 +26,7 @@ ComputeShader3D::~ComputeShader3D()
 	}
 
 	//clear buffers
-	for(int i = 0 ; i < constantBuffers.size(); i++)
+	for(size_t i = 0; i < constantBuffers.size(); i++)
 	{
 		gpubuffers[i]->Release();
 	}
