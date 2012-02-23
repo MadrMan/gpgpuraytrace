@@ -106,6 +106,16 @@ void VariableManager::sendVariable(Variable* var)
 	send(client, (char*)var->pointer, lengthShort, 0);
 }
 
+
+void VariableManager::sendAllVariables()
+{
+	if(client)
+	{
+		for(auto it = variables.begin(); it != variables.end(); ++it)
+			sendVariable(&*it);
+	}
+}
+
 void VariableManager::sendClearAllVariables()
 {
 	unsigned char type = 2;
@@ -137,8 +147,7 @@ void VariableManager::netLoop()
 		client = accept(listener, 0, 0);
 		Logger() << "Client connected";
 
-		for(auto it = variables.begin(); it != variables.end(); ++it)
-			sendVariable(&*it);
+		sendAllVariables();
 
 		bufferAmount = 0;
 		bufferPosition = 0;

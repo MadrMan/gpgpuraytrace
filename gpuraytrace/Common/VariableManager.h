@@ -19,8 +19,8 @@ public:
 	static VariableManager* get();
 	void registerVariable(const Variable& var);
 	void clear();
+	void sendAllVariables();
 	void start();
-	
 private:
 	VariableManager() : variables() { };
 	static VariableManager* variableManager;
