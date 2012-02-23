@@ -39,8 +39,8 @@ LRESULT CALLBACK WindowWinAPI::MainWndProc(UINT Msg, WPARAM wParam, LPARAM lPara
 			break;	
 		case WM_ERASEBKGND:
 			return 0;
-		case WM_PAINT:
-			return 0;
+		//case WM_PAINT:
+		//	return 0;
 		//case WM_SETCURSOR:
 		//	SetCursor(nullptr);
 		//	return TRUE;
