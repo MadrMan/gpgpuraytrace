@@ -2,10 +2,11 @@
 //SamplerState state;
 //Texture2D<float> texNoise;
 
-cbuffer CBTweakable
+/*cbuffer CBTweakable
 {
 	float3 SunDirection;
-}
+}*/
+
 
 cbuffer CBFrame
 {
@@ -20,7 +21,8 @@ cbuffer CBPermanent
 }
 
 const static float RAY_STEP = 0.1f;
-const static int RAY_STEPS = 6000;
+const static int RAY_STEPS = 50000;
+const static float3 SunDirection = float3(0.4f, 0.4f, 0.4f);
 
 RWTexture2D<float4> texOut : register(u0);
 
@@ -56,8 +58,20 @@ float4 getPoint(float3 position)
 	
 	if(h < position.y) return float4(0.0f, 0.0f, 0.0f, 0.0f);
 	
+	position.y = h;
+	float3 herex = float3(position.x + 1.0f, h, position.z);
+	float3 herey = float3(position.x, h, position.z + 1.0f);
+	herex.y = getHeight(herex.xz);
+	herey.y = getHeight(herey.xz);
+	
+	float3 normal = cross(herex - position, herey - position);
+	
 	h += 45;
-	return float4(h * 0.04f, h * 0.010f, (h - 80.0f) * 0.03, 1.0f);
+	//return float4(normal * 0.5f + 0.5f, 1.0f);
+	
+	float3 color = float3(h * 0.04f, h * 0.010f, (h - 80.0f) * 0.03);
+	float brightness = saturate(dot(normal, -normalize(SunDirection)));
+	return float4(color * brightness, 1.0f);
 	//if(h < position.y) return float4(0.0f, 0.0f, 0.0f, 0.0f);
 	//return float4(h * 0.05f, h * 0.1f, saturate(-h) + h * 0.03f, 1.0f);
 }

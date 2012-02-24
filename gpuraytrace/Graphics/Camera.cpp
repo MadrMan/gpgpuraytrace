@@ -7,7 +7,7 @@
 
 Camera::Camera()
 {
-	position = XMVectorSet(20.0f, 20.0f, 20.0f, 0.0f);
+	position = XMVectorSet(20.0f, 80.0f, 20.0f, 0.0f);
 	rotation = XMQuaternionRotationRollPitchYaw(0.0f, 0.0f, 0.0f);
 	
 	rotationEuler[0] = 0.0f;
