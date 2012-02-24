@@ -312,7 +312,7 @@ void ComputeDirect3D::run()
 		ConstantBufferD3D* buffer = *it;
 		if(buffer->dirty)
 		{
-			buffer->dirty = true;
+			buffer->dirty = false;
 			device->getImmediate()->UpdateSubresource(buffer->gpuBuffer, 0, 0, buffer->data, buffer->size, 0);
 		}
 	}

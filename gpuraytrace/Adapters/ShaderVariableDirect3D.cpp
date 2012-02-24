@@ -18,4 +18,5 @@ ShaderVariableDirect3D::ShaderVariableDirect3D(const std::string name, int offse
 void ShaderVariableDirect3D::write(void* data)
 {
 	memcpy(buffer->data + offset, data, sizeInBytes);
+	buffer->dirty = true;
 }
