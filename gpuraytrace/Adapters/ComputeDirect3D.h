@@ -22,6 +22,18 @@ public:
 	
 };
 
+class ShaderIncludeHandler : public ID3DInclude
+{
+public:
+	ShaderIncludeHandler(const std::string& directory);
+
+	HRESULT WINAPI Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes);
+	HRESULT WINAPI Close(LPCVOID pData);
+
+private:
+	std::string directory;
+};
+
 class DeviceDirect3D;
 class ComputeDirect3D : public ICompute
 {
@@ -29,7 +41,7 @@ public:
 	ComputeDirect3D(DeviceDirect3D* device);
 	virtual ~ComputeDirect3D();
 
-	virtual bool create(const std::string& fileName, const std::string& main) override;
+	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main) override;
 
 	virtual void run() override;
 

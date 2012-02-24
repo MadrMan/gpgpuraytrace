@@ -142,7 +142,7 @@ void Raytracer::updateComputeVars()
 
 void Raytracer::loadComputeShader()
 {
-	if(!compute->create("shader/CSMain.hlsl", "CSMain"))
+	if(!compute->create("shader", "CSMain.hlsl", "CSMain"))
 	{
 		Logger() << "Could not create shader";
 	}

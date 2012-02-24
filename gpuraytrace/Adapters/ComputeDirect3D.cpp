@@ -8,7 +8,68 @@
 #include <fstream>
 #include <D3Dcompiler.h>
 
-//!ComputeShader
+ShaderIncludeHandler::ShaderIncludeHandler(const std::string& directory) : directory(directory)
+{
+
+}
+
+HRESULT WINAPI ShaderIncludeHandler::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes)
+{
+	std::string fullPath = directory + "/" + pFileName;
+
+	BY_HANDLE_FILE_INFORMATION shaderFileInfo = {0};
+	DWORD shaderFileBytesRead = 0;
+
+	HANDLE hShaderFile = nullptr;
+	while((hShaderFile = CreateFile(fullPath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr)) == INVALID_HANDLE_VALUE)
+	{
+		DWORD err = GetLastError();
+		switch(err)
+		{
+		case ERROR_SHARING_VIOLATION:
+			//Ignore and sleep
+			break;
+		case ERROR_PATH_NOT_FOUND:
+			Logger() << "Shader file not found: " << fullPath;
+			return err;
+		default:
+			LOGERROR(err, "CreateFile");
+			return err;
+		}
+		Sleep(10);
+	}
+
+	GetFileInformationByHandle(hShaderFile, &shaderFileInfo);
+	DWORD shaderFileBytes = shaderFileInfo.nFileSizeLow;
+
+	if(!shaderFileBytes)
+	{
+		Logger() << "Error getting shader file info: " << fullPath;
+
+		CloseHandle(hShaderFile);
+		return E_ACCESSDENIED;
+	}
+
+	char* fileData = new char[shaderFileBytes + 1];
+	fileData[shaderFileInfo.nFileSizeLow] = 0;
+
+	ReadFile(hShaderFile, fileData, shaderFileInfo.nFileSizeLow, &shaderFileBytesRead, nullptr);
+	CloseHandle(hShaderFile);
+
+	*ppData = fileData;
+	*pBytes = shaderFileBytesRead;
+
+	return S_OK;
+}
+
+HRESULT WINAPI ShaderIncludeHandler::Close(LPCVOID pData)
+{
+	delete[] pData;
+
+	return S_OK;
+}
+
 ComputeShader3D::ComputeShader3D(ID3D11ComputeShader* shader) : shader(shader) 
 {
 	
@@ -48,8 +109,6 @@ IShaderVariable* ComputeShader3D::getVariable(const std::string& name)
 	return nullptr;
 }	
 		
-
-//!computeDirect3D
 ComputeDirect3D::ComputeDirect3D(DeviceDirect3D* device) : device(device)
 {
 	shader = nullptr;
@@ -67,7 +126,6 @@ IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
 	if(!shader) return nullptr;
 	return shader->getVariable(name);
 }
-
 
 void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader)
 {
@@ -178,44 +236,19 @@ void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	reflection->Release();
 }
 
-bool ComputeDirect3D::create(const std::string& fileName, const std::string& main)
+bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main)
 {
 	//clear variables in variablemanager, this also tells the client (if there is one) to clear their variables
 	VariableManager::get()->clear();
+
+	//Create shader opener
+	ShaderIncludeHandler handler(directory);
+
+	//Open main shader file
+	UINT fileSize = 0;
+	LPCVOID fileData = 0;
+	HRESULT result = handler.Open(D3D_INCLUDE_LOCAL, fileName.c_str(), nullptr, &fileData, &fileSize);
 	
-	BY_HANDLE_FILE_INFORMATION shaderFileInfo = {0};
-	DWORD shaderFileBytesRead = 0;
-
-	HANDLE hShaderFile = nullptr;
-	while((hShaderFile = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr)) == INVALID_HANDLE_VALUE)
-	{
-		DWORD err = GetLastError();
-		if(err != ERROR_SHARING_VIOLATION)
-		{
-			LOGERROR(err, "CreateFile");
-			return false;
-		}
-		Sleep(10);
-	}
-
-	GetFileInformationByHandle(hShaderFile, &shaderFileInfo);
-	DWORD shaderFileBytes = shaderFileInfo.nFileSizeLow;
-
-	if(!shaderFileBytes)
-	{
-		Logger() << "Error getting shader file info: " << fileName;
-
-		CloseHandle(hShaderFile);
-		return false;
-	}
-
-	char* fileData = new char[shaderFileBytes + 1];
-	fileData[shaderFileInfo.nFileSizeLow] = 0;
-
-	ReadFile(hShaderFile, fileData, shaderFileInfo.nFileSizeLow, &shaderFileBytesRead, nullptr);
-	CloseHandle(hShaderFile);
-
 	UINT shaderFlags;
 #if defined(_DEBUG)
 	shaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
@@ -231,9 +264,12 @@ bool ComputeDirect3D::create(const std::string& fileName, const std::string& mai
 
 	Logger() << "Creating CS from " << fileName << " at " << csProfile;
 
+	//Compile main shader file and includes
 	ID3D10Blob* shaderBlob;
 	ID3D10Blob* errorBlob;
-	HRESULT result = D3DCompile(fileData, shaderFileInfo.nFileSizeLow + 1, fileName.c_str(), nullptr, ((ID3DInclude*)(UINT_PTR)1), main.c_str(), csProfile.c_str(), shaderFlags, 0, &shaderBlob, &errorBlob);
+	result = D3DCompile(fileData, fileSize, fileName.c_str(), nullptr, &handler, main.c_str(), csProfile.c_str(), shaderFlags, 0, &shaderBlob, &errorBlob);
+	handler.Close(fileData);
+
 	if(result != S_OK)
 	{
 		if(result != E_FAIL)
