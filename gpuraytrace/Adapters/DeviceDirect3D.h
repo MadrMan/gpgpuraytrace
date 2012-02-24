@@ -16,6 +16,8 @@ public:
 
 	virtual ICompute* createCompute() override;
 
+	virtual ITexture* createTexture() override;
+
 	ID3D11Device* getD3DDevice() const
 	{ return device; }
 

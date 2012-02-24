@@ -3,6 +3,7 @@
 
 #include "WindowWinAPI.h"
 #include "ComputeDirect3D.h"
+#include "TextureDirect3D.h"
 
 #include "../Common/Logger.h"
 
@@ -119,6 +120,23 @@ bool DeviceDirect3D::create()
 
 	context->CSSetUnorderedAccessViews(0, 1, &uavSwapBuffer, 0);
 
+	D3D11_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.AddressU =
+	samplerDesc.AddressV =
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MinLOD = -FLT_MAX;
+	samplerDesc.MaxLOD = FLT_MAX;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+
+	ID3D11SamplerState* sampler;
+	device->CreateSamplerState(&samplerDesc, &sampler);
+	context->CSSetSamplers(0, 1, &sampler);
+	sampler->Release();
+
 	return true;
 }
 
@@ -130,4 +148,9 @@ void DeviceDirect3D::present()
 ICompute* DeviceDirect3D::createCompute()
 {
 	return new ComputeDirect3D(this);
+}
+
+ITexture* DeviceDirect3D::createTexture()
+{
+	return new TextureDirect3D(this);
 }

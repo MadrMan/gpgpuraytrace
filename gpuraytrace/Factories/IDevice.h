@@ -10,6 +10,7 @@ namespace DeviceAPI { enum T
 };}
 
 class ICompute;
+class ITexture;
 
 //! Interfaces inherited by all devices
 class IDevice
@@ -27,6 +28,9 @@ public:
 
 	//! Create a new compute program
 	virtual ICompute* createCompute() = 0;
+	
+	//! Create a new texture
+	virtual ITexture* createTexture() = 0;
 
 	//! Get the API used to create the device with
 	DeviceAPI::T getAPI() const { return api; }

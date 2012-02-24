@@ -2,6 +2,7 @@
 #include "ComputeDirect3D.h"
 #include "DeviceDirect3D.h"
 #include "ShaderVariableDirect3D.h"
+#include "TextureDirect3D.h"
 #include "../Common/Logger.h"
 
 #include "D3D11Shader.h"
@@ -362,4 +363,10 @@ void ComputeDirect3D::run()
 	//dc->CSSetShader(shader, nullptr, 0);
 	//dc->CSSetUnorderedAccessViews(
 	//dc->
+}
+
+void ComputeDirect3D::setTexture(int stage, ITexture* texture)
+{
+	ID3D11ShaderResourceView* view = static_cast<TextureDirect3D*>(texture)->getView();
+	device->getImmediate()->CSSetShaderResources(stage, 1, &view);
 }

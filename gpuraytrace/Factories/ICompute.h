@@ -1,6 +1,7 @@
 #pragma once
 
 class IShaderVariable;
+class ITexture;
 
 //! Interfaces inherited by all devices
 class ICompute
@@ -16,6 +17,8 @@ public:
 	virtual IShaderVariable* getVariable(const std::string& name) = 0;
 
 	virtual bool swap() = 0;
+
+	virtual void setTexture(int stage, ITexture* texture) = 0;
 
 protected:
 	ICompute() { }

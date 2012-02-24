@@ -1,3 +1,7 @@
+#include "noise.hlsl"
+//SamplerState state;
+//Texture2D<float> texNoise;
+
 cbuffer CBTweakable
 {
 	float3 SunDirection;
@@ -16,13 +20,24 @@ cbuffer CBPermanent
 }
 
 const static float RAY_STEP = 0.1f;
-const static int RAY_STEPS = 100000;
+const static int RAY_STEPS = 6000;
 
 RWTexture2D<float4> texOut : register(u0);
 
 float getHeight(float2 position)
 {
-	return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
+	const static float p = 0.45f;
+	
+	float h = 0.3f;
+	float2 scaled = position * 0.01f;
+	
+	//return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
+	for(uint x = 0; x < 12; x++)
+	{
+		h += noise2d(scaled * pow(2, x)) * pow(p, x);
+	}
+	
+	return h * 80.0f;
 }
 
 float4 getSky(float3 direction)
@@ -38,8 +53,13 @@ float4 getSky(float3 direction)
 float4 getPoint(float3 position)
 {
 	float h = getHeight(position.xz);
+	
 	if(h < position.y) return float4(0.0f, 0.0f, 0.0f, 0.0f);
-	return float4(h * 0.05f, h * 0.1f, saturate(-h) + h * 0.03f, 1.0f);
+	
+	h += 45;
+	return float4(h * 0.04f, h * 0.010f, (h - 80.0f) * 0.03, 1.0f);
+	//if(h < position.y) return float4(0.0f, 0.0f, 0.0f, 0.0f);
+	//return float4(h * 0.05f, h * 0.1f, saturate(-h) + h * 0.03f, 1.0f);
 }
 
 [numthreads(20, 20, 1)]
@@ -70,9 +90,9 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 			result = color;
 		
 			d -= step;
-			step *= 0.25f;
+			step *= 0.4f;
 		} else {
-			step *= 1.02;
+			step *= 1.015f;
 			d += step;
 		}
 	}

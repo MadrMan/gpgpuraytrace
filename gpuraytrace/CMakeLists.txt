@@ -31,6 +31,8 @@ set(PROJ_ADAPTER
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/ShaderVariableDirect3D.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/TimerWinAPI.h
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/TimerWinAPI.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/TextureDirect3D.h
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/TextureDirect3D.cpp
 )
 
 set(PROJ_FACTORY
@@ -42,6 +44,7 @@ set(PROJ_FACTORY
 	${gpgpuraytrace_SOURCE_DIR}/Factories/ICompute.h
 	${gpgpuraytrace_SOURCE_DIR}/Factories/IWindow.h
 	${gpgpuraytrace_SOURCE_DIR}/Factories/IDevice.h
+	${gpgpuraytrace_SOURCE_DIR}/Factories/ITexture.h
 )
 
 set (PROJ_GRAPHICS
@@ -82,7 +85,7 @@ include_directories("${gpgpuraytrace_SOURCE_DIR}/Common")
 if(MSVC)
 	include_directories("$ENV{DXSDK_DIR}/include")
 	link_directories("$ENV{DXSDK_DIR}/lib/x86")
-	link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib)
+	link_libraries(d3d11.lib d3dx11.lib d3dcompiler.lib dxguid.lib ws2_32.lib)
 endif()
 
 add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON})

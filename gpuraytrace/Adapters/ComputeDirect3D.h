@@ -49,6 +49,8 @@ public:
 
 	virtual bool swap() override;
 
+	virtual void setTexture(int stage, ITexture* texture) override;
+
 private:
 	void createBuffer(ID3D10Blob* shaderBlob);
 	void reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader);

@@ -4,6 +4,7 @@ class IShaderVariable;
 class IDevice;
 class IWindow;
 class ICompute;
+class ITexture;
 class Camera;
 
 //! Main class for the raytrace project
@@ -31,6 +32,7 @@ private:
 	IDevice* device;
 	IWindow* window;
 	ICompute* compute;
+	ITexture* texNoise;
 	Camera* camera;
 
 	IShaderVariable* varView;

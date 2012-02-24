@@ -4,6 +4,7 @@
 #include "./Factories/DeviceFactory.h"
 #include "./Factories/WindowFactory.h"
 #include "./Factories/ICompute.h"
+#include "./Factories/ITexture.h"
 #include "./Graphics/Camera.h"
 #include "./Graphics/IShaderVariable.h"
 
@@ -21,6 +22,8 @@ Raytracer::Raytracer()
 	varView = nullptr;
 	varProjection = nullptr;
 	varEye = nullptr;
+
+	texNoise = nullptr;
 }
 
 Raytracer::~Raytracer()
@@ -28,6 +31,7 @@ Raytracer::~Raytracer()
 	delete compute;
 	delete device;
 	delete window;
+	delete texNoise;
 }
 
 void Raytracer::run()
@@ -47,6 +51,10 @@ void Raytracer::run()
 
 	//Show window after device creation
 	window->show();
+
+	//Load textures
+	texNoise = device->createTexture();
+	texNoise->create("Media/noise1_small.png");
 
 	//Create a new compute shader instance
 	compute = device->createCompute();
@@ -138,11 +146,13 @@ void Raytracer::updateComputeVars()
 		float screenSize[2] = { (float)window->getWindowSettings().width, (float)window->getWindowSettings().height };
 		varScreenSize->write(screenSize);
 	}
+
+	compute->setTexture(0, texNoise);
 }
 
 void Raytracer::loadComputeShader()
 {
-	if(!compute->create("shader", "CSMain.hlsl", "CSMain"))
+	if(!compute->create("shader", "csmain.hlsl", "CSMain"))
 	{
 		Logger() << "Could not create shader";
 	}
