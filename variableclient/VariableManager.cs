@@ -150,8 +150,10 @@ namespace variableclient
         /// TO server:
         /// [var:s][data:x]
         /// FROM server:
-        /// [add(1)][var:s][type:s][length:2][data:x]
-        /// [remove(0)][var:s]
+        /// 
+        /// [add(1):1][var:s][type:s][length:2][data:x]
+        /// [remove(0):1][var:s]
+        /// [removeAll(2):1][var:s]
         /// </summary>
         private void Run()
         {
@@ -233,6 +235,10 @@ namespace variableclient
         internal void Connect(string address)
         {
             Address = address;
+            
+            if (address == "")
+                address = "localhost";
+
             client = new TcpClient();
             client.BeginConnect(address, port, (ar) =>
             {
