@@ -234,10 +234,9 @@ namespace variableclient
 
         internal void Connect(string address)
         {
+            if (string.IsNullOrWhiteSpace(address)) address = "localhost" ;
+                
             Address = address;
-            
-            if (address == "")
-                address = "localhost";
 
             client = new TcpClient();
             client.BeginConnect(address, port, (ar) =>
