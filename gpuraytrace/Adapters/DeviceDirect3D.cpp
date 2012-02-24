@@ -48,9 +48,11 @@ bool DeviceDirect3D::create()
 	
 	ZeroMemory(&sd,sizeof(sd));
 	
+	const WindowSettings& ws = getWindow()->getWindowSettings();
+
 	sd.BufferCount = 1;	
-	sd.BufferDesc.Width = (UINT)getWindow()->getWindowSettings().width;
-	sd.BufferDesc.Height = (UINT)getWindow()->getWindowSettings().height;
+	sd.BufferDesc.Width = (UINT)ws.width;
+	sd.BufferDesc.Height = (UINT)ws.height;
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; //_SRGB;
 	sd.BufferDesc.RefreshRate.Numerator = 60;	
 	sd.BufferDesc.RefreshRate.Denominator = 1;	
@@ -59,7 +61,7 @@ bool DeviceDirect3D::create()
 	sd.OutputWindow = static_cast<WindowWinAPI*>(getWindow())->getHandle();
 	sd.SampleDesc.Count = 1;
 	sd.SampleDesc.Quality = 0;
-	sd.Windowed = TRUE;
+	sd.Windowed = ws.fullscreen ? FALSE : TRUE;
 	
 	HRESULT result = D3D11CreateDeviceAndSwapChain(0 , D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, featureLevels,
                         _countof(featureLevels), D3D11_SDK_VERSION, &sd, &swapChain, &device, &featureLevel, &context);

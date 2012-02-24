@@ -12,10 +12,9 @@ cbuffer CBFrame
 
 cbuffer CBPermanent
 {
-	
+	float2 ScreenSize;
 }
 
-const static float2 ScreenSize = float2(800.0f, 600.0f);
 const static float RAY_STEP = 0.1f;
 const static int RAY_STEPS = 100000;
 

@@ -35,6 +35,7 @@ void Raytracer::run()
 	WindowSettings ws;
 	ws.width = 800;
 	ws.height = 600;
+	ws.fullscreen = false;
 
 	//Create window
 	window = WindowFactory::construct(WindowAPI::WinAPI, ws);
@@ -126,9 +127,17 @@ void Raytracer::updateCompute()
 
 void Raytracer::updateComputeVars()
 {
-		varView = compute->getVariable("ViewInverse");
-		varProjection = compute->getVariable("Projection");
-		varEye = compute->getVariable("Eye");
+	varView = compute->getVariable("ViewInverse");
+	varProjection = compute->getVariable("Projection");
+	varEye = compute->getVariable("Eye");
+
+	//Set resolution in the shader
+	IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
+	if(varScreenSize)
+	{
+		float screenSize[2] = { (float)window->getWindowSettings().width, (float)window->getWindowSettings().height };
+		varScreenSize->write(screenSize);
+	}
 }
 
 void Raytracer::loadComputeShader()
