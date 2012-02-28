@@ -16,6 +16,7 @@ struct Variable
 class VariableManager
 {
 public:
+	static const char PREFIX = 'X';
 	static VariableManager* get();
 	void registerVariable(const Variable& var);
 	void clear();

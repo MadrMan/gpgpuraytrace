@@ -11,7 +11,7 @@ public:
 	std::vector<IShaderVariable*> variables;
 	bool dirty;
 	ID3D11Buffer* gpuBuffer;
-	
+
 	virtual ~ConstantBufferD3D();
 };
 
@@ -24,6 +24,9 @@ public:
 
 	ConstantBufferD3D* getBuffer() const
 	{ return buffer; }
+	
+	int getSizeInBytes()
+	{ return sizeInBytes; }
 
 private:
 	int offset;

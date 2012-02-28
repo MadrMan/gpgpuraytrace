@@ -3,6 +3,7 @@
 #include <ostream>
 
 #define LOGERROR(x, f) Logger() << __FUNCTION__ << " failed at " << (f) << " with 0x" << std::hex << (x) << std::dec;
+#define LOGFUNCERROR(x) Logger() << __FUNCTION__ << " failed because " << (x);
 
 //! Buffer which logs all the text from the Logger to the outputs
 class LogBuffer : public std::streambuf

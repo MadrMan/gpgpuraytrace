@@ -187,7 +187,8 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		ShaderVariableDirect3D* shaderVariable = new ShaderVariableDirect3D(shaderVarDesc.Name, shaderVarDesc.StartOffset,  shaderVarDesc.Size, newBuffer);
 		newBuffer->variables.push_back(shaderVariable);
 	
-		if(index == 0)
+		//check if this variable needs to be send to the variablemanager
+		if(newBuffer->name[0] == VariableManager::PREFIX)
 		{
 			Variable v;
 			v.name = shaderVarDesc.Name;
@@ -310,15 +311,56 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 	{
 		shader = createdShader;
 	} else {
+		copyShaderVarsToNewShader(createdShader);
 		newShader = createdShader;
+	
 	}
 
 	Logger() << "Compiled new shader";
-
-	//tell the variable manager to resend the variables
-	VariableManager::get()->sendAllVariables();
+	
 	return true;
 }
+
+void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader)
+{
+	if(!shader || !createdShader)
+	{
+		LOGFUNCERROR("Invalid parameter");
+		return;
+	}
+
+	//for each new buffer
+	for(auto it1 = createdShader->getConstantBuffers().begin(); it1 != createdShader->getConstantBuffers().end(); ++it1)
+	{
+		ConstantBufferD3D* newShaderBuffer = *it1;	
+		if(newShaderBuffer->name[0] != VariableManager::PREFIX) continue;
+		
+		//for each variable in a watched buffer
+		for(auto it2 = newShaderBuffer->variables.begin(); it2 != newShaderBuffer->variables.end(); ++it2)
+		{
+			ShaderVariableDirect3D* shaderVarNew = (ShaderVariableDirect3D*)*it2;
+			
+			//for each old buffer
+			for(auto it3 = shader->getConstantBuffers().begin(); it3 != shader->getConstantBuffers().end(); ++it3)
+			{
+				ConstantBufferD3D* oldShaderBuffer = *it3;	
+				if(oldShaderBuffer->name[0] != VariableManager::PREFIX ||
+					oldShaderBuffer->name.compare(newShaderBuffer->name) != 0) continue;
+
+				//for each variable in the old buffer (that is watched)
+				for(auto it4 = oldShaderBuffer->variables.begin(); it4 != oldShaderBuffer->variables.end(); ++it4)
+				{
+					ShaderVariableDirect3D* shaderVarOld = (ShaderVariableDirect3D*)*it4;
+					if(shaderVarNew->getName().compare(shaderVarOld->getName()) != 0 ||
+						shaderVarNew->getSizeInBytes() != shaderVarOld->getSizeInBytes()) continue;
+				
+					shaderVarNew->write(shaderVarOld->getBuffer()->data);
+				}
+			}
+		}
+	}
+}
+
 
 bool ComputeDirect3D::swap()
 {
@@ -334,6 +376,9 @@ bool ComputeDirect3D::swap()
 		shader = newShader;
 		newShader = nullptr;
 
+
+		//tell the variable manager to resend the variables
+		VariableManager::get()->sendAllVariables();
 		return true;
 	}
 

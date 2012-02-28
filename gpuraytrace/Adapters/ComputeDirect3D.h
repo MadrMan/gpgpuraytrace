@@ -19,7 +19,6 @@ public:
 	ID3D11ComputeShader* getShader() { return shader; }
 	ID3D11Buffer** getGpuBuffers() { return gpubuffers; }
 	std::vector<ConstantBufferD3D*>& getConstantBuffers() { return constantBuffers; }		
-	
 };
 
 class ShaderIncludeHandler : public ID3DInclude
@@ -55,7 +54,9 @@ private:
 	void createBuffer(ID3D10Blob* shaderBlob);
 	void reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader);
 	void addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader);
-
+	
+	//!copy the var values from old shader to the new.
+	void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader);
 	void onVariableChangedCallback(const Variable& var);
 
 	//void loopShaderBuffer(ID3D11ShaderReflectionConstantBuffer* reflectionBuffer, D3D11_SHADER_BUFFER_DESC reflectionBufferDesc, int bufferPosition); 
