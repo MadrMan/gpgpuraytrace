@@ -58,7 +58,7 @@ void Camera::update()
 	//Move camera
 	XMVECTOR front = XMVector3Rotate(XM_FRONT, rotation);
 	position = XMVectorAdd(position, front * moveForward->getState() * moveSpeed);
-	XMVECTOR right = XMVector3Rotate(front, XMQuaternionRotationRollPitchYaw(0.0f, XM_PIDIV2, 0.0f));
+	XMVECTOR right = XMVectorSetY(XMVector3Rotate(front, XMQuaternionRotationRollPitchYaw(0.0f, -XM_PIDIV2, 0.0f)), 0.0f);
 	position = XMVectorAdd(position, right * moveSide->getState() * moveSpeed);
 
 	//Update matrices
