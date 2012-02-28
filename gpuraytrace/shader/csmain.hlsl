@@ -34,10 +34,12 @@ float getHeight(float2 position)
 	float2 scaled = position * 0.01f;
 	
 	//return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
-	for(uint x = 0; x < 12; x++)
+	for(uint x = 0; x < 1; x++)
 	{
 		h += noise2d(scaled * pow(2, x)) * pow(p, x);
 	}
+	
+	//float h = sin(position.x * 0.1f) * 0.1f * sin(position.y * 0.1f);
 	
 	return h * 80.0f;
 }
@@ -52,6 +54,7 @@ float4 getSky(float3 direction)
 	return c;
 }
 
+const static float normalDistance = 0.5f;
 float4 getPoint(float3 position)
 {
 	float h = getHeight(position.xz);
@@ -59,18 +62,20 @@ float4 getPoint(float3 position)
 	if(h < position.y) return float4(0.0f, 0.0f, 0.0f, 0.0f);
 	
 	position.y = h;
-	float3 herex = float3(position.x + 1.0f, h, position.z);
-	float3 herey = float3(position.x, h, position.z + 1.0f);
+	float3 herex = float3(position.x - normalDistance, h, position.z);
+	float3 herey = float3(position.x, h, position.z - normalDistance);
 	herex.y = getHeight(herex.xz);
 	herey.y = getHeight(herey.xz);
 	
-	float3 normal = cross(herex - position, herey - position);
+	position = position.xzy; herex = herex.xzy; herey = herey.xzy;
+	float3 normal = normalize(cross(position - herex, position - herey));
 	
-	h += 45;
 	//return float4(normal * 0.5f + 0.5f, 1.0f);
 	
+	h += 45;
 	float3 color = float3(h * 0.04f, h * 0.010f, (h - 80.0f) * 0.03);
-	float brightness = saturate(dot(normal, -normalize(SunDirection)));
+	//float3 color = float3(fmod(h, 1.0f), 0.0f, 0.0f);
+	float brightness = saturate(dot(normal, normalize(SunDirection)));
 	return float4(color * brightness, 1.0f);
 	//if(h < position.y) return float4(0.0f, 0.0f, 0.0f, 0.0f);
 	//return float4(h * 0.05f, h * 0.1f, saturate(-h) + h * 0.03f, 1.0f);
