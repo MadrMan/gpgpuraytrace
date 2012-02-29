@@ -4,6 +4,7 @@
 #include "../Factories/IWindow.h"
 #include "../Common/Timer.h"
 #include "IInput.h"
+#include "Logger.h"
 
 Camera::Camera()
 {
@@ -21,6 +22,7 @@ Camera::~Camera()
 	input->destroyAction(moveForward);
 	input->destroyAction(rotateLR);
 	input->destroyAction(rotateUD);
+	input->destroyAction(disableMouse);
 }
 
 void Camera::setWindow(IWindow* window)
@@ -36,19 +38,28 @@ void Camera::setWindow(IWindow* window)
 	moveForward = window->getInput()->createAction();
 	rotateLR = window->getInput()->createAction();
 	rotateUD = window->getInput()->createAction();
+	disableMouse = window->getInput()->createAction();
+
 	moveSide->registerKeyboard('A', -1.0f, TriggerType::OnHold);
 	moveSide->registerKeyboard('D', 1.0f, TriggerType::OnHold);
 	moveForward->registerKeyboard('W', 1.0f, TriggerType::OnHold);
 	moveForward->registerKeyboard('S', -1.0f, TriggerType::OnHold);
+	disableMouse->registerKeyboard(VK_CONTROL, 1.0f, TriggerType::OnHold);
+	
 	rotateLR->registerMouseAxis(0);
 	rotateUD->registerMouseAxis(1);
 }
 
+
 void Camera::update()
 {
-	//Rotate camera
-	rotationEuler[0] -= rotateUD->getState() * 0.01f;
-	rotationEuler[1] -= rotateLR->getState() * 0.01f;
+	//if ctrl is hold down, discard mouse move
+	if(disableMouse->getState() < 0.5f)
+	{
+		//Rotate camera
+		rotationEuler[0] -= rotateUD->getState() * 0.01f;
+		rotationEuler[1] -= rotateLR->getState() * 0.01f;
+	}
 	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
 	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
 	//rotation = XMQuaternionMultiply(extraRotation, rotation);

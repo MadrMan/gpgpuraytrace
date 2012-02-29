@@ -34,10 +34,11 @@ float getHeight(float2 position)
 	float2 scaled = position * 0.01f;
 	
 	//return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
-	for(uint x = 0; x < 6; x++)
+	for(uint x = 0; x < 1; x++)
 	{
 		h += noise2d(scaled * pow(2, x)) * pow(p, x);
 	}
+	
 	
 	//float h = sin(position.x * 0.1f) * 0.1f * sin(position.y * 0.1f);
 	
