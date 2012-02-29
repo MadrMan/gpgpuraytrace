@@ -122,14 +122,14 @@ bool DeviceDirect3D::create()
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
-	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; //D3D11_FILTER_ANISOTROPIC;
 	samplerDesc.AddressU =
 	samplerDesc.AddressV =
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.MinLOD = -FLT_MAX;
 	samplerDesc.MaxLOD = FLT_MAX;
 	samplerDesc.MipLODBias = 0.0f;
-	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxAnisotropy = 0;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 
 	ID3D11SamplerState* sampler;

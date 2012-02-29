@@ -1,5 +1,7 @@
 SamplerState state;
-Texture2D texNoise;
+Texture2D<float> texNoise;
+
+const static float TEXSIZE = 128.0f;
 
 #if 0
 static const float3 grad3[] = {{1,1,0},{-1,1,0},{1,-1,0},{-1,-1,0},
@@ -37,6 +39,8 @@ static const uint perm[] = {151,160,137,91,90,15,
 // 2D simplex noise
 float noise2d(float2 pin) 
 {
+	pin *= 0.3f; //Scale to match texture
+
 	float n0, n1, n2; // Noise contributions from the three corners
 	// Skew the input space to determine which simplex cell we're in
 	static const float F2 = 0.5f*(sqrt(3.0f)-1.0f);
@@ -91,30 +95,30 @@ float noise2d(float2 pin)
 	return 70.0f * (n0 + n1 + n2);
 }
 
-/*float getHeight(float2 position)
-{
-	const static float p = 1.0f;
-	
-	float h = 0.0f;
-	float2 scaled = position * 0.01f;
-	
-	//return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
-	for(uint x = 0; x < 100; x++)
-	{
-		h += noise2d(scaled * pow(2, x)) * pow(p, x);
-	}
-	
-	return h * 10.0f;
-}*/
 #else
+
+float2 fade(float2 t)
+{
+	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+}
+
+const static int TEXSIZEI = 128;
 float noise2d(float2 pos)
 {
-	float2 scaled = pos / 128.0f;
-	//int2 bla;
-	//float2 fract = modf(scaled, bla);
-	//float4 samples = texNoise.Gather(state, scaled);
-	//return fract.xyxx; //lerp(lerp(samples.x, samples.y, fract.x), lerp(samples.z, samples.w, fract.x), fract.y);
-	return texNoise.SampleLevel(state, scaled, 0).x * 2.0f - 1.0f;
+	pos = abs(pos);
+	int2 loc = floor(pos);
+	float4 samples = float4(
+		texNoise.Load(uint3(loc, 0.0f) % TEXSIZEI), 
+		texNoise.Load(uint3((loc + uint2(1, 0)) % TEXSIZEI, 0.0f)), 
+		texNoise.Load(uint3((loc + uint2(1, 1)) % TEXSIZEI, 0.0f)), 
+		texNoise.Load(uint3((loc + uint2(0, 1)) % TEXSIZEI, 0.0f)));
+	float2 fract = fade(pos - loc.xy);
+	//float2 fract = fmod(pos - loc.xy, 1.0f);
+	float2 interpx = float2(
+		lerp(samples.x, samples.y, fract.x),
+		lerp(samples.w, samples.z, fract.x));
+	//return lerp(samples.x, samples.y, fract.x) * 0.5f + samples.x * 0.5f;
+	return lerp(interpx.x, interpx.y, fract.y) * 2.0f - 1.0f;
 }
 #endif
 
@@ -122,8 +126,8 @@ float noise2d(float2 pos)
 [numthreads(20, 20, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
-	float2 texel = DTid.xy / 100.0f + float2(0.5f, 0.5f);
-	texOut[DTid.xy] = noise2d(texel) * 0.5f + 0.5f; //getHeight(DTid.xy) * 0.01f;
+	float2 texel = DTid.xy / 10.0f;
+	texOut[DTid.xy] = noise2d(texel - 0.8f) * 0.5f + 0.5f; //getHeight(DTid.xy) * 0.01f
 
 	//float4(h.xxx * 0.5f + 0.5f, 0.0f);
 }*/
