@@ -22,7 +22,7 @@ cbuffer CBPermanent
 
 const static float RAY_STEP = 0.1f;
 const static int RAY_STEPS = 50000;
-const static float3 SunDirection = float3(0.4f, 0.4f, 0.4f);
+const static float3 SunDirection = float3(0.5f, 0.2f, 1.2f);
 
 RWTexture2D<float4> texOut : register(u0);
 
@@ -36,7 +36,7 @@ float getHeight(float2 position)
 	//return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
 	for(uint x = 0; x < 1; x++)
 	{
-		h += noise2d(scaled * pow(2, x)) * pow(p, x);
+		h += round(noise2d(scaled * pow(2, x))) * pow(p, x);
 	}
 	
 	
@@ -100,11 +100,12 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	
 	float step = RAY_STEP;
 	float d = 0.0f;
+	float3 rayPosition;
 	
 	//[loop] while(d < maxDist && step > (d * 0.001f))
 	[loop] while(d < maxDist && step > RAY_STEP * 0.1f)
 	{
-		float3 rayPosition = rayStart + rayDirection * d;
+		rayPosition = rayStart + rayDirection * d;
 		float4 color = getPoint(rayPosition);
 
 		if(color.a >= 0.1)
@@ -122,7 +123,28 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	if(result.a < 0.1)
 	{
 		result = getSky(rayDirection);
-	}
+	}else{
+		step = RAY_STEP;
+		d = 1.0f;
+		rayStart = rayPosition;
+		
+		[loop] while(d < maxDist)
+		{
+			rayPosition = rayStart + SunDirection * d;
+			float4 color = getPoint(rayPosition);
 
+			if(color.a >= 0.1)
+			{
+				result = float4(0.0f,0.0f,0.0f,0.0f);
+				break;
+			} else {
+				step *= 1.015f;
+				d += step;
+			}
+		}
+		
+		
+	}
+	
 	texOut[DTid.xy] = result;
 }

@@ -23,6 +23,7 @@ Camera::~Camera()
 	input->destroyAction(rotateLR);
 	input->destroyAction(rotateUD);
 	input->destroyAction(disableMouse);
+	input->destroyAction(warpDrive);
 }
 
 void Camera::setWindow(IWindow* window)
@@ -39,13 +40,15 @@ void Camera::setWindow(IWindow* window)
 	rotateLR = window->getInput()->createAction();
 	rotateUD = window->getInput()->createAction();
 	disableMouse = window->getInput()->createAction();
+	warpDrive = window->getInput()->createAction();
 
 	moveSide->registerKeyboard('A', -1.0f, TriggerType::OnHold);
 	moveSide->registerKeyboard('D', 1.0f, TriggerType::OnHold);
 	moveForward->registerKeyboard('W', 1.0f, TriggerType::OnHold);
 	moveForward->registerKeyboard('S', -1.0f, TriggerType::OnHold);
 	disableMouse->registerKeyboard(VK_CONTROL, 1.0f, TriggerType::OnHold);
-	
+	warpDrive->registerKeyboard('Q', 1.0f, TriggerType::OnHold);
+
 	rotateLR->registerMouseAxis(0);
 	rotateUD->registerMouseAxis(1);
 }
@@ -66,6 +69,11 @@ void Camera::update()
 
 	float moveSpeed = Timer::get()->getConstant() * 10.0f;
 
+	//warpspeed
+	if(warpDrive->getState() > 0.5f)
+	{
+		moveSpeed *= 100.0f;
+	}
 	//Move camera
 	XMVECTOR front = XMVector3Rotate(XM_FRONT, rotation);
 	position = XMVectorAdd(position, front * moveForward->getState() * moveSpeed);
