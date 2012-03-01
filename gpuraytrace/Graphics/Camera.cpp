@@ -67,12 +67,12 @@ void Camera::update()
 	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
 	//rotation = XMQuaternionMultiply(extraRotation, rotation);
 
-	float moveSpeed = Timer::get()->getConstant() * 10.0f;
+	float moveSpeed = Timer::get()->getConstant() * 5.0f;
 
 	//warpspeed
 	if(warpDrive->getState() > 0.5f)
 	{
-		moveSpeed *= 100.0f;
+		moveSpeed *= 10.0f;
 	}
 	//Move camera
 	XMVECTOR front = XMVector3Rotate(XM_FRONT, rotation);

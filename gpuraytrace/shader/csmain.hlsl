@@ -34,7 +34,7 @@ float getHeight(float2 position)
 	float2 scaled = position * 0.01f;
 	
 	//return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
-	for(uint x = 0; x < 7; x++)
+	for(uint x = 0; x < 2; x++)
 	{
 		h += noise3d(float3(scaled * pow(2, x), 0.0f)) * pow(p, x);
 	}
@@ -123,21 +123,21 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	{
 		result = getSky(rayDirection);
 	}else{
-		step = RAY_STEP;
-		d = 1.0f;
+		step = RAY_STEP * 5.0f;
+		d = 0.5f;
 		rayStart = rayPosition;
 		
-		[loop] while(d < maxDist)
+		[loop] while(d < maxDist * 0.1f && result.a >= 0.1f)
 		{
 			rayPosition = rayStart + SunDirection * d;
 			float4 color = getPoint(rayPosition);
 
 			if(color.a >= 0.1)
 			{
-				result = float4(0.0f,0.0f,0.0f,0.0f);
-				break;
+				result *= float4(0.2f,0.2f,0.6f,0.0f);
+				//break;
 			} else {
-				step *= 1.015f;
+				step *= 1.05f;
 				d += step;
 			}
 		}
