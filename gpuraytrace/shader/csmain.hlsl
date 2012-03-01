@@ -22,7 +22,7 @@ cbuffer CBPermanent
 
 const static float RAY_STEP = 0.1f;
 const static int RAY_STEPS = 50000;
-const static float3 SunDirection = float3(0.5f, 0.2f, 1.2f);
+const static float3 SunDirection = float3(0.4f, 0.4f, 0.4f);
 
 RWTexture2D<float4> texOut : register(u0);
 
@@ -34,11 +34,10 @@ float getHeight(float2 position)
 	float2 scaled = position * 0.01f;
 	
 	//return sin(position.x * 0.1f) * sin(position.y * 0.1f) * 20.0f;
-	for(uint x = 0; x < 1; x++)
+	for(uint x = 0; x < 7; x++)
 	{
-		h += round(noise2d(scaled * pow(2, x))) * pow(p, x);
+		h += noise3d(float3(scaled * pow(2, x), 0.0f)) * pow(p, x);
 	}
-	
 	
 	//float h = sin(position.x * 0.1f) * 0.1f * sin(position.y * 0.1f);
 	

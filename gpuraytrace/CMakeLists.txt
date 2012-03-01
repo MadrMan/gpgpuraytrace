@@ -48,6 +48,8 @@ set(PROJ_FACTORY
 )
 
 set (PROJ_GRAPHICS
+	${gpgpuraytrace_SOURCE_DIR}/Graphics/Noise.h
+	${gpgpuraytrace_SOURCE_DIR}/Graphics/Noise.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Camera.h
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Camera.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/IShaderVariable.h

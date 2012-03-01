@@ -7,6 +7,7 @@
 #include "./Factories/ITexture.h"
 #include "./Graphics/Camera.h"
 #include "./Graphics/IShaderVariable.h"
+#include "./Graphics/Noise.h"
 
 #include "IInput.h"
 #include "Directory.h"
@@ -23,7 +24,8 @@ Raytracer::Raytracer()
 	varProjection = nullptr;
 	varEye = nullptr;
 
-	texNoise = nullptr;
+	texNoise1D = nullptr;
+	texNoise2D = nullptr;
 }
 
 Raytracer::~Raytracer()
@@ -31,7 +33,8 @@ Raytracer::~Raytracer()
 	delete compute;
 	delete device;
 	delete window;
-	delete texNoise;
+	delete texNoise1D;
+	delete texNoise2D;
 }
 
 void Raytracer::run()
@@ -53,8 +56,15 @@ void Raytracer::run()
 	window->show();
 
 	//Load textures
-	texNoise = device->createTexture();
-	texNoise->create("Media/noise1_small.png");
+	Noise* noise = new Noise();
+	noise->generate();
+
+	texNoise1D = device->createTexture();
+	texNoise2D = device->createTexture();
+	texNoise2D->create(TextureDimensions::Texture2D, Noise::TEXTURE_SIZE, Noise::TEXTURE_SIZE, noise->permutations2D);
+	texNoise1D->create(TextureDimensions::Texture1D, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
+
+	//texNoise1D->create("Media/noise1_small.png");
 
 	//Create a new compute shader instance
 	compute = device->createCompute();
@@ -147,7 +157,16 @@ void Raytracer::updateComputeVars()
 		varScreenSize->write(screenSize);
 	}
 
-	compute->setTexture(0, texNoise);
+	//Set other variables
+	IShaderVariable* varSunDirection = compute->getVariable("SunDirection");
+	if(varSunDirection)
+	{
+		float sunDirection[3] = { 0.6f, 0.6f, 0.6f };
+		varSunDirection->write(sunDirection);
+	}
+
+	compute->setTexture(0, texNoise1D);
+	compute->setTexture(1, texNoise2D);
 }
 
 void Raytracer::loadComputeShader()

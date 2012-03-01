@@ -1,7 +1,4 @@
 SamplerState state;
-Texture2D<float> texNoise;
-
-const static float TEXSIZE = 128.0f;
 
 #if 0
 static const float3 grad3[] = {{1,1,0},{-1,1,0},{1,-1,0},{-1,-1,0},
@@ -95,7 +92,10 @@ float noise2d(float2 pin)
 	return 70.0f * (n0 + n1 + n2);
 }
 
-#else
+#endif
+#if 0
+Texture2D<float> texNoise;
+const static float TEXSIZE = 128.0f;
 
 float2 fade(float2 t)
 {
@@ -121,13 +121,63 @@ float noise2d(float2 pos)
 	return lerp(interpx.x, interpx.y, fract.y) * 2.0f - 1.0f;
 }
 #endif
+#if 1
+Texture1D<float4> texPermGrad : register(t0);
+Texture2D<float4> texPerm2D : register(t1);
+
+//3D
+float3 fade(float3 t)
+{
+	return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+float4 perm2d(float2 p)
+{
+	return texPerm2D.SampleLevel(state, p, 0);
+}
+
+//3D
+float gradperm(float x, float3 p)
+{
+	return dot(texPermGrad.SampleLevel(state, x, 0).xyz, p);
+}
+
+// 3D noise
+float noise3d(float3 p)
+{
+	float3 P = fmod(floor(p), 256.0);	// FIND UNIT CUBE THAT CONTAINS POINT
+  	p -= floor(p);                      // FIND RELATIVE X,Y,Z OF POINT IN CUBE.
+	float3 f = fade(p);  
+	// COMPUTE FADE CURVES FOR EACH OF X,Y,Z.
+	
+	P = P / 256.0;
+	const float one = 1.0 / 256.0;
+	
+    // HASH COORDINATES OF THE 8 CUBE CORNERS
+	float4 AA = perm2d(P.xy) + P.z;
+	
+	float3 norm = texPermGrad.SampleLevel(state, AA.x, 0).xyz;
+	float3 direction = p;
+
+	// AND ADD BLENDED RESULTS FROM 8 CORNERS OF CUBE
+  	return lerp( lerp( lerp( gradperm(AA.x, p ),  
+                             gradperm(AA.z, p + float3(-1, 0, 0) ), f.x),
+                       lerp( gradperm(AA.y, p + float3(0, -1, 0) ),
+                             gradperm(AA.w, p + float3(-1, -1, 0) ), f.x), f.y),
+                             
+                 lerp( lerp( gradperm(AA.x+one, p + float3(0, 0, -1) ),
+                             gradperm(AA.z+one, p + float3(-1, 0, -1) ), f.x),
+                       lerp( gradperm(AA.y+one, p + float3(0, -1, -1) ),
+                             gradperm(AA.w+one, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
+}
+#endif
 
 /*RWTexture2D<float4> texOut : register(u0);
 [numthreads(20, 20, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
-	float2 texel = DTid.xy / 10.0f;
-	texOut[DTid.xy] = noise2d(texel - 0.8f) * 0.5f + 0.5f; //getHeight(DTid.xy) * 0.01f
+	float2 texel = DTid.xy / 100.0f;
+	texOut[DTid.xy] = noise3d(float3(texel.xy, 0.0f)) * 0.5f + 0.5f;
 
 	//float4(h.xxx * 0.5f + 0.5f, 0.0f);
 }*/

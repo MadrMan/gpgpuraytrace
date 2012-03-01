@@ -11,6 +11,8 @@ public:
 
 	virtual bool create(const std::string& path) override;
 
+	virtual bool create(TextureDimensions::T dimensions, int width, int height, const void* data) override;
+
 	ID3D11Resource* getResource() const
 	{ return resource; }
 

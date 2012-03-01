@@ -32,7 +32,8 @@ private:
 	IDevice* device;
 	IWindow* window;
 	ICompute* compute;
-	ITexture* texNoise;
+	ITexture* texNoise1D;
+	ITexture* texNoise2D;
 	Camera* camera;
 
 	IShaderVariable* varView;

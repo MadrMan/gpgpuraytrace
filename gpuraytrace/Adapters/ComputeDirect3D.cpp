@@ -412,6 +412,11 @@ void ComputeDirect3D::run()
 
 void ComputeDirect3D::setTexture(int stage, ITexture* texture)
 {
-	ID3D11ShaderResourceView* view = static_cast<TextureDirect3D*>(texture)->getView();
-	device->getImmediate()->CSSetShaderResources(stage, 1, &view);
+	if(texture)
+	{
+		ID3D11ShaderResourceView* view = static_cast<TextureDirect3D*>(texture)->getView();
+		device->getImmediate()->CSSetShaderResources(stage, 1, &view);
+	} else {
+		device->getImmediate()->CSSetShaderResources(stage, 1, nullptr);
+	}
 }
