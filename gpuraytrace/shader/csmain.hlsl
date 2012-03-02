@@ -31,16 +31,20 @@ float4 getFog(float3 p)
 
 float getDensity(float3 p)
 {
-	float d = 0.0f;
-	float3 scaled = p * 0.1f;
-	
-	for(uint x = 0; x < 1; x++)
-	{
-		d += noise3d(scaled * pow(2, x)) * pow(0.45f, x);
-	}
-	
-	d -= p.y * 0.15f;
+	//float r = length(p - Eye.xyz);
 
+	p *= 0.1f;
+	float d = 0.0f;
+
+	d = -p.y;
+	d += noise3d(p * 4.03f) * 0.25f;
+	d += noise3d(p * 1.96f) * 0.5f;
+	d += noise3d(p * 1.01f) * 1.0f;
+	d += noise3d(p * 0.53f) * 2.0f;
+	d += noise3d(p * 0.21f) * 6.0f;
+	d += noise3d(p * 0.09f) * 14.0f;
+	d += pow(saturate(-p.y) * 2.0f, 2.3f);
+	
 	return d;
 }
 
