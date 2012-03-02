@@ -17,11 +17,16 @@ cbuffer CBPermanent
 	float2 ScreenSize;
 }
 
-const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
+//const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
+const static float3 FOG_COLOR = normalize(float3(0.5f, 0.6f, 0.7f));
 float4 getFog(float3 p)
 {
-	//--Calculate fog here
-	return 0.0f;
+	float d = noise3d(p * 0.05f) * 2.0f + 1.0f;		// pluimen
+	d *= 0.005f;
+	d -= p.y * 0.0001f;
+	d = saturate(d);
+	float fogd = (noise3d(p * 0.006f) + noise3d(p * 0.1f)) * 2.8f + 1.0f;
+	return float4(FOG_COLOR * fogd * d, d);
 }
 
 float getDensity(float3 p)
@@ -29,7 +34,7 @@ float getDensity(float3 p)
 	float d = 0.0f;
 	float3 scaled = p * 0.1f;
 	
-	for(uint x = 0; x < 2; x++)
+	for(uint x = 0; x < 1; x++)
 	{
 		d += noise3d(scaled * pow(2, x)) * pow(0.45f, x);
 	}
@@ -55,15 +60,17 @@ float2 traceRay(float3 p, float stepmod, float3 dir, out float3 fogcol, out floa
 		rayp = p + dir * s;
 		
 		d = getDensity(rayp);
-		f += getFog(rayp);
+		float4 fogstep = getFog(rayp) * step;
 
 		if(f.a > 1.0f || d > 0.0f) 
 		{
 			s -= step;
 			step *= 0.4f;
+			f -= fogstep;
 		} else {
 			step *= 1.015f;
 			s += step;
+			f += fogstep;
 		}
 	}
 	
@@ -97,6 +104,7 @@ float3 getColor(float3 p, float3 n)
 		color = lerp(color, fog, d.y);
 	}
 	
+
 	return color;
 }
 
