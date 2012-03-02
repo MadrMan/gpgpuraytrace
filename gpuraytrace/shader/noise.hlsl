@@ -131,9 +131,10 @@ float3 fade(float3 t)
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
+const static float halfPixel = 0.5f / 256.0f;
 float4 perm2d(float2 p)
 {
-	return texPerm2D.SampleLevel(state, p, 0);
+	return texPerm2D.SampleLevel(state, p + halfPixel, 0);
 }
 
 //3D
@@ -143,18 +144,33 @@ float gradperm(float x, float3 p)
 }
 
 // 3D noise
+const static float onePixel = 1.0f / 256.0f;
 float noise3d(float3 p)
 {
-	float3 P = fmod(floor(p), 256.0);	// FIND UNIT CUBE THAT CONTAINS POINT
-  	p -= floor(p);                      // FIND RELATIVE X,Y,Z OF POINT IN CUBE.
+	float3 P = floor(p);
+	p -= P; 
+
+	P /= 256.0f;
+	//float3 P = fp / 256.0f; //fmod(fp, 256.0);	// FIND UNIT CUBE THAT CONTAINS POINT
+	float4 AA = perm2d(P.xy) + P.z;
+
+	/*fp.x = fp.x < 0 ? 256 - abs(fp.x) % 256 : fp.x % 256;
+	fp.y = fp.y < 0 ? 256 - abs(fp.y) % 256 : fp.y % 256;
+	fp.z = fp.z < 0 ? 256 - abs(fp.z) % 256 : fp.z % 256;
+	float4 AA = texPerm2D.Load(int3(fp.xy, 0)) + fp.z / 256.0;*/
+	//return AA;
+	//return P;
+	
+  	                     // FIND RELATIVE X,Y,Z OF POINT IN CUBE.
 	float3 f = fade(p);  
 	// COMPUTE FADE CURVES FOR EACH OF X,Y,Z.
 	
-	P = P / 256.0;
-	const float one = 1.0 / 256.0;
+	
+	
 	
     // HASH COORDINATES OF THE 8 CUBE CORNERS
-	float4 AA = perm2d(P.xy) + P.z;
+	//float4 AA = texPerm2D.Load(int3(fp.xy, 0)) + P.z;
+	//float4 AA = perm2d(P.xy) + P.z;
 	
 	float3 norm = texPermGrad.SampleLevel(state, AA.x, 0).xyz;
 	float3 direction = p;
@@ -165,10 +181,10 @@ float noise3d(float3 p)
                        lerp( gradperm(AA.y, p + float3(0, -1, 0) ),
                              gradperm(AA.w, p + float3(-1, -1, 0) ), f.x), f.y),
                              
-                 lerp( lerp( gradperm(AA.x+one, p + float3(0, 0, -1) ),
-                             gradperm(AA.z+one, p + float3(-1, 0, -1) ), f.x),
-                       lerp( gradperm(AA.y+one, p + float3(0, -1, -1) ),
-                             gradperm(AA.w+one, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
+                 lerp( lerp( gradperm(AA.x + onePixel, p + float3(0, 0, -1) ),
+                             gradperm(AA.z + onePixel, p + float3(-1, 0, -1) ), f.x),
+                       lerp( gradperm(AA.y + onePixel, p + float3(0, -1, -1) ),
+                             gradperm(AA.w + onePixel, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
 }
 #endif
 
@@ -176,8 +192,14 @@ float noise3d(float3 p)
 [numthreads(20, 20, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
-	float2 texel = DTid.xy / 100.0f;
-	texOut[DTid.xy] = noise3d(float3(texel.xy, 0.0f)) * 0.5f + 0.5f;
+	float4 tnoise = 0.0f;
+	for(int x = 0; x < 2500; x++)
+	{
+		float2 texel = DTid.xy / 2000.0f;
+		float4 noise = noise3d(float3(texel.xy, 0.0f));
+		tnoise += noise * 0.0004f;
+	}
+	texOut[DTid.xy] = fmod(tnoise * 0.5f + 0.5f, 0.1f) * 10.0f;
 
 	//float4(h.xxx * 0.5f + 0.5f, 0.0f);
 }*/
