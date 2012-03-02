@@ -48,11 +48,20 @@ float getDensity(float3 p)
 	return d;
 }
 
+struct RayResult
+{
+	float d; //density
+	float f; //fog
+	float3 p; //position
+	float3 fcolor; //fog color
+};
+
 const static float RAY_STEP = 0.1f;
 const static uint RAY_STEPS = 50000;
 const static float MAX_DIST = RAY_STEP * RAY_STEPS;
-float2 traceRay(float3 p, float stepmod, float3 dir, out float3 fogcol, out float3 pout)
+RayResult traceRay(float3 p, float stepmod, float3 dir)
 {
+	RayResult rr;
 	float4 f = 0.0;
 	
 	float step = RAY_STEP * stepmod;
@@ -78,9 +87,11 @@ float2 traceRay(float3 p, float stepmod, float3 dir, out float3 fogcol, out floa
 		}
 	}
 	
-	pout = rayp;
-	fogcol = f.rgb;
-	return float2(d, f.a);
+	rr.p = rayp;
+	rr.fcolor = f.rgb;
+	rr.d = d;
+	rr.f = f.a;
+	return rr;
 }
 
 const static float3 SunDirection = float3(0.4f, 0.4f, 0.4f);
@@ -88,7 +99,7 @@ const static float3 ShadowColor = float3(0.1f, 0.1f, 0.2f);
 float3 getColor(float3 p, float3 n)
 {
 	float3 color = 0.0f;
-	
+
 	//Calculate landscape color
 	float h = p.y;
 	h += 100;
@@ -97,18 +108,15 @@ float3 getColor(float3 p, float3 n)
 	color *= brightness;
 	
 	//Calculate shadow
-	float3 fog;
-	float3 pout;
-	float2 d = traceRay(p, 4.0f, SunDirection, fog, pout);
+	RayResult rr = traceRay(p, 4.0f, SunDirection);
 	
-	if(d.x > 0.0f)
+	if(rr.d > 0.0f)
 	{
-		color *= lerp(ShadowColor, fog, d.y);
+		color *= lerp(ShadowColor, rr.fcolor, rr.f);
 	} else {
-		color = lerp(color, fog, d.y);
+		color = lerp(color, rr.fcolor, rr.f);
 	}
 	
-
 	return color;
 }
 
@@ -156,18 +164,17 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
 	PixelData pd = getPixelRay(DTid.xy);
 	
-	float3 p;
-	float3 color;
-	float2 d = traceRay(pd.p, 1.0f, pd.dir, color, p);
-	
-	if(d.x > 0.0f) 							//-- we've hit something
+	float3 color = 0.0f;
+	RayResult rr = traceRay(pd.p, 1.0f, pd.dir);
+
+	if(rr.d > 0.0f) 							//-- we've hit something
 	{
-		float3 n = getNormal(p, d.x);
-		float3 tcolor = getColor(p, n);
-		color = lerp(tcolor, color, d.y);
+		float3 n = getNormal(rr.p, rr.d);
+		float3 tcolor = getColor(rr.p, n);
+		color = lerp(tcolor, color, rr.f);
 	} else { 								// -- we've hit nothing
 		float3 scolor = getSky(pd.dir);
-		color = lerp(scolor, color, d.y);
+		color = lerp(scolor, color, rr.f);
 	}
 	
 	texOut[DTid.xy] = float4(color, 0.0f);
