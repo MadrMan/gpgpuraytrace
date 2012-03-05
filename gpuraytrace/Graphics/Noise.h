@@ -9,12 +9,13 @@ public:
 	int setSeed(int seed);
 	void generate();
 
-	static const int TEXTURE_SIZE = 256;
+	static const int TEXTURE_SIZE = 128;
 	unsigned char* permutations2D;
-	char* permutations1D;
+	float* permutations1D;
 
 private:
 	void generatePermutations2D();
 	void generatePermuationsGradient1D();
 	int getPermutation2D(int i);
+	int* permutations;
 };

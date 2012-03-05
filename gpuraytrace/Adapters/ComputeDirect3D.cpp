@@ -317,14 +317,13 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 		return false;
 	}
 
-	if(!shader)
-	{
-		shader = createdShader;
-	} else {
+	//if(!shader)
+	//{
+	//	shader = createdShader;
+	//} else {
 		copyShaderVarsToNewShader(createdShader);
 		newShader = createdShader;
-	
-	}
+	//}
 
 	Logger() << "Compiled new shader";
 	
@@ -413,7 +412,7 @@ void ComputeDirect3D::run()
 
 	ID3D11DeviceContext* dc = device->getImmediate();
 	dc->CSSetShader(shader->getShader(), 0, 0);
-	dc->Dispatch(device->getWindow()->getWindowSettings().width / 20, device->getWindow()->getWindowSettings().height / 20, 1);
+	dc->Dispatch(device->getWindow()->getWindowSettings().width / 16, device->getWindow()->getWindowSettings().height / 16, 1);
 	
 	//dc->CSSetShader(shader, nullptr, 0);
 	//dc->CSSetUnorderedAccessViews(

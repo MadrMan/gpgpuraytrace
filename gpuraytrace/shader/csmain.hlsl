@@ -1,9 +1,9 @@
 #include "noise.hlsl"
 
-/*cbuffer CBTweakable
+cbuffer CBTweakable
 {
 	float3 SunDirection;
-}*/
+}
 
 cbuffer CBFrame
 {
@@ -56,9 +56,10 @@ struct RayResult
 	float3 fcolor; //fog color
 };
 
-const static float RAY_STEP = 0.1f;
-const static uint RAY_STEPS = 50000;
-const static float MAX_DIST = RAY_STEP * RAY_STEPS;
+const static float RAY_STEP = 0.03f;
+//const static uint RAY_STEPS = 500000;
+const static float MAX_DIST = 5000.0f;
+
 RayResult traceRay(float3 p, float stepmod, float3 dir)
 {
 	RayResult rr;
@@ -68,7 +69,7 @@ RayResult traceRay(float3 p, float stepmod, float3 dir)
 	float s = 0.5f;
 	float d = 0.0f;
 	float3 rayp;
-	[loop] while(s < MAX_DIST && step > RAY_STEP * 0.1f)
+	[loop] while(s < MAX_DIST && step > RAY_STEP * 0.2f)
 	{
 		rayp = p + dir * s;
 		
@@ -81,7 +82,7 @@ RayResult traceRay(float3 p, float stepmod, float3 dir)
 			step *= 0.4f;
 			f -= fogstep;
 		} else {
-			step *= 1.015f;
+			step *= 1.012f;
 			s += step;
 			f += fogstep;
 		}
@@ -94,7 +95,6 @@ RayResult traceRay(float3 p, float stepmod, float3 dir)
 	return rr;
 }
 
-const static float3 SunDirection = float3(0.4f, 0.4f, 0.4f);
 const static float3 ShadowColor = float3(0.1f, 0.1f, 0.2f);
 float3 getColor(float3 p, float3 n)
 {
@@ -104,18 +104,18 @@ float3 getColor(float3 p, float3 n)
 	float h = p.y;
 	h += 100;
 	color = float3(h * 0.01f, h * 0.010f, (h - 80.0f) * 0.03);
-	float brightness = saturate(dot(n, normalize(SunDirection)));
+	float brightness = saturate(dot(n, SunDirection));
 	color *= brightness;
 	
 	//Calculate shadow
-	RayResult rr = traceRay(p, 4.0f, SunDirection);
+	/*RayResult rr = traceRay(p, 4.0f, SunDirection);
 	
 	if(rr.d > 0.0f)
 	{
 		color *= lerp(ShadowColor, rr.fcolor, rr.f);
 	} else {
 		color = lerp(color, rr.fcolor, rr.f);
-	}
+	}*/
 	
 	return color;
 }
@@ -125,9 +125,8 @@ float3 getSky(float3 dir)
 	float3 c = float3(0.0f, 0.0f, 1.0f - dir.y * 0.6f);
 	c.rg += (c.b - 0.6f) * 1.0f;
 	
-	float hemi = saturate(dot(dir, normalize(SunDirection)));
-	c.rgb += pow(hemi, 14.0f);
-	return c;
+	float hemi = saturate(dot(dir, SunDirection));
+	return lerp(c.rgb, float3(2.0f, 2.0f, 1.2f), pow(hemi, 14.0f));
 }
 
 float3 getNormal(float3 p, float d)
@@ -159,7 +158,7 @@ PixelData getPixelRay(uint2 DTid)
 }
 
 RWTexture2D<float4> texOut : register(u0);
-[numthreads(20, 20, 1)]
+[numthreads(16, 16, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
 	PixelData pd = getPixelRay(DTid.xy);

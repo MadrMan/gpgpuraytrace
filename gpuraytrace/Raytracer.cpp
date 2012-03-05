@@ -56,13 +56,13 @@ void Raytracer::run()
 	window->show();
 
 	//Load textures
-	Noise* noise = new Noise();
+	noise = new Noise();
 	noise->generate();
 
-	texNoise1D = device->createTexture();
+	//texNoise1D = device->createTexture();
 	texNoise2D = device->createTexture();
 	texNoise2D->create(TextureDimensions::Texture2D, Noise::TEXTURE_SIZE, Noise::TEXTURE_SIZE, noise->permutations2D);
-	texNoise1D->create(TextureDimensions::Texture1D, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
+	//texNoise1D->create(TextureDimensions::Texture1D, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
 
 	//texNoise1D->create("Media/noise1_small.png");
 
@@ -161,12 +161,19 @@ void Raytracer::updateComputeVars()
 	IShaderVariable* varSunDirection = compute->getVariable("SunDirection");
 	if(varSunDirection)
 	{
-		float sunDirection[3] = { 0.6f, 0.6f, 0.6f };
-		varSunDirection->write(sunDirection);
+		XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f);
+		sunDirection = XMVector3Normalize(sunDirection);
+		varSunDirection->write(&sunDirection);
 	}
 
-	compute->setTexture(0, texNoise1D);
-	compute->setTexture(1, texNoise2D);
+	IShaderVariable* varNoiseGrads = compute->getVariable("permGradients");
+	if(varNoiseGrads)
+	{
+		varNoiseGrads->write(noise->permutations1D);
+	}
+
+	//compute->setTexture(0, texNoise1D);
+	compute->setTexture(0, texNoise2D);
 }
 
 void Raytracer::loadComputeShader()

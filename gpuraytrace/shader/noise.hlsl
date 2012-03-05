@@ -122,8 +122,15 @@ float noise2d(float2 pos)
 }
 #endif
 #if 1
-Texture1D<float4> texPermGrad : register(t0);
-Texture2D<float4> texPerm2D : register(t1);
+
+static const int TEXTURE_SIZE = 128;
+cbuffer CBNoise
+{
+	float4 permGradients[TEXTURE_SIZE];
+}
+
+//Texture1D<float4> texPermGrad : register(t0);
+Texture2D<uint4> texPerm2D : register(t0);
 
 //3D
 float3 fade(float3 t)
@@ -131,29 +138,33 @@ float3 fade(float3 t)
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-const static float halfPixel = 0.5f / 256.0f;
-float4 perm2d(float2 p)
-{
-	return texPerm2D.SampleLevel(state, p + halfPixel, 0);
-}
-
 //3D
-float gradperm(float x, float3 p)
+float gradperm(uint x, float3 p)
 {
-	return dot(texPermGrad.SampleLevel(state, x, 0).xyz, p);
+	//return dot(texPermGrad.SampleLevel(state, x, 0).xyz, p);
+	return dot(permGradients[x % TEXTURE_SIZE].xyz, p);
 }
 
 // 3D noise
-const static float onePixel = 1.0f / 256.0f;
 float noise3d(float3 p)
 {
-	float3 P = floor(p);
+	int3 P = floor(p);
 	p -= P; 
 
-	P /= 256.0f;
+	uint3 Pu = uint3(
+		P.x < 0 ? TEXTURE_SIZE - (uint)abs(P.x) % TEXTURE_SIZE : (uint)P.x % TEXTURE_SIZE,
+		P.y < 0 ? TEXTURE_SIZE - (uint)abs(P.y) % TEXTURE_SIZE : (uint)P.y % TEXTURE_SIZE,
+		P.z < 0 ? TEXTURE_SIZE - (uint)abs(P.z) % TEXTURE_SIZE : (uint)P.z % TEXTURE_SIZE
+	);
+	
 	//float3 P = fp / 256.0f; //fmod(fp, 256.0);	// FIND UNIT CUBE THAT CONTAINS POINT
-	float4 AA = perm2d(P.xy) + P.z;
+	//float4 AA = perm2d(P.xy) + P.z;
+	
+	uint4 AA = texPerm2D.Load(uint3(Pu.xy, 0)) + Pu.z;
 
+	//float4 AA = texPerm2D.Load(int3(P.xy, 0));
+	//return AA;
+	
 	/*fp.x = fp.x < 0 ? 256 - abs(fp.x) % 256 : fp.x % 256;
 	fp.y = fp.y < 0 ? 256 - abs(fp.y) % 256 : fp.y % 256;
 	fp.z = fp.z < 0 ? 256 - abs(fp.z) % 256 : fp.z % 256;
@@ -162,44 +173,47 @@ float noise3d(float3 p)
 	//return P;
 	
   	                     // FIND RELATIVE X,Y,Z OF POINT IN CUBE.
-	float3 f = fade(p);  
+	
 	// COMPUTE FADE CURVES FOR EACH OF X,Y,Z.
-	
-	
 	
 	
     // HASH COORDINATES OF THE 8 CUBE CORNERS
 	//float4 AA = texPerm2D.Load(int3(fp.xy, 0)) + P.z;
 	//float4 AA = perm2d(P.xy) + P.z;
-	
-	float3 norm = texPermGrad.SampleLevel(state, AA.x, 0).xyz;
+
+	//float3 norm = texPermGrad.SampleLevel(state, (float)AA.x / 255, 0).xyz;
+	//float3 norm = texPermGrad.Load(int2(AA.x, 0)).xyz;
+	float3 norm = permGradients[AA.x].xyz;
 	float3 direction = p;
 
+	float3 f = fade(p);  
+	
 	// AND ADD BLENDED RESULTS FROM 8 CORNERS OF CUBE
   	return lerp( lerp( lerp( gradperm(AA.x, p ),  
                              gradperm(AA.z, p + float3(-1, 0, 0) ), f.x),
                        lerp( gradperm(AA.y, p + float3(0, -1, 0) ),
                              gradperm(AA.w, p + float3(-1, -1, 0) ), f.x), f.y),
                              
-                 lerp( lerp( gradperm(AA.x + onePixel, p + float3(0, 0, -1) ),
-                             gradperm(AA.z + onePixel, p + float3(-1, 0, -1) ), f.x),
-                       lerp( gradperm(AA.y + onePixel, p + float3(0, -1, -1) ),
-                             gradperm(AA.w + onePixel, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
+                 lerp( lerp( gradperm(AA.x + 1, p + float3(0, 0, -1) ),
+                             gradperm(AA.z + 1, p + float3(-1, 0, -1) ), f.x),
+                       lerp( gradperm(AA.y + 1, p + float3(0, -1, -1) ),
+                             gradperm(AA.w + 1, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
 }
 #endif
 
 /*RWTexture2D<float4> texOut : register(u0);
-[numthreads(20, 20, 1)]
+[numthreads(16, 16, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
 	float4 tnoise = 0.0f;
-	for(int x = 0; x < 2500; x++)
+	const static int iterations = 2500;
+	for(int x = 0; x < iterations; x++)
 	{
-		float2 texel = DTid.xy / 2000.0f;
-		float4 noise = noise3d(float3(texel.xy, 0.0f));
-		tnoise += noise * 0.0004f;
+		float2 texel = DTid.xy / 40.0f;
+		float4 noise = noise3d(float3(texel.x, 0.0f, texel.y));
+		tnoise += noise * (1.0f / iterations);
 	}
-	texOut[DTid.xy] = fmod(tnoise * 0.5f + 0.5f, 0.1f) * 10.0f;
+	texOut[DTid.xy] = tnoise * 0.5f + 0.5f; //fmod(tnoise * 0.5f + 0.5f, 0.1f) * 10.0f;
 
 	//float4(h.xxx * 0.5f + 0.5f, 0.0f);
 }*/

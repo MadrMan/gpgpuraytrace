@@ -6,6 +6,7 @@ class IWindow;
 class ICompute;
 class ITexture;
 class Camera;
+class Noise;
 
 //! Main class for the raytrace project
 //! Calling run on this class will block and run the raytracing program
@@ -35,6 +36,7 @@ private:
 	ITexture* texNoise1D;
 	ITexture* texNoise2D;
 	Camera* camera;
+	Noise* noise;
 
 	IShaderVariable* varView;
 	IShaderVariable* varProjection;
