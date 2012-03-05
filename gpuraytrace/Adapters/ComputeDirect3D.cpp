@@ -128,7 +128,7 @@ IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
 	return shader->getVariable(name);
 }
 
-void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader)
+bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader)
 {
 	HRESULT result;
 	ID3D11ShaderReflectionConstantBuffer* reflectionBuffer = nullptr;
@@ -138,7 +138,7 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 	if(result != S_OK)
 	{
 		LOGERROR(result, "reflectionBuffer->GetDesc");
-		return ;
+		return false;
 	}
 	
 	ConstantBufferD3D* newBuffer = new ConstantBufferD3D();
@@ -154,7 +154,7 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 	if(result != S_OK) 
 	{
 		LOGERROR(result, "ID3D11Device::CreateBuffer");
-		return ;
+		return false;
 	}
 	createdShader->getGpuBuffers()[index] = newBuffer->gpuBuffer;
 		
@@ -179,7 +179,7 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		if(result != S_OK)
 		{
 			LOGERROR(result, "ID3D11ShaderReflectionVariable::GetDesc");
-			return ;
+			return false;
 		}
 
 		shaderReflectionVarType = shaderReflectionVar->GetType();
@@ -201,6 +201,8 @@ void ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		}
 	}
 	createdShader->getConstantBuffers().push_back(newBuffer);
+
+	return true;
 }
 
 void ComputeDirect3D::onVariableChangedCallback(const Variable& var)
@@ -209,7 +211,7 @@ void ComputeDirect3D::onVariableChangedCallback(const Variable& var)
 	shaderVariable->getBuffer()->dirty = true;
 }
 
-void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader)
+bool ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader)
 {
 	ID3D11ShaderReflection* reflection = nullptr; 
 
@@ -217,7 +219,7 @@ void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	if(FAILED(result))
 	{
 		LOGERROR(result, "D3DReflect could not be created");
-		return ;
+		return false;
 	}
 
 	D3D11_SHADER_DESC reflectionDesc;
@@ -225,17 +227,22 @@ void ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	if(FAILED(result))
 	{
 		LOGERROR(result, "D3DReflectDesc could not be created");
-		return ;
+		return false;
 	}
 
 	//loop to find all constant shader buffers
 	unsigned int index;
 	for(index = 0; index < reflectionDesc.ConstantBuffers; index++)
 	{
-		addBuffer(reflection, reflectionDesc, index, createdShader);
+		if(!addBuffer(reflection, reflectionDesc, index, createdShader))
+		{
+			return false;
+		}
 	}
 
 	reflection->Release();
+
+	return true;
 }
 
 bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main)
@@ -305,7 +312,10 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 	}
 
 	ComputeShader3D* createdShader = new ComputeShader3D(shaderCS);
-	reflect(shaderBlob, createdShader);
+	if(!reflect(shaderBlob, createdShader))
+	{
+		return false;
+	}
 
 	if(!shader)
 	{

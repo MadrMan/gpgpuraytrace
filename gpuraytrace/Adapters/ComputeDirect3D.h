@@ -52,8 +52,8 @@ public:
 
 private:
 	void createBuffer(ID3D10Blob* shaderBlob);
-	void reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader);
-	void addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader);
+	bool reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader);
+	bool addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader);
 	
 	//!copy the var values from old shader to the new.
 	void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader);
