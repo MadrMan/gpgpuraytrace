@@ -17,6 +17,9 @@ TextureDirect3D::~TextureDirect3D()
 
 bool TextureDirect3D::create(const std::string& path)
 {
+	UNREFERENCED_PARAMETER(path);
+
+	/*device->getD3DDevice()->CreateTexture2D(
 	HRESULT result = D3DX11CreateTextureFromFile(device->getD3DDevice(), path.c_str(), nullptr, nullptr, &resource, nullptr);
 	if(FAILED(result))
 	{
@@ -27,9 +30,9 @@ bool TextureDirect3D::create(const std::string& path)
 	if(FAILED(result))
 	{
 		return false;
-	}
+	}*/
 
-	return true;
+	return false;
 }
 
 bool TextureDirect3D::create(TextureDimensions::T dimensions, int width, int height, const void* dataptr)

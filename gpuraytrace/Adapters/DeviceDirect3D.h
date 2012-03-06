@@ -3,7 +3,6 @@
 #include "../Factories/IDevice.h"
 
 #include <d3d11.h>
-#include <D3DX11.h>
 
 class DeviceDirect3D : public IDevice
 {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Common/Types.h"
-#include <xnamath.h>
 
 class IWindow;
 class IInputAction;
