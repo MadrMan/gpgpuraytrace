@@ -18,14 +18,20 @@ cbuffer CBPermanent
 }
 
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
-const static float3 FOG_COLOR = normalize(float3(0.5f, 0.6f, 0.7f));
+const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
 float4 getFog(float3 p)
 {
-	float d = noise3d(p * 0.05f) * 2.0f + 1.0f;		// pluimen
+	/*float d = (noise3d(p * 0.003f) * noise3d(p * 0.009f)) * 6.8f + 0.4f;
 	d *= 0.005f;
-	d -= p.y * 0.0001f;
+	d -= abs(p.y - 250.0f) * 0.0002f;
 	d = saturate(d);
-	float fogd = (noise3d(p * 0.006f) + noise3d(p * 0.1f)) * 2.8f + 1.0f;
+	float fogd = (noise3d(p * 0.008f) + noise3d(p * 0.015f)) * 0.3f + 1.0f;
+	return float4(FOG_COLOR * fogd * d, d);*/
+	
+	float d = (noise3d(p * 0.003f) * noise3d(p * 0.009f)) * 0.006f + .01f;
+	d -= (p.y - 10.0f) * 0.001f;
+	d = saturate(d);
+	float fogd = (noise3d(p * 0.081f) + noise3d(p * 0.052f)) * 0.8f + 1.0f;
 	return float4(FOG_COLOR * fogd * d, d);
 }
 
@@ -108,14 +114,15 @@ float3 getColor(float3 p, float3 n)
 	color *= brightness;
 	
 	//Calculate shadow
-	/*RayResult rr = traceRay(p, 4.0f, SunDirection);
+	RayResult rr = traceRay(p, 4.0f, SunDirection);
 	
 	if(rr.d > 0.0f)
 	{
-		color *= lerp(ShadowColor, rr.fcolor, rr.f);
+		//color *= lerp( ShadowColor, rr.fcolor, rr.f);
+		color *= ShadowColor;
 	} else {
-		color = lerp(color, rr.fcolor, rr.f);
-	}*/
+		color *= lerp(color, ShadowColor, rr.f * 0.8f);
+	}
 	
 	return color;
 }
@@ -157,6 +164,8 @@ PixelData getPixelRay(uint2 DTid)
 	return pd;
 }
 
+//float3 h2r(float h,float s,float v){return lerp(saturate((abs(frac(h+float3(1,2,3)/3)*6-3)-1)),1,s)*v;}
+
 RWTexture2D<float4> texOut : register(u0);
 [numthreads(16, 16, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
@@ -170,11 +179,11 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	{
 		float3 n = getNormal(rr.p, rr.d);
 		float3 tcolor = getColor(rr.p, n);
-		color = lerp(tcolor, color, rr.f);
+		color = lerp(tcolor, rr.fcolor, rr.f);
 	} else { 								// -- we've hit nothing
 		float3 scolor = getSky(pd.dir);
-		color = lerp(scolor, color, rr.f);
+		color = lerp(scolor, rr.fcolor, rr.f);
 	}
-	
-	texOut[DTid.xy] = float4(color, 0.0f);
+
+	texOut[DTid.xy] = float4(color, 1.0f);
 }
