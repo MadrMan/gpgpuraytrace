@@ -1,6 +1,6 @@
 #include "noise.hlsl"
 
-cbuffer CBTweakable
+cbuffer XTweakable
 {
 	float3 SunDirection;
 }
@@ -29,7 +29,7 @@ float4 getFog(float3 p)
 	return float4(FOG_COLOR * fogd * d, d);*/
 	
 	float d = (noise3d(p * 0.003f) * noise3d(p * 0.009f)) * 0.006f + .01f;
-	d -= (p.y - 10.0f) * 0.001f;
+	d -= (p.y - 6.0f) * 0.001f;
 	d = saturate(d);
 	float fogd = (noise3d(p * 0.081f) + noise3d(p * 0.052f)) * 0.8f + 1.0f;
 	return float4(FOG_COLOR * fogd * d, d);
@@ -49,17 +49,17 @@ float getDensity(float3 p)
 	d += noise3d(p * 0.53f) * 2.0f;
 	d += noise3d(p * 0.21f) * 6.0f;
 	d += noise3d(p * 0.09f) * 14.0f;
-	d += pow(saturate(-p.y) * 2.0f, 2.3f);
-	
+	d += pow(saturate(-p.y) * 2.0f, 2.4f);
+	//d -= pow(saturate(p.y - 5.0f) * 1.0f, 1.5f);
+	//d += pow(saturate(-p.y + 1.5f) * 2.0f, 2.0f);
+	//d += pow(saturate(-p.y + 3.0f) * 2.0f, 2.5f);
 	return d;
 }
 
 struct RayResult
 {
-	float d; //density
-	float f; //fog
-	float3 p; //position
-	float3 fcolor; //fog color
+	float4 pd; //position : 3, density : 1
+	float4 fcolord; //fog color : 3, fog density : 1
 };
 
 const static float RAY_STEP = 0.03f;
@@ -88,20 +88,19 @@ RayResult traceRay(float3 p, float stepmod, float3 dir)
 			step *= 0.4f;
 			f -= fogstep;
 		} else {
-			step *= 1.012f;
+			//step *= 1.012f;
+			step *= 1.014f;
 			s += step;
 			f += fogstep;
 		}
 	}
 	
-	rr.p = rayp;
-	rr.fcolor = f.rgb;
-	rr.d = d;
-	rr.f = f.a;
+	rr.pd = float4(rayp, d);
+	rr.fcolord = f;
 	return rr;
 }
 
-const static float3 ShadowColor = float3(0.1f, 0.1f, 0.2f);
+const static float3 ShadowColor = float3(0.2f, 0.2f, 0.23f);
 float3 getColor(float3 p, float3 n)
 {
 	float3 color = 0.0f;
@@ -114,14 +113,14 @@ float3 getColor(float3 p, float3 n)
 	color *= brightness;
 	
 	//Calculate shadow
-	RayResult rr = traceRay(p, 4.0f, SunDirection);
+	RayResult rr = traceRay(p, 3.0f, SunDirection);
 	
-	if(rr.d > 0.0f)
+	if(rr.pd.w > 0.0f)
 	{
 		//color *= lerp( ShadowColor, rr.fcolor, rr.f);
 		color *= ShadowColor;
 	} else {
-		color *= lerp(color, ShadowColor, rr.f * 0.8f);
+		color *= lerp(color, ShadowColor, rr.fcolord.w * 0.8f);
 	}
 	
 	return color;
@@ -136,13 +135,13 @@ float3 getSky(float3 dir)
 	return lerp(c.rgb, float3(2.0f, 2.0f, 1.2f), pow(hemi, 14.0f));
 }
 
-float3 getNormal(float3 p, float d)
+float3 getNormal(float4 pd)
 {
-	float2 normalDistance = float2(length(p - Eye.xyz) * 0.005f, 0.0f);
+	float2 normalDistance = float2(length(pd.xyz - Eye.xyz) * 0.005f, 0.0f);
 	return normalize(float3(
-		 getDensity(p - normalDistance.xyy) - d,
-		 getDensity(p - normalDistance.yxy) - d,
-		 getDensity(p - normalDistance.yyx) - d
+		 getDensity(pd.xyz - normalDistance.xyy) - pd.w,
+		 getDensity(pd.xyz - normalDistance.yxy) - pd.w,
+		 getDensity(pd.xyz - normalDistance.yyx) - pd.w
 	));
 }
 
@@ -175,14 +174,14 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	float3 color = 0.0f;
 	RayResult rr = traceRay(pd.p, 1.0f, pd.dir);
 
-	if(rr.d > 0.0f) 							//-- we've hit something
+	if(rr.pd.w > 0.0f) 							//-- we've hit something
 	{
-		float3 n = getNormal(rr.p, rr.d);
-		float3 tcolor = getColor(rr.p, n);
-		color = lerp(tcolor, rr.fcolor, rr.f);
+		float3 n = getNormal(rr.pd);
+		float3 tcolor = getColor(rr.pd.xyz, n);
+		color = lerp(tcolor, rr.fcolord.xyz, rr.fcolord.w);
 	} else { 								// -- we've hit nothing
 		float3 scolor = getSky(pd.dir);
-		color = lerp(scolor, rr.fcolor, rr.f);
+		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
 	}
 
 	texOut[DTid.xy] = float4(color, 1.0f);

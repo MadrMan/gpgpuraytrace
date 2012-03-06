@@ -87,4 +87,15 @@ void Noise::generatePermuationsGradient1D()
 		color[2] = grad[2];
 		color[3] = 0.0f;
     }
+
+	/*permutations1D = new char[TEXTURE_SIZE * bpp];
+    for (int x = 0; x < TEXTURE_SIZE; x++)
+    {
+		char* color = permutations1D + x * bpp;
+		float* grad = g3[permutations[x] % 16];
+        color[0] = (char)grad[0] * 127;
+		color[1] = (char)grad[1] * 127;
+		color[2] = (char)grad[2] * 127;
+		color[3] = 0;
+    }*/
 }

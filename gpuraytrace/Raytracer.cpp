@@ -40,8 +40,10 @@ Raytracer::~Raytracer()
 void Raytracer::run()
 {
 	WindowSettings ws;
-	ws.width = 800;
-	ws.height = 600;
+	//ws.width = 800;
+	//ws.height = 600;
+	ws.width = 1920 / 4;
+	ws.height = 1080 / 4;
 	ws.fullscreen = false;
 
 	//Create window
@@ -59,11 +61,10 @@ void Raytracer::run()
 	noise = new Noise();
 	noise->generate();
 
-	//texNoise1D = device->createTexture();
 	texNoise2D = device->createTexture();
 	texNoise2D->create(TextureDimensions::Texture2D, Noise::TEXTURE_SIZE, Noise::TEXTURE_SIZE, noise->permutations2D);
+	//texNoise1D = device->createTexture();
 	//texNoise1D->create(TextureDimensions::Texture1D, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
-
 	//texNoise1D->create("Media/noise1_small.png");
 
 	//Create a new compute shader instance
@@ -172,8 +173,8 @@ void Raytracer::updateComputeVars()
 		varNoiseGrads->write(noise->permutations1D);
 	}
 
-	//compute->setTexture(0, texNoise1D);
 	compute->setTexture(0, texNoise2D);
+	//compute->setTexture(1, texNoise1D);
 }
 
 void Raytracer::loadComputeShader()

@@ -124,13 +124,16 @@ float noise2d(float2 pos)
 #if 1
 
 static const int TEXTURE_SIZE = 128;
+//static const float ONE_PIXEL = 1.0f / (float)TEXTURE_SIZE;
+static const uint ONE_PIXEL = 1;
+
 cbuffer CBNoise
 {
 	float4 permGradients[TEXTURE_SIZE];
 }
 
-//Texture1D<float4> texPermGrad : register(t0);
 Texture2D<uint4> texPerm2D : register(t0);
+//Texture1D<float4> texPermGrad : register(t1);
 
 //3D
 float3 fade(float3 t)
@@ -142,6 +145,7 @@ float3 fade(float3 t)
 float gradperm(uint x, float3 p)
 {
 	//return dot(texPermGrad.SampleLevel(state, x, 0).xyz, p);
+	//return dot(texPermGrad.Load(uint2(x % TEXTURE_SIZE, 0)).xyz, p);
 	return dot(permGradients[x % TEXTURE_SIZE].xyz, p);
 }
 
@@ -149,55 +153,29 @@ float gradperm(uint x, float3 p)
 float noise3d(float3 p)
 {
 	int3 P = floor(p);
-	p -= P; 
+	p -= P;
+	float3 f = fade(p);
 
-	uint3 Pu = uint3(
-		P.x < 0 ? TEXTURE_SIZE - (uint)abs(P.x) % TEXTURE_SIZE : (uint)P.x % TEXTURE_SIZE,
-		P.y < 0 ? TEXTURE_SIZE - (uint)abs(P.y) % TEXTURE_SIZE : (uint)P.y % TEXTURE_SIZE,
-		P.z < 0 ? TEXTURE_SIZE - (uint)abs(P.z) % TEXTURE_SIZE : (uint)P.z % TEXTURE_SIZE
+	uint4 Pu = uint4(
+		P.x < 0 ? (TEXTURE_SIZE - (uint)abs(P.x)) % TEXTURE_SIZE : (uint)P.x % TEXTURE_SIZE,
+		P.y < 0 ? (TEXTURE_SIZE - (uint)abs(P.y)) % TEXTURE_SIZE : (uint)P.y % TEXTURE_SIZE,
+		P.z < 0 ? (TEXTURE_SIZE - (uint)abs(P.z)) % TEXTURE_SIZE : (uint)P.z % TEXTURE_SIZE,
+		0
 	);
 	
-	//float3 P = fp / 256.0f; //fmod(fp, 256.0);	// FIND UNIT CUBE THAT CONTAINS POINT
-	//float4 AA = perm2d(P.xy) + P.z;
-	
-	uint4 AA = texPerm2D.Load(uint3(Pu.xy, 0)) + Pu.z;
-
-	//float4 AA = texPerm2D.Load(int3(P.xy, 0));
-	//return AA;
-	
-	/*fp.x = fp.x < 0 ? 256 - abs(fp.x) % 256 : fp.x % 256;
-	fp.y = fp.y < 0 ? 256 - abs(fp.y) % 256 : fp.y % 256;
-	fp.z = fp.z < 0 ? 256 - abs(fp.z) % 256 : fp.z % 256;
-	float4 AA = texPerm2D.Load(int3(fp.xy, 0)) + fp.z / 256.0;*/
-	//return AA;
-	//return P;
-	
-  	                     // FIND RELATIVE X,Y,Z OF POINT IN CUBE.
-	
-	// COMPUTE FADE CURVES FOR EACH OF X,Y,Z.
-	
-	
-    // HASH COORDINATES OF THE 8 CUBE CORNERS
-	//float4 AA = texPerm2D.Load(int3(fp.xy, 0)) + P.z;
-	//float4 AA = perm2d(P.xy) + P.z;
-
-	//float3 norm = texPermGrad.SampleLevel(state, (float)AA.x / 255, 0).xyz;
-	//float3 norm = texPermGrad.Load(int2(AA.x, 0)).xyz;
-	float3 norm = permGradients[AA.x].xyz;
-	float3 direction = p;
-
-	float3 f = fade(p);  
+	Pu = texPerm2D.Load(uint3(Pu.xy, 0)) + Pu.z;
+	//AA /= TEXTURE_SIZE;
 	
 	// AND ADD BLENDED RESULTS FROM 8 CORNERS OF CUBE
-  	return lerp( lerp( lerp( gradperm(AA.x, p ),  
-                             gradperm(AA.z, p + float3(-1, 0, 0) ), f.x),
-                       lerp( gradperm(AA.y, p + float3(0, -1, 0) ),
-                             gradperm(AA.w, p + float3(-1, -1, 0) ), f.x), f.y),
+  	return lerp( lerp( lerp( gradperm(Pu.x, p ),  
+                             gradperm(Pu.z, p + float3(-1, 0, 0) ), f.x),
+                       lerp( gradperm(Pu.y, p + float3(0, -1, 0) ),
+                             gradperm(Pu.w, p + float3(-1, -1, 0) ), f.x), f.y),
                              
-                 lerp( lerp( gradperm(AA.x + 1, p + float3(0, 0, -1) ),
-                             gradperm(AA.z + 1, p + float3(-1, 0, -1) ), f.x),
-                       lerp( gradperm(AA.y + 1, p + float3(0, -1, -1) ),
-                             gradperm(AA.w + 1, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
+                 lerp( lerp( gradperm(Pu.x + ONE_PIXEL, p + float3(0, 0, -1) ),
+                             gradperm(Pu.z + ONE_PIXEL, p + float3(-1, 0, -1) ), f.x),
+                       lerp( gradperm(Pu.y + ONE_PIXEL, p + float3(0, -1, -1) ),
+                             gradperm(Pu.w + ONE_PIXEL, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
 }
 #endif
 

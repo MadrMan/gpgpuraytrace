@@ -47,6 +47,7 @@ bool TextureDirect3D::create(TextureDimensions::T dimensions, int width, int hei
 			desc.Width = width;
 			desc.MipLevels = 1;
 			desc.ArraySize = 1;
+			//desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			desc.Format = DXGI_FORMAT_R8G8B8A8_SNORM;
 			desc.Usage = D3D11_USAGE_IMMUTABLE;
 			desc.CPUAccessFlags = 0;
