@@ -37,7 +37,7 @@ Noise::~Noise()
 
 void Noise::generate()
 {
-	srand(time(0));
+	srand((unsigned int)time(0));
 	permutations = new int[TEXTURE_SIZE];
 	for(int x = 0; x < TEXTURE_SIZE; x++)
 		permutations[x] = x;
@@ -66,10 +66,10 @@ void Noise::generatePermutations2D()
 			unsigned char* color = permutations2D + (x + (y * TEXTURE_SIZE)) * bpp;
             int A = getPermutation2D(x) + y;
 			int B = getPermutation2D(x + 1) + y;
-            color[0] = getPermutation2D(A);
-            color[1] = getPermutation2D(A + 1);
-            color[2] = getPermutation2D(B);
-            color[3] = getPermutation2D(B + 1);
+            color[0] = (unsigned char)getPermutation2D(A);
+            color[1] = (unsigned char)getPermutation2D(A + 1);
+            color[2] = (unsigned char)getPermutation2D(B);
+            color[3] = (unsigned char)getPermutation2D(B + 1);
         }
     }
 }

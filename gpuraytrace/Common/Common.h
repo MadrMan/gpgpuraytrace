@@ -1,13 +1,20 @@
 #pragma once
 
+#include "Types.h"
+
 #if defined(_WIN32)
 	#define NOMINMAX
 	#define WIN32_LEAN_AND_MEAN
 	#include <Windows.h>
 	#include <d3d11.h>
-	#include <D3DX11.h>
-	#include <xnamath.h>
 	#include <process.h>
+
+	#ifdef RT_HAS_DXSDK
+	#include <xnamath.h>
+	#else
+	#include <DirectXMath.h>
+	using namespace DirectX;
+	#endif
 #endif
 
 #include <iostream>

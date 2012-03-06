@@ -13,7 +13,6 @@ MACRO(DELAYLOAD_DX11)
 	endif(MSVC)
 ENDMACRO()
 
- 
 project(gpgpuraytrace)
 
 set(PROJ_ADAPTER
@@ -84,11 +83,12 @@ source_group("" FILES ${PROJ_SOURCES})
 
 include_directories("${gpgpuraytrace_SOURCE_DIR}/Common")
 
-if(MSVC)
+if(MSVC_VERSION LESS 1700)
+	add_definitions(-DRT_HAS_DXSDK)
 	include_directories("$ENV{DXSDK_DIR}/include")
 	link_directories("$ENV{DXSDK_DIR}/lib/x86")
-	link_libraries(d3d11.lib d3dx11.lib d3dcompiler.lib dxguid.lib ws2_32.lib)
 endif()
+link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib)
 
 add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON})
 

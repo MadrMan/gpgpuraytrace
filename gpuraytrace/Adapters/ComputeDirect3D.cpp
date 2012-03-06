@@ -16,6 +16,9 @@ ShaderIncludeHandler::ShaderIncludeHandler(const std::string& directory) : direc
 
 HRESULT WINAPI ShaderIncludeHandler::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes)
 {
+	UNREFERENCED_PARAMETER(IncludeType);
+	UNREFERENCED_PARAMETER(pParentData);
+
 	std::string fullPath = directory + "/" + pFileName;
 
 	BY_HANDLE_FILE_INFORMATION shaderFileInfo = {0};
@@ -128,7 +131,7 @@ IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
 	return shader->getVariable(name);
 }
 
-bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER_DESC reflectionDesc, unsigned int index, ComputeShader3D* createdShader)
+bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int index, ComputeShader3D* createdShader)
 {
 	HRESULT result;
 	ID3D11ShaderReflectionConstantBuffer* reflectionBuffer = nullptr;
@@ -219,7 +222,7 @@ bool ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	unsigned int index;
 	for(index = 0; index < reflectionDesc.ConstantBuffers; index++)
 	{
-		if(!addBuffer(reflection, reflectionDesc, index, createdShader))
+		if(!addBuffer(reflection, index, createdShader))
 		{
 			return false;
 		}

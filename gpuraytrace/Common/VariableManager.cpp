@@ -93,12 +93,12 @@ void VariableManager::sendVariable(Variable* var)
 	send(client, (char*)&type, 1, 0);
 
 	//name of var
-	length = var->name.size();
+	length = (unsigned char)var->name.size();
 	send(client,(char*)&length, 1, 0);		
 	send(client,var->name.data(), length, 0);
 
 	//type of var
-	length = var->type.size();
+	length = (unsigned char)var->type.size();
 	send(client,(char*)&length, 1, 0);	
 	send(client,var->type.data(), length, 0);
 
@@ -144,7 +144,7 @@ void VariableManager::netLoop()
 
 	listen(listener, 5);
 
-	while(true)
+	for(;;)
 	{
 		client = accept(listener, 0, 0);
 		Logger() << "Client connected";
@@ -153,7 +153,7 @@ void VariableManager::netLoop()
 
 		bufferAmount = 0;
 		bufferPosition = 0;
-		while(true)
+		for(;;)
 		{
 			unsigned char stringLength;
 			if(!readBytes((char*)&stringLength, 1)) break;
