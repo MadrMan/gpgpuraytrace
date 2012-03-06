@@ -141,35 +141,20 @@ bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, D3D11_SHADER
 		return false;
 	}
 	
-	ConstantBufferD3D* newBuffer = new ConstantBufferD3D();
-	
-	D3D11_BUFFER_DESC bufferDesc;
-	ZeroMemory( &bufferDesc, sizeof(bufferDesc) );
-	bufferDesc.ByteWidth = reflectionBufferDesc.Size;
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; 
-	bufferDesc.CPUAccessFlags = 0;
-
-	result = device->getD3DDevice()->CreateBuffer(&bufferDesc, 0, &newBuffer->gpuBuffer);
-	if(result != S_OK) 
-	{
-		LOGERROR(result, "ID3D11Device::CreateBuffer");
-		return false;
-	}
-	createdShader->getGpuBuffers()[index] = newBuffer->gpuBuffer;
+	ConstantBufferD3D* newBuffer = new ConstantBufferD3D(createdShader->getGpuBuffers(),index);
 		
 	ID3D11ShaderReflectionVariable* shaderReflectionVar = nullptr;
 	ID3D11ShaderReflectionType* shaderReflectionVarType = nullptr;
 	D3D11_SHADER_VARIABLE_DESC shaderVarDesc;
 	D3D11_SHADER_TYPE_DESC shaderTypeDesc;
 	
-	
 	newBuffer->index = index;
 	newBuffer->size = reflectionBufferDesc.Size;
 	newBuffer->data = new char[newBuffer->size];
 	newBuffer->name = reflectionBufferDesc.Name;
 	newBuffer->dirty = true;
-
+	newBuffer->create(device);
+	
 	ZeroMemory(newBuffer->data, newBuffer->size);
 	
 	for(unsigned int i =0; i < reflectionBufferDesc.Variables; i++)

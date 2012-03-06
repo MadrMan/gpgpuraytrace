@@ -9,6 +9,7 @@ public:
 	virtual ~IShaderVariable() { };
 
 	virtual void write(void* data) = 0;
+	virtual void finalizeBuffer() = 0;
 
 	const std::string& getName() const
 	{ return name; }
