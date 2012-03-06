@@ -49,7 +49,7 @@ bool ConstantBufferD3D::create(DeviceDirect3D* device3D)
 	
 	final = false;	
 	device = device3D;
-	registerGpuBuffer(false);
+	return registerGpuBuffer(false);
 }
 
 void ConstantBufferD3D::finalize()

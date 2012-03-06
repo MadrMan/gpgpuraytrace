@@ -305,6 +305,7 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 		return false;
 	}
 
+	//TODO if this is uncommented and the first shader to be loaded has an compile error, a new (errorless) shader is not displayed 
 	//if(!shader)
 	//{
 	//	shader = createdShader;
