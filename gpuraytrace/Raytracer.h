@@ -41,4 +41,5 @@ private:
 	IShaderVariable* varView;
 	IShaderVariable* varProjection;
 	IShaderVariable* varEye;
+	IShaderVariable* varFrameData;
 };

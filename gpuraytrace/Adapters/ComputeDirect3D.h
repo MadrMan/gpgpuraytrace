@@ -7,18 +7,21 @@
 
 class ComputeShader3D
 {
-private:	
-	ID3D11ComputeShader* shader;
-	std::vector<ConstantBufferD3D*> constantBuffers;
-	ID3D11Buffer* gpubuffers[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT];
 public:
 	ComputeShader3D(ID3D11ComputeShader* shader);
-	~ComputeShader3D();
+	virtual ~ComputeShader3D();
 	IShaderVariable* getVariable(const std::string& name);
 	
 	ID3D11ComputeShader* getShader() { return shader; }
-	ID3D11Buffer** getGpuBuffers() { return gpubuffers; }
 	std::vector<ConstantBufferD3D*>& getConstantBuffers() { return constantBuffers; }		
+	std::vector<UAVBufferD3D*>& getUAVBuffers() { return uavBuffers; }	
+	std::vector<BufferD3D*>& getBuffers() { return buffers; }	
+
+private:	
+	ID3D11ComputeShader* shader;
+	std::vector<ConstantBufferD3D*> constantBuffers;
+	std::vector<UAVBufferD3D*> uavBuffers;
+	std::vector<BufferD3D*> buffers;
 };
 
 class ShaderIncludeHandler : public ID3DInclude
@@ -41,13 +44,9 @@ public:
 	virtual ~ComputeDirect3D();
 
 	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main) override;
-
 	virtual void run() override;
-
     virtual IShaderVariable* getVariable(const std::string& name) override;
-
 	virtual bool swap() override;
-
 	virtual void setTexture(int stage, ITexture* texture) override;
 
 private:

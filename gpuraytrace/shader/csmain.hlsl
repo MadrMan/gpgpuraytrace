@@ -10,12 +10,23 @@ cbuffer CBFrame
 	float4 Eye;
 	float4x4 ViewInverse;
 	float4x4 Projection;
+	
+	float StartDistance;
+	float EndDistance;
 }
 
 cbuffer CBPermanent
 {
 	float2 ScreenSize;
 }
+
+struct SBFrameData
+{
+	uint MinHitDistance;
+	uint MaxHitDistance;
+};
+
+globallycoherent RWStructuredBuffer<SBFrameData> FrameData;
 
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
@@ -60,6 +71,7 @@ struct RayResult
 {
 	float4 pd; //position : 3, density : 1
 	float4 fcolord; //fog color : 3, fog density : 1
+	float dist;
 };
 
 const static float RAY_STEP = 0.03f;
@@ -97,6 +109,7 @@ RayResult traceRay(float3 p, float stepmod, float3 dir)
 	
 	rr.pd = float4(rayp, d);
 	rr.fcolord = f;
+	rr.dist = s;
 	return rr;
 }
 
@@ -179,6 +192,9 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		float3 n = getNormal(rr.pd);
 		float3 tcolor = getColor(rr.pd.xyz, n);
 		color = lerp(tcolor, rr.fcolord.xyz, rr.fcolord.w);
+		
+		InterlockedMax(FrameData[0].MaxHitDistance, asuint(rr.dist));
+		InterlockedMin(FrameData[0].MinHitDistance, asuint(rr.dist));
 	} else { 								// -- we've hit nothing
 		float3 scolor = getSky(pd.dir);
 		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);

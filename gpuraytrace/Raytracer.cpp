@@ -23,6 +23,7 @@ Raytracer::Raytracer()
 	varView = nullptr;
 	varProjection = nullptr;
 	varEye = nullptr;
+	varFrameData = nullptr;
 
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
@@ -125,9 +126,25 @@ void Raytracer::run()
 	Logger() << "Raytracer exit";
 }
 
+struct SBFrameData
+{
+	float minDistance;
+	float maxDistance;
+};
+
 void Raytracer::updateCompute()
 {
 	if(compute->swap()) updateComputeVars();
+
+	//Fetch some data from the frame and calculate new constants
+	if(varFrameData)
+	{
+		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varFrameData->map());
+		Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
+		fd->minDistance = 50.0f;
+		fd->maxDistance = 100.0f;
+		varFrameData->unmap();
+	}
 
 	//Set variables
 	if(varView && varProjection && varEye)
@@ -149,6 +166,7 @@ void Raytracer::updateComputeVars()
 	varView = compute->getVariable("ViewInverse");
 	varProjection = compute->getVariable("Projection");
 	varEye = compute->getVariable("Eye");
+	varFrameData = compute->getVariable("FrameData");
 
 	//Set resolution in the shader
 	IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
