@@ -62,6 +62,9 @@ void Camera::update()
 		//Rotate camera
 		rotationEuler[0] -= rotateUD->getState() * 0.01f;
 		rotationEuler[1] -= rotateLR->getState() * 0.01f;
+		
+		//maximize up/down so camera control does not flip
+		rotationEuler[0] = std::max(-XM_PI * 1.5f, std::min(-XM_PIDIV2 - 0.0001f, rotationEuler[0]));
 	}
 	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
 	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
