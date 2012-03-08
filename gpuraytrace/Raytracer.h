@@ -42,4 +42,6 @@ private:
 	IShaderVariable* varProjection;
 	IShaderVariable* varEye;
 	IShaderVariable* varFrameData;
+	IShaderVariable* varMinDistance;
+	IShaderVariable* varMaxDistance;
 };

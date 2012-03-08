@@ -76,18 +76,19 @@ struct RayResult
 
 const static float RAY_STEP = 0.03f;
 //const static uint RAY_STEPS = 500000;
-const static float MAX_DIST = 5000.0f;
+const static float MAX_DIST = 100.0f;
+const static float RAY_STEP_FACTOR = 1.014f;
 
-RayResult traceRay(float3 p, float stepmod, float3 dir)
+RayResult traceRay(float3 p, float s, float stepmod, float3 dir)
 {
 	RayResult rr;
 	float4 f = 0.0;
 	
-	float step = RAY_STEP * stepmod;
-	float s = 0.5f;
 	float d = 0.0f;
+	float step = RAY_STEP * stepmod - s * (1 - RAY_STEP_FACTOR);
+
 	float3 rayp;
-	[loop] while(s < MAX_DIST && step > RAY_STEP * 0.2f)
+	[loop] while(s < EndDistance && step > RAY_STEP * 0.2f)
 	{
 		rayp = p + dir * s;
 		
@@ -100,8 +101,7 @@ RayResult traceRay(float3 p, float stepmod, float3 dir)
 			step *= 0.4f;
 			f -= fogstep;
 		} else {
-			//step *= 1.012f;
-			step *= 1.014f;
+			step *= RAY_STEP_FACTOR;
 			s += step;
 			f += fogstep;
 		}
@@ -126,7 +126,7 @@ float3 getColor(float3 p, float3 n)
 	color *= brightness;
 	
 	//Calculate shadow
-	RayResult rr = traceRay(p, 3.0f, SunDirection);
+	RayResult rr = traceRay(p, 0.1f, 3.0f, SunDirection);
 	
 	if(rr.pd.w > 0.0f)
 	{
@@ -185,7 +185,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	PixelData pd = getPixelRay(DTid.xy);
 	
 	float3 color = 0.0f;
-	RayResult rr = traceRay(pd.p, 1.0f, pd.dir);
+	RayResult rr = traceRay(pd.p, StartDistance, 1.0f, pd.dir);
 
 	if(rr.pd.w > 0.0f) 							//-- we've hit something
 	{

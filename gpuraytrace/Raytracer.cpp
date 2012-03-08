@@ -24,6 +24,8 @@ Raytracer::Raytracer()
 	varProjection = nullptr;
 	varEye = nullptr;
 	varFrameData = nullptr;
+	varMinDistance = nullptr;
+	varMaxDistance = nullptr;
 
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
@@ -137,12 +139,27 @@ void Raytracer::updateCompute()
 	if(compute->swap()) updateComputeVars();
 
 	//Fetch some data from the frame and calculate new constants
-	if(varFrameData)
+	if(varFrameData && varMinDistance && varMaxDistance)
 	{
 		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varFrameData->map());
 		Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
-		fd->minDistance = 50.0f;
-		fd->maxDistance = 100.0f;
+
+		float minDist = std::max(0.1f, fd->minDistance * 0.9f);
+		float maxDist = std::max(100.0f, fd->maxDistance * 1.1f);
+
+		const float MINIMAL_DIFFERENCE = 10.0f;
+		float difference = maxDist - minDist;
+		if(difference < MINIMAL_DIFFERENCE)
+		{
+			minDist = maxDist - MINIMAL_DIFFERENCE;
+		}
+
+		varMinDistance->write(&minDist);
+		varMaxDistance->write(&maxDist);
+
+		fd->minDistance = 2000.0f;
+		fd->maxDistance = 20.0f;
+
 		varFrameData->unmap();
 	}
 
@@ -167,6 +184,8 @@ void Raytracer::updateComputeVars()
 	varProjection = compute->getVariable("Projection");
 	varEye = compute->getVariable("Eye");
 	varFrameData = compute->getVariable("FrameData");
+	varMinDistance = compute->getVariable("StartDistance");
+	varMaxDistance = compute->getVariable("EndDistance");
 
 	//Set resolution in the shader
 	IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
