@@ -88,37 +88,40 @@ const static float RAY_STEP = 0.03f;
 const static float MAX_DIST = 100.0f;
 const static float RAY_STEP_FACTOR = 1.014f;
 
-RayResult traceRay(float3 p, float s, float stepmod, float3 dir)
+RayResult traceRay(float3 p, float dist, float stepmod, float3 dir)
 {
 	RayResult rr;
 	float4 f = 0.0;
 	
 	float d = 0.0f;
-	float step = RAY_STEP * stepmod - s * (1 - RAY_STEP_FACTOR);
+	float step = RAY_STEP * stepmod - dist * (1.0f - RAY_STEP_FACTOR);
 
+	float4 middleFog = getFog(p + dir * dist * 0.5f);
+	f += middleFog * dist;
+	
 	float3 rayp;
-	[loop] while(s < EndDistance && step > RAY_STEP * 0.2f)
+	[loop] while(dist < EndDistance && (step > RAY_STEP * 0.2f))
 	{
-		rayp = p + dir * s;
+		rayp = p + dir * dist;
 		
 		d = getDensity(rayp);
 		float4 fogstep = getFog(rayp) * step;
 
 		if(f.a > 1.0f || d > 0.0f) 
 		{
-			s -= step;
+			dist -= step;
 			step *= 0.4f;
 			f -= fogstep;
 		} else {
 			step *= RAY_STEP_FACTOR;
-			s += step;
+			dist += step;
 			f += fogstep;
 		}
 	}
 	
 	rr.pd = float4(rayp, d);
 	rr.fcolord = f;
-	rr.dist = s;
+	rr.dist = dist;
 	return rr;
 }
 
