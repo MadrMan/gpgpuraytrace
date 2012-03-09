@@ -86,8 +86,13 @@ ComputeShader3D::~ComputeShader3D()
 	//clear buffers
 	for(auto it = constantBuffers.begin(); it != constantBuffers.end(); ++it)
 	{
-		ConstantBufferD3D* buffer = *it;
-		delete buffer;
+		delete *it;
+	}
+
+	//clear uavs
+	for(auto it = uavBuffers.begin(); it != uavBuffers.end(); ++it)
+	{
+		delete *it;
 	}
 }
 

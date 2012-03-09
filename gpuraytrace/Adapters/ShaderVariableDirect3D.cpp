@@ -58,6 +58,7 @@ bool ConstantBufferD3D::create()
 		LOGERROR(result, "ID3D11Device::CreateBuffer");
 		return false;
 	}
+
 	return true;
 }
 
@@ -109,7 +110,9 @@ UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, D3D11_SHADER_BUFFER_DESC& des
 
 UAVBufferD3D::~UAVBufferD3D()
 {
-
+	if(gpuBuffer) gpuBuffer->Release();
+	if(stagingBuffer) stagingBuffer->Release();
+	if(gpuView) gpuView->Release();
 }
 
 void UAVBufferD3D::change()

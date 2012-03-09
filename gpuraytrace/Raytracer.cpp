@@ -170,6 +170,7 @@ void Raytracer::updateTerrain()
 
 		varFrameData->unmap();
 	}
+}
 
 void Raytracer::updateCompute()
 {
