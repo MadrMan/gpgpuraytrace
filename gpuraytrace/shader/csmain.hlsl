@@ -9,15 +9,15 @@ cbuffer CBFrame
 {
 	float4 Eye;
 	float4x4 ViewInverse;
-	float4x4 Projection;
-	
 	float StartDistance;
 	float EndDistance;
+	float Time;
 }
 
 cbuffer CBPermanent
 {
 	float2 ScreenSize;
+	float4x4 Projection;
 }
 
 struct SBFrameData
@@ -39,7 +39,7 @@ float4 getFog(float3 p)
 	float fogd = (noise3d(p * 0.008f) + noise3d(p * 0.015f)) * 0.3f + 1.0f;
 	return float4(FOG_COLOR * fogd * d, d);*/
 	
-	float d = (noise3d(p * 0.003f) * noise3d(p * 0.009f)) * 0.006f + .01f;
+	float d = (noise3d(p * 0.004f) * noise3d(p * 0.016f)) * 0.006f + .01f;
 	d -= (p.y - 6.0f) * 0.001f;
 	d = saturate(d);
 	float fogd = (noise3d(p * 0.081f) + noise3d(p * 0.052f)) * 0.8f + 1.0f;
@@ -125,7 +125,7 @@ RayResult traceRay(float3 p, float dist, float stepmod, float3 dir)
 	return rr;
 }
 
-const static float3 ShadowColor = float3(0.2f, 0.2f, 0.23f);
+const static float3 ShadowColor = float3(0.1f, 0.1f, 0.13f);
 float3 getColor(float3 p, float3 n)
 {
 	float3 color = 0.0f;
@@ -136,6 +136,11 @@ float3 getColor(float3 p, float3 n)
 	color = float3(h * 0.01f, h * 0.010f, (h - 80.0f) * 0.03);
 	float brightness = saturate(dot(n, SunDirection));
 	color *= brightness;
+	
+	//Cliffs
+	//float3 cliffColor = float3(0.5f, 0.3f, 0.1f);
+	//cliffColor *= noise3d(p * float3(1.0f, 0.1f, 1.0f)) * 0.5f + 0.5f;
+	//color = lerp(cliffColor, color , saturate(abs(n.y) * 1.5f));
 	
 	//Calculate shadow
 	RayResult rr = traceRay(p, 0.1f, 3.0f, SunDirection);

@@ -26,6 +26,7 @@ Raytracer::Raytracer()
 	varFrameData = nullptr;
 	varMinDistance = nullptr;
 	varMaxDistance = nullptr;
+	varTime = nullptr;
 
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
@@ -170,14 +171,18 @@ void Raytracer::updateCompute()
 	}
 
 	//Set variables
-	if(varView && varProjection && varEye)
+	if(varView && varEye)
 	{
 		XMVECTOR determinant;
 		XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
 		varView->write(&invTransView);
-		XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
-		varProjection->write(&transProjection);
 		varEye->write(&camera->position);
+	}
+
+	if(varTime)
+	{
+		float time = Timer::get()->getTime();
+		varTime->write(&time);
 	}
 
 	//Run shader
@@ -187,11 +192,18 @@ void Raytracer::updateCompute()
 void Raytracer::updateComputeVars()
 {
 	varView = compute->getVariable("ViewInverse");
-	varProjection = compute->getVariable("Projection");
 	varEye = compute->getVariable("Eye");
 	varFrameData = compute->getVariable("FrameData");
 	varMinDistance = compute->getVariable("StartDistance");
 	varMaxDistance = compute->getVariable("EndDistance");
+	varTime = compute->getVariable("Time");
+
+	varProjection = compute->getVariable("Projection");
+	if(varProjection)
+	{
+		XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
+		varProjection->write(&transProjection);
+	}
 
 	//Set resolution in the shader
 	IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
