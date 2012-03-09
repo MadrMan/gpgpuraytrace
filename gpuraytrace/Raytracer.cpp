@@ -147,18 +147,24 @@ void Raytracer::updateCompute()
 		float minDist = std::max(0.1f, fd->minDistance * 0.9f);
 		float maxDist = std::max(100.0f, fd->maxDistance * 1.1f);
 
+		const float MIN_DEFAULT = 20.0f;
+		const float MAX_DEFAULT = 2000.0f;
 		const float MINIMAL_DIFFERENCE = 10.0f;
 		float difference = maxDist - minDist;
-		if(difference < MINIMAL_DIFFERENCE)
+		if(difference < 0.0f)
 		{
-			minDist = maxDist - MINIMAL_DIFFERENCE;
+			minDist = MIN_DEFAULT;
+			maxDist = MAX_DEFAULT;
+		} else if(difference < MINIMAL_DIFFERENCE) {
+			maxDist = minDist + MINIMAL_DIFFERENCE;
 		}
 
 		varMinDistance->write(&minDist);
 		varMaxDistance->write(&maxDist);
 
-		fd->minDistance = 2000.0f;
-		fd->maxDistance = 20.0f;
+		//Assign default inverse values (any large/small number would do)
+		fd->minDistance = MAX_DEFAULT; //Swapped
+		fd->maxDistance = MIN_DEFAULT; //Swapped
 
 		varFrameData->unmap();
 	}
