@@ -144,8 +144,8 @@ void Raytracer::updateCompute()
 		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varFrameData->map());
 		Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
 
-		float minDist = std::max(0.1f, fd->minDistance * 0.9f);
-		float maxDist = std::max(100.0f, fd->maxDistance * 1.1f);
+		float minDist = std::max(0.05f, fd->minDistance * 0.9f);
+		float maxDist = std::min(std::max(40.0f, fd->maxDistance * 1.1f), 10000.0f);
 
 		const float MIN_DEFAULT = 20.0f;
 		const float MAX_DEFAULT = 2000.0f;
