@@ -46,4 +46,5 @@ private:
 	IShaderVariable* varFrameData;
 	IShaderVariable* varMinDistance;
 	IShaderVariable* varMaxDistance;
+	IShaderVariable* varTime;
 };

@@ -26,6 +26,7 @@ Raytracer::Raytracer()
 	varFrameData = nullptr;
 	varMinDistance = nullptr;
 	varMaxDistance = nullptr;
+	varTime = nullptr;
 
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
@@ -136,33 +137,39 @@ struct SBFrameData
 
 void Raytracer::updateTerrain()
 {
+
 	//Fetch some data from the frame and calculate new constants
 	if(varFrameData && varMinDistance && varMaxDistance)
 	{
 		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varFrameData->map());
 		if(!fd) return;
+		Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
 
-		//Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
 
-		float minDist = std::max(0.1f, fd->minDistance * 0.95f);
-		float maxDist = std::max(100.0f, fd->maxDistance * 1.5f);
+		float minDist = std::max(0.05f, fd->minDistance * 0.9f);
+		float maxDist = std::min(std::max(40.0f, fd->maxDistance * 1.1f), 10000.0f);
 
+		const float MIN_DEFAULT = 20.0f;
+		const float MAX_DEFAULT = 2000.0f;
 		const float MINIMAL_DIFFERENCE = 10.0f;
 		float difference = maxDist - minDist;
-		if(difference < MINIMAL_DIFFERENCE)
+		if(difference < 0.0f)
 		{
-			minDist = maxDist - MINIMAL_DIFFERENCE;
+			minDist = MIN_DEFAULT;
+			maxDist = MAX_DEFAULT;
+		} else if(difference < MINIMAL_DIFFERENCE) {
+			maxDist = minDist + MINIMAL_DIFFERENCE;
 		}
 
 		varMinDistance->write(&minDist);
 		varMaxDistance->write(&maxDist);
 
-		fd->minDistance = 2000.0f;
-		fd->maxDistance = 20.0f;
+		//Assign default inverse values (any large/small number would do)
+		fd->minDistance = MAX_DEFAULT; //Swapped
+		fd->maxDistance = MIN_DEFAULT; //Swapped
 
 		varFrameData->unmap();
 	}
-}
 
 void Raytracer::updateCompute()
 {
@@ -171,14 +178,18 @@ void Raytracer::updateCompute()
 	updateTerrain();
 
 	//Set variables
-	if(varView && varProjection && varEye)
+	if(varView && varEye)
 	{
 		XMVECTOR determinant;
 		XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
 		varView->write(&invTransView);
-		XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
-		varProjection->write(&transProjection);
 		varEye->write(&camera->position);
+	}
+
+	if(varTime)
+	{
+		float time = Timer::get()->getTime();
+		varTime->write(&time);
 	}
 
 	//Run shader
@@ -188,11 +199,18 @@ void Raytracer::updateCompute()
 void Raytracer::updateComputeVars()
 {
 	varView = compute->getVariable("ViewInverse");
-	varProjection = compute->getVariable("Projection");
 	varEye = compute->getVariable("Eye");
 	varFrameData = compute->getVariable("FrameData");
 	varMinDistance = compute->getVariable("StartDistance");
 	varMaxDistance = compute->getVariable("EndDistance");
+	varTime = compute->getVariable("Time");
+
+	varProjection = compute->getVariable("Projection");
+	if(varProjection)
+	{
+		XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
+		varProjection->write(&transProjection);
+	}
 
 	//Set resolution in the shader
 	IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
@@ -207,7 +225,6 @@ void Raytracer::updateComputeVars()
 	if(varSunDirection)
 	{
 		XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f);
-		//XMVECTOR sunDirection = XMVectorSet(0.2f, 0.2f, 0.2f, 0.0f);
 		sunDirection = XMVector3Normalize(sunDirection);
 		varSunDirection->write(&sunDirection);
 	}
