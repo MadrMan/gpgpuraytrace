@@ -134,18 +134,18 @@ struct SBFrameData
 	float maxDistance;
 };
 
-void Raytracer::updateCompute()
+void Raytracer::updateTerrain()
 {
-	if(compute->swap()) updateComputeVars();
-
 	//Fetch some data from the frame and calculate new constants
 	if(varFrameData && varMinDistance && varMaxDistance)
 	{
 		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varFrameData->map());
-		Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
+		if(!fd) return;
 
-		float minDist = std::max(0.1f, fd->minDistance * 0.9f);
-		float maxDist = std::max(100.0f, fd->maxDistance * 1.1f);
+		//Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
+
+		float minDist = std::max(0.1f, fd->minDistance * 0.95f);
+		float maxDist = std::max(100.0f, fd->maxDistance * 1.5f);
 
 		const float MINIMAL_DIFFERENCE = 10.0f;
 		float difference = maxDist - minDist;
@@ -162,6 +162,13 @@ void Raytracer::updateCompute()
 
 		varFrameData->unmap();
 	}
+}
+
+void Raytracer::updateCompute()
+{
+	if(compute->swap()) updateComputeVars();
+
+	updateTerrain();
 
 	//Set variables
 	if(varView && varProjection && varEye)
@@ -200,6 +207,7 @@ void Raytracer::updateComputeVars()
 	if(varSunDirection)
 	{
 		XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f);
+		//XMVECTOR sunDirection = XMVectorSet(0.2f, 0.2f, 0.2f, 0.0f);
 		sunDirection = XMVector3Normalize(sunDirection);
 		varSunDirection->write(&sunDirection);
 	}

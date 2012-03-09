@@ -30,6 +30,8 @@ public:
 	void updateComputeVars();
 
 private:
+	void updateTerrain();
+
 	IDevice* device;
 	IWindow* window;
 	ICompute* compute;

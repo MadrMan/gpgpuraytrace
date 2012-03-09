@@ -36,6 +36,8 @@ public:
 	IInputAction* rotateUD;
 	IInputAction* disableMouse;
 	IInputAction* warpDrive;
+	IInputAction* moveUp;
+	IInputAction* moveDown;
 	IInput* input;
 
 	float rotationEuler[3];
