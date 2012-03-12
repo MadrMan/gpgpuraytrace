@@ -26,6 +26,8 @@ struct SBFrameData
 	uint MaxHitDistance;
 };
 
+#include "sky.hlsl"
+
 globallycoherent RWStructuredBuffer<SBFrameData> FrameData;
 
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
@@ -154,15 +156,6 @@ float3 getColor(float3 p, float3 n)
 	}
 	
 	return color;
-}
-
-float3 getSky(float3 dir)
-{
-	float3 c = float3(0.0f, 0.0f, 1.0f - dir.y * 0.6f);
-	c.rg += (c.b - 0.6f) * 1.0f;
-	
-	float hemi = saturate(dot(dir, SunDirection));
-	return lerp(c.rgb, float3(2.0f, 2.0f, 1.2f), pow(hemi, 14.0f));
 }
 
 float3 getNormal(float4 pd)
