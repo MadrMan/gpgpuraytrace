@@ -9,7 +9,7 @@ ENDMACRO()
 
 MACRO(DELAYLOAD_DX11)
 	if(MSVC)
-		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/DELAYLOAD:d3d11.dll")
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/DELAYLOAD:d3d11.dll /DELAYLOAD:d3dcompiler_43.dll")
 	endif(MSVC)
 ENDMACRO()
 
