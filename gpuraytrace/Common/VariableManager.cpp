@@ -5,9 +5,6 @@
 #include <WS2tcpip.h>
 #include <process.h>
 
-
-
-
 VariableManager* VariableManager::variableManager;
 
 VariableManager* VariableManager::get()
