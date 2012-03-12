@@ -32,10 +32,16 @@ DeviceDirect3D::~DeviceDirect3D()
 bool DeviceDirect3D::create()
 {
 	HMODULE libD3D11 = LoadLibrary("d3d11.dll");
-
 	if(!libD3D11)
 	{
 		Logger() << "Could not load d3d11.dll, you probably do not have DirectX 11 installed.";
+		return false;
+	}
+
+	HMODULE libCompiler43 = LoadLibrary("d3dcompiler_43.dll");
+	if(!libCompiler43)
+	{
+		Logger() << "Could not load d3dcompiler_43.dll, try updating your DirectX";
 		return false;
 	}
 

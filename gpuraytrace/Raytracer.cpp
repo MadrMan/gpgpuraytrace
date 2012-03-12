@@ -8,6 +8,7 @@
 #include "./Graphics/Camera.h"
 #include "./Graphics/IShaderVariable.h"
 #include "./Graphics/Noise.h"
+#include "./Gameplay/Flyby.h"
 
 #include "IInput.h"
 #include "Directory.h"
@@ -83,9 +84,15 @@ void Raytracer::run()
 	IInputAction* escape = window->getInput()->createAction();
 	escape->registerKeyboard(VK_ESCAPE, 1.0f);
 
+	IInputAction* toggleFlyby = window->getInput()->createAction();
+	toggleFlyby->registerKeyboard(VK_F1, 1.0f);
+
 	//Create camera
 	camera = new Camera();
 	camera->setWindow(window);
+
+	//Flyby mode
+	Flyby* flyby = new Flyby(camera);
 
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
@@ -95,8 +102,17 @@ void Raytracer::run()
 
 	float frameTime = 0.0f;
 	int frames = 0;
+	bool isFlybyMode = false;
 	while(escape->getState() < 0.5f)
 	{
+		if(toggleFlyby->isTriggered()) isFlybyMode = !isFlybyMode;
+		if(isFlybyMode)
+		{
+			flyby->fly();
+		} else {
+			camera->move();
+		}
+
 		camera->update();
 		updateCompute();
 

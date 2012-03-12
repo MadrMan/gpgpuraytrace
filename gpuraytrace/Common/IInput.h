@@ -10,6 +10,14 @@ namespace MouseButtons { enum T
 	Size
 };}
 
+namespace TriggerState { enum T
+{
+	Released,
+	Holding,
+	Held,
+	Releasing
+};}
+
 namespace TriggerType { enum T
 {
 	OnTrigger,

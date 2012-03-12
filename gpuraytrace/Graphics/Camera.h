@@ -21,11 +21,13 @@ public:
 	void setWindow(IWindow* window);
 	void setInput(IInput* input);
 
+	void move();
 	void update();
 
 //private:
 	XMVECTOR position;
 	XMVECTOR rotation;
+	XMVECTOR front;
 	XMMATRIX matView;
 	XMMATRIX matProjection;
 	XMMATRIX matViewProjection;

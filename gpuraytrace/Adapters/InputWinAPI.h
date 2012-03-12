@@ -19,7 +19,7 @@ public:
 private:
 	float state;
 	InputWinAPI const* input;
-	bool triggeredState;
+	TriggerState::T triggeredState;
 	bool triggered;
 
 	std::vector<KeyboardTrigger> keyboardKeys;
