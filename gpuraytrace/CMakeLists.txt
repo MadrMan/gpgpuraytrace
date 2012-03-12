@@ -75,10 +75,16 @@ set(PROJ_COMMON
 	${gpgpuraytrace_SOURCE_DIR}/Common/Timer.cpp
 )
 
+set(PROJ_GAMEPLAY
+	${gpgpuraytrace_SOURCE_DIR}/Gameplay/Flyby.h
+	${gpgpuraytrace_SOURCE_DIR}/Gameplay/Flyby.cpp
+)
+
 source_group(Adapters FILES ${PROJ_ADAPTER})
 source_group(Factories FILES ${PROJ_FACTORY})
 source_group(Common FILES ${PROJ_COMMON})
 source_group(Graphics FILES ${PROJ_GRAPHICS})
+source_group(Gameplay FILES ${PROJ_GAMEPLAY})
 source_group("" FILES ${PROJ_SOURCES})
 
 include_directories("${gpgpuraytrace_SOURCE_DIR}/Common")
@@ -90,7 +96,7 @@ if(MSVC_VERSION LESS 1700)
 endif()
 link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib)
 
-add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON})
+add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON} ${PROJ_GAMEPLAY})
 
 ADD_PROJECT_PCH("Common.h")
 DELAYLOAD_DX11()

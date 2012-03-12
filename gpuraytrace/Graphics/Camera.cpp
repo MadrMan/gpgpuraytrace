@@ -59,8 +59,7 @@ void Camera::setWindow(IWindow* window)
 	rotateUD->registerMouseAxis(1);
 }
 
-
-void Camera::update()
+void Camera::move()
 {
 	//if ctrl is hold down, discard mouse move
 	if(disableMouse->getState() < 0.5f)
@@ -72,25 +71,27 @@ void Camera::update()
 		//maximize up/down so camera control does not flip
 		rotationEuler[0] = std::max(-XM_PI * 1.5f, std::min(-XM_PIDIV2 - 0.0001f, rotationEuler[0]));
 	}
-	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
-	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
-	//rotation = XMQuaternionMultiply(extraRotation, rotation);
 
+	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
+	//rotation = XMQuaternionMultiply(extraRotation, rotation);
 	float moveSpeed = Timer::get()->getConstant() * 5.0f;
 
 	//warpspeed
-	if(warpDrive->getState() > 0.5f)
-	{
-		moveSpeed *= 10.0f;
-	}
-	//Move camera
-	XMVECTOR front = XMVector3Rotate(XM_FRONT, rotation);
+	if(warpDrive->getState() > 0.5f) moveSpeed *= 5.0f;
+
 	position = XMVectorAdd(position, front * moveForward->getState() * moveSpeed);
 	if(moveUp->getState()) position = XMVectorAdd(position, XMVectorSet(0.0f, moveSpeed, 0.0f, 0.0f));
 	if(moveDown->getState()) position = XMVectorSubtract(position, XMVectorSet(0.0f, moveSpeed, 0.0f, 0.0f));
 
 	XMVECTOR right = XMVectorSetY(XMVector3Rotate(front, XMQuaternionRotationRollPitchYaw(0.0f, -XM_PIDIV2, 0.0f)), 0.0f);
 	position = XMVectorAdd(position, right * moveSide->getState() * moveSpeed);
+}
+
+void Camera::update()
+{
+	//Move camera
+	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
+	front = XMVector3Rotate(XM_FRONT, rotation);
 
 	//Update matrices
 	XMVECTOR direction = XMVector3Rotate(XM_FRONT, rotation);

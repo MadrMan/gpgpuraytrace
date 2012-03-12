@@ -7,7 +7,7 @@ InputActionWinAPI::InputActionWinAPI(InputWinAPI* input) : input(input)
 {
 	state = 0.0f;
 	triggered = 0;
-	triggeredState = 0;
+	triggeredState = TriggerState::Released;
 }
 
 float InputActionWinAPI::getState() const
@@ -22,13 +22,16 @@ bool InputActionWinAPI::isTriggered() const
 
 void InputActionWinAPI::update()
 {
+	bool oldIdle = isnull(state);
 	state = 0.0f;
+	TriggerType::T type = TriggerType::OnHold;
 
 	for(auto it = keyboardKeys.begin(); it != keyboardKeys.end(); ++it)
 	{
 		if(input->keys[it->key])
 		{
 			state += it->value;
+			type = it->trigger;
 		}
 	}
 
@@ -37,6 +40,7 @@ void InputActionWinAPI::update()
 		if(input->mouseButtons[it->key])
 		{
 			state += it->value;
+			type = it->trigger;
 		}
 	}
 
@@ -45,21 +49,35 @@ void InputActionWinAPI::update()
 		state += input->mouseAxis[*it];
 	}
 
-	/*if(isnull(state))
+	
+	if(isnull(state))
 	{
-		if(!triggered)
+		if(oldIdle)
 		{
-			triggered = false;
-			triggeredState = TriggerType::OnRelease;
+			triggeredState = TriggerState::Releasing;
 		} else {
-			triggeredState = TriggerType::;
+			triggeredState = TriggerState::Released;
 		}
+
+		triggered = false;
 	} else {
-		if(!triggered)
+		if(oldIdle)
+		{
+			triggeredState = TriggerState::Holding;
+		} else {
+			triggeredState = TriggerState::Held;
+		}
+
+		if((type == TriggerType::OnTrigger && triggeredState == TriggerState::Holding) ||
+			(type == TriggerType::OnHold && triggeredState == TriggerState::Holding) ||
+			(type == TriggerType::OnHold && triggeredState == TriggerState::Held) ||
+			(type == TriggerType::OnRelease && triggeredState == TriggerState::Releasing))
 		{
 			triggered = true;
+		} else {
+			triggered = false;
 		}
-	}*/
+	}
 }
 
 void InputActionWinAPI::registerKeyboard(int key, float highValue, TriggerType::T trigger)
