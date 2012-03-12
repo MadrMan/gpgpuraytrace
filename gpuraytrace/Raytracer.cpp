@@ -143,8 +143,7 @@ void Raytracer::updateTerrain()
 	{
 		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varFrameData->map());
 		if(!fd) return;
-		Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
-
+		//Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
 
 		float minDist = std::max(0.05f, fd->minDistance * 0.9f);
 		float maxDist = std::min(std::max(40.0f, fd->maxDistance * 1.1f), 10000.0f);

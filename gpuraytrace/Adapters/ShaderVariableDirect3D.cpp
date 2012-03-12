@@ -30,7 +30,7 @@ ConstantBufferD3D::ConstantBufferD3D(DeviceDirect3D* device, D3D11_SHADER_BUFFER
 
 ConstantBufferD3D::~ConstantBufferD3D()
 {
-
+	if(gpuBuffer) gpuBuffer->Release();
 }
 
 bool ConstantBufferD3D::create()
