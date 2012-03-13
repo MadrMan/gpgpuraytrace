@@ -158,7 +158,7 @@ bool InputWinAPI::handleWindowMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 			mouseButtons[MouseButtons::LeftButton] = 1;
 			return true;
 		case WM_RBUTTONDOWN:
-			mouseButtons[MouseButtons::MiddleButton] = 1;
+			mouseButtons[MouseButtons::RightButton] = 1;
 			return true;
 		case WM_MBUTTONDOWN:
 			mouseButtons[MouseButtons::MiddleButton] = 1;
