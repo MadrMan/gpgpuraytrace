@@ -3,7 +3,9 @@
 #include "DeviceDirect3D.h"
 #include "ShaderVariableDirect3D.h"
 #include "TextureDirect3D.h"
+
 #include "../Common/Logger.h"
+#include "../Common/CRC32.h"
 
 #include "D3D11Shader.h"
 #include <fstream>
@@ -34,12 +36,13 @@ HRESULT WINAPI ShaderIncludeHandler::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR p
 		case ERROR_SHARING_VIOLATION:
 			//Ignore and sleep
 			break;
+		case ERROR_FILE_NOT_FOUND:
 		case ERROR_PATH_NOT_FOUND:
 			Logger() << "Shader file not found: " << fullPath;
-			return err;
+			return -1;
 		default:
 			LOGERROR(err, "CreateFile");
-			return err;
+			return -1;
 		}
 		Sleep(10);
 	}
@@ -244,24 +247,12 @@ bool ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	return true;
 }
 
-bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main)
+HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std::string& fileName, const std::string& main, ID3DBlob** shaderBlob, ID3DBlob** errorBlob)
 {
-	//clear variables in variablemanager, this also tells the client (if there is one) to clear their variables
-	VariableManager::get()->clear();
-
-	//Create shader opener
-	ShaderIncludeHandler handler(directory);
-
-	//Open main shader file
-	UINT fileSize = 0;
-	LPCVOID fileData = 0;
-	HRESULT result = handler.Open(D3D_INCLUDE_LOCAL, fileName.c_str(), nullptr, &fileData, &fileSize);
-	
-	UINT shaderFlags;
 #if defined(_DEBUG)
-	shaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
+	UINT shaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
 #else
-	shaderFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
+	UINT shaderFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
 
 	std::string csProfile = "cs_5_0";
@@ -272,12 +263,88 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 
 	Logger() << "Creating CS from " << fileName << " at " << csProfile;
 
+	//Create shader opener
+	ShaderIncludeHandler handler(directory);
+
+	//Open main shader file
+	UINT fileSize = 0;
+	LPCVOID fileData = 0;
+	HRESULT result = handler.Open(D3D_INCLUDE_LOCAL, fileName.c_str(), nullptr, &fileData, &fileSize);
+
 	//Compile main shader file and includes
-	ID3D10Blob* shaderBlob;
-	ID3D10Blob* errorBlob;
-	result = D3DCompile(fileData, fileSize, fileName.c_str(), nullptr, &handler, main.c_str(), csProfile.c_str(), shaderFlags, 0, &shaderBlob, &errorBlob);
+	ID3DBlob* preprocBlob;
+	result = D3DPreprocess(fileData, fileSize, fileName.c_str(), nullptr, &handler, &preprocBlob, errorBlob);
+	if(FAILED(result)) return result;
+
 	handler.Close(fileData);
 
+	checksum_t preChecksum = CRC32::hash(preprocBlob->GetBufferPointer(), preprocBlob->GetBufferSize());
+
+	const std::string cachedDirectory = directory + "/cache";
+	const std::string cachedFile = cachedDirectory + "/" + fileName + ".bin";
+	HANDLE hShaderCached = CreateFile(cachedFile.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
+	if(hShaderCached == INVALID_HANDLE_VALUE) //No cached file found
+	{
+		Logger() << "No existing cached file found for " << fileName;
+	} else {
+		BY_HANDLE_FILE_INFORMATION cachedFileInfo;
+		GetFileInformationByHandle(hShaderCached, &cachedFileInfo);
+
+		checksum_t cachedChecksum;
+		DWORD cacheFileBytesRead;
+
+		ReadFile(hShaderCached, &cachedChecksum, sizeof(cachedChecksum), &cacheFileBytesRead, nullptr);
+
+		//Check if the existing checksum equals the old checksum
+		//If equal, load from cache instead of compiling ourselves
+		if(preChecksum == cachedChecksum)
+		{
+			DWORD blobSize = cachedFileInfo.nFileSizeLow - sizeof(checksum_t);
+			HRESULT res = D3DCreateBlob(blobSize, shaderBlob);
+			
+			ReadFile(hShaderCached, (*shaderBlob)->GetBufferPointer(), (*shaderBlob)->GetBufferSize(), &cacheFileBytesRead, nullptr);
+
+			CloseHandle(hShaderCached);
+			preprocBlob->Release();
+
+			Logger() << "Loaded cached shader " << cachedFile;
+
+			return S_OK;
+		} else {
+			CloseHandle(hShaderCached);
+		}
+	}
+
+	//No usable cached version was found, so compile and save
+	result = D3DCompile(preprocBlob->GetBufferPointer(), preprocBlob->GetBufferSize(), fileName.c_str(), nullptr, 0, main.c_str(), csProfile.c_str(), shaderFlags, 0, shaderBlob, errorBlob);
+	if(FAILED(result)) return result;
+
+	CreateDirectory(cachedDirectory.c_str(), nullptr);
+	hShaderCached = CreateFile(cachedFile.c_str(), GENERIC_WRITE, 0, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
+	if(hShaderCached == INVALID_HANDLE_VALUE) 
+	{
+		Logger() << "Could not save cached file to " << cachedFile;
+	} else {
+		DWORD cacheFileBytesWritten;
+		WriteFile(hShaderCached, &preChecksum, sizeof(preChecksum), &cacheFileBytesWritten, nullptr);
+		WriteFile(hShaderCached, (*shaderBlob)->GetBufferPointer(), (*shaderBlob)->GetBufferSize(), &cacheFileBytesWritten, nullptr);
+		CloseHandle(hShaderCached);
+		Logger() << "Saved cached file to " << cachedFile;
+	}
+
+	return S_OK;
+}
+
+bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main)
+{
+	//clear variables in variablemanager, this also tells the client (if there is one) to clear their variables
+	VariableManager::get()->clear();
+
+	ID3DBlob* shaderBlob = nullptr;
+	ID3DBlob* errorBlob = nullptr;
+	HRESULT result = getCompiledBlob(directory, fileName, main, &shaderBlob, &errorBlob);
 	if(result != S_OK)
 	{
 		if(result != E_FAIL)
@@ -326,6 +393,8 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 	//}
 
 	Logger() << "Compiled new shader";
+
+	shaderBlob->Release();
 	
 	return true;
 }

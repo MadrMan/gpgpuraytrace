@@ -53,6 +53,7 @@ private:
 	void createBuffer(ID3D10Blob* shaderBlob);
 	bool reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader);
 	bool addBuffer(ID3D11ShaderReflection* reflection, unsigned int index, ComputeShader3D* createdShader);
+	HRESULT getCompiledBlob(const std::string& directory, const std::string& fileName, const std::string& main, ID3DBlob** shaderBlob, ID3DBlob** errorBlob);
 	
 	//!copy the var values from old shader to the new.
 	void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader);
