@@ -10,18 +10,17 @@ class ComputeShader3D
 public:
 	ComputeShader3D(ID3D11ComputeShader* shader);
 	virtual ~ComputeShader3D();
-	IShaderVariable* getVariable(const std::string& name);
-	
+
 	ID3D11ComputeShader* getShader() { return shader; }
 	std::vector<ConstantBufferD3D*>& getConstantBuffers() { return constantBuffers; }		
-	std::vector<UAVBufferD3D*>& getUAVBuffers() { return uavBuffers; }	
-	std::vector<BufferD3D*>& getBuffers() { return buffers; }	
+	std::vector<UAVBufferD3D*>& getArrays() { return uavBuffers; }	
+	std::vector<ShaderVariableDirect3D*>& getVariables() { return variables; }	
 
 private:	
 	ID3D11ComputeShader* shader;
-	std::vector<ConstantBufferD3D*> constantBuffers;
+	std::vector<ShaderVariableDirect3D*> variables;
 	std::vector<UAVBufferD3D*> uavBuffers;
-	std::vector<BufferD3D*> buffers;
+	std::vector<ConstantBufferD3D*> constantBuffers;
 };
 
 class ShaderIncludeHandler : public ID3DInclude
@@ -44,8 +43,10 @@ public:
 	virtual ~ComputeDirect3D();
 
 	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main) override;
-	virtual void run() override;
-    virtual IShaderVariable* getVariable(const std::string& name) override;
+	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) override;
+	virtual IShaderVariable* getVariable(const std::string& name) override;
+	virtual IShaderArray* getArray(const std::string& name) override;
+	virtual IShaderBuffer* getBuffer(const std::string& name) override;
 	virtual bool swap() override;
 	virtual void setTexture(int stage, ITexture* texture) override;
 

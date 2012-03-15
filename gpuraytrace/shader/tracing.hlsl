@@ -1,5 +1,3 @@
-#include "noise.hlsl"
-
 cbuffer XTweakable
 {
 	float3 SunDirection;
@@ -20,15 +18,8 @@ cbuffer CBPermanent
 	float4x4 Projection;
 }
 
-struct SBFrameData
-{
-	uint MinHitDistance;
-	uint MaxHitDistance;
-};
-
+#include "noise.hlsl"
 #include "sky.hlsl"
-
-globallycoherent RWStructuredBuffer<SBFrameData> FrameData;
 
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
@@ -80,9 +71,9 @@ float getDensity(float3 p)
 
 struct RayResult
 {
-	float4 pd; //position : 3, density : 1
+	float4 pd; //position : 3, depth : 1
 	float4 fcolord; //fog color : 3, fog density : 1
-	float dist;
+	float density;
 };
 
 const static float RAY_STEP = 0.03f;
@@ -90,7 +81,7 @@ const static float RAY_STEP = 0.03f;
 const static float MAX_DIST = 100.0f;
 const static float RAY_STEP_FACTOR = 1.014f;
 
-RayResult traceRay(float3 p, float dist, float stepmod, float3 dir)
+RayResult traceRay(float3 p, float dist, float stepmod, float3 dir, bool calcfog)
 {
 	RayResult rr;
 	float4 f = 0.0;
@@ -106,8 +97,10 @@ RayResult traceRay(float3 p, float dist, float stepmod, float3 dir)
 	{
 		rayp = p + dir * dist;
 		
+		float4 fogstep = 0;
+
 		d = getDensity(rayp);
-		float4 fogstep = getFog(rayp) * step;
+		if(calcfog) fogstep = getFog(rayp) * step;
 
 		if(f.a > 1.0f || d > 0.0f) 
 		{
@@ -121,9 +114,9 @@ RayResult traceRay(float3 p, float dist, float stepmod, float3 dir)
 		}
 	}
 	
-	rr.pd = float4(rayp, d);
+	rr.pd = float4(rayp, dist);
 	rr.fcolord = f;
-	rr.dist = dist;
+	rr.density = d;
 	return rr;
 }
 
@@ -145,9 +138,9 @@ float3 getColor(float3 p, float3 n)
 	//color = lerp(cliffColor, color , saturate(abs(n.y) * 1.5f));
 	
 	//Calculate shadow
-	RayResult rr = traceRay(p, 0.1f, 3.0f, SunDirection);
+	RayResult rr = traceRay(p, 0.1f, 3.0f, SunDirection, true);
 	
-	if(rr.pd.w > 0.0f)
+	if(rr.density > 0.0f)
 	{
 		//color *= lerp( ShadowColor, rr.fcolor, rr.f);
 		color *= ShadowColor;
@@ -184,31 +177,4 @@ PixelData getPixelRay(uint2 DTid)
 	pd.p = mul(screenLocation, ViewInverse).xyz;
 	pd.dir = normalize(pd.p - Eye.xyz);
 	return pd;
-}
-
-//float3 h2r(float h,float s,float v){return lerp(saturate((abs(frac(h+float3(1,2,3)/3)*6-3)-1)),1,s)*v;}
-
-RWTexture2D<float4> texOut : register(u0);
-[numthreads(16, 16, 1)]
-void CSMain( uint3 DTid : SV_DispatchThreadID )
-{
-	PixelData pd = getPixelRay(DTid.xy);
-	
-	float3 color = 0.0f;
-	RayResult rr = traceRay(pd.p, StartDistance, 1.0f, pd.dir);
-
-	if(rr.pd.w > 0.0f) 							//-- we've hit something
-	{
-		float3 n = getNormal(rr.pd);
-		float3 tcolor = getColor(rr.pd.xyz, n);
-		color = lerp(tcolor, rr.fcolord.xyz, rr.fcolord.w);
-		
-		InterlockedMax(FrameData[0].MaxHitDistance, asuint(rr.dist));
-		InterlockedMin(FrameData[0].MinHitDistance, asuint(rr.dist));
-	} else { 								// -- we've hit nothing
-		float3 scolor = getSky(pd.dir);
-		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
-	}
-
-	texOut[DTid.xy] = float4(color, 1.0f);
 }

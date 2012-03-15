@@ -1,6 +1,7 @@
 #pragma once
 
-class IShaderVariable;
+#include "../Graphics/IShaderVariable.h"
+
 class ITexture;
 
 //! Interfaces inherited by all devices
@@ -12,9 +13,11 @@ public:
 
 	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main) = 0;
 
-	virtual void run() = 0;
+	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) = 0;
 
 	virtual IShaderVariable* getVariable(const std::string& name) = 0;
+	virtual IShaderArray* getArray(const std::string& name) = 0;
+	virtual IShaderBuffer* getBuffer(const std::string& name) = 0;
 
 	virtual bool swap() = 0;
 

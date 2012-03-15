@@ -4,27 +4,11 @@
 
 const int BUFFER_PADSIZE = 16;
 
-BufferD3D::BufferD3D(DeviceDirect3D* device, D3D11_SHADER_BUFFER_DESC& desc) : device(device)
-{
-	size = desc.Size;
-	name = desc.Name;
-}
-
-BufferD3D::~BufferD3D()
-{
-	for(auto it = variables.begin(); it != variables.end(); ++it)
-	{
-		ShaderVariableDirect3D* shaderVar = (ShaderVariableDirect3D*)*it;
-		delete shaderVar;
-	}
-}
-
-ConstantBufferD3D::ConstantBufferD3D(DeviceDirect3D* device, D3D11_SHADER_BUFFER_DESC& desc) : BufferD3D(device, desc)
+ConstantBufferD3D::ConstantBufferD3D(DeviceDirect3D* device, const std::string name, int size) : IShaderBuffer(name), device(device), size(size)
 {
 	data = new char[size];
 	ZeroMemory(data, size);
 
-	final = false;
 	gpuBuffer = nullptr;
 }
 
@@ -33,19 +17,21 @@ ConstantBufferD3D::~ConstantBufferD3D()
 	if(gpuBuffer) gpuBuffer->Release();
 }
 
-bool ConstantBufferD3D::create()
+bool ConstantBufferD3D::create(bool cpuWrite)
 {
+	setWritable(cpuWrite);
+
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
 	bufferDesc.ByteWidth = (size % BUFFER_PADSIZE) ? size + BUFFER_PADSIZE - size % BUFFER_PADSIZE : size;
 
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bufferDesc.CPUAccessFlags = 0;
-	if(final)
+	if(cpuWrite)
 	{
-		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	} else {
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	} else {
+		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	}
 
 	D3D11_SUBRESOURCE_DATA initialData;
@@ -62,50 +48,51 @@ bool ConstantBufferD3D::create()
 	return true;
 }
 
-void ConstantBufferD3D::change()
+void ConstantBufferD3D::update(ID3D11DeviceContext* context)
 {
-	dirty = true;
-}
-
-void ConstantBufferD3D::finalize()
-{
-	final = true;
-	create();
-}
-
-void ConstantBufferD3D::write(unsigned int offset, void* src, unsigned int size)
-{
-	if(final) 
+	if(dirty)
 	{
-		LOGFUNCERROR("Cannot write to finalized cbuffer");
+		dirty = false;
+		context->UpdateSubresource(gpuBuffer, 0, 0, data, size, 0);
+	}
+}
+
+void ConstantBufferD3D::write(unsigned int offset, void* src, unsigned int writeSize)
+{
+	if(!isWritable()) 
+	{
+		LOGFUNCERROR("Cannot write to unwritable cbuffer");
 		return;
 	}
 
-	memcpy((char*)data + offset, src, size);
+	if(writeSize > size)
+	{
+		LOGFUNCERROR("Data size to write is larger than buffer size (" << writeSize << " > " << size << ")");
+		return;
+	}
+
+	memcpy((char*)data + offset, src, writeSize);
 
 	change();
 }
 
-void* ConstantBufferD3D::map(unsigned int offset, unsigned int size)
+void ConstantBufferD3D::write(void* data)
 {
-	return nullptr;
-
-	/*D3D11_MAPPED_SUBRESOURCE mapped;
-	HRESULT result = device->getImmediate()->Map(stagingBuffer, 0, D3D11_MAP_READ_WRITE, 0, &mapped);
-	if(FAILED(result)) return nullptr;
-	return nullptr;*/
+	write(0, data, size);
 }
 
-void ConstantBufferD3D::unmap()
-{
-	//device->getImmediate()->Unmap(stagingBuffer, 0);
-}
-
-UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, D3D11_SHADER_BUFFER_DESC& desc, UINT stride) : BufferD3D(device, desc), stride(stride)
+UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string name, int stride) : IShaderArray(name), stride(stride), device(device)
 {
 	gpuBuffer = nullptr;
 	stagingBuffer = nullptr;
 	gpuView = nullptr;
+}
+
+UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string name, ID3D11UnorderedAccessView* gpuView) : IShaderArray(name), gpuView(gpuView), device(device)
+{
+	stride = 0;
+	gpuBuffer = nullptr;
+	stagingBuffer = nullptr;
 }
 
 UAVBufferD3D::~UAVBufferD3D()
@@ -115,16 +102,19 @@ UAVBufferD3D::~UAVBufferD3D()
 	if(gpuView) gpuView->Release();
 }
 
-void UAVBufferD3D::change()
+bool UAVBufferD3D::create(bool cpuWrite, unsigned int elements)
 {
+	setWritable(cpuWrite);
 
-}
+	if(gpuView) 
+	{
+		LOGFUNCERROR("SRV already created");
+		return false;
+	}
 
-bool UAVBufferD3D::create()
-{
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-	bufferDesc.ByteWidth = (size % BUFFER_PADSIZE) ? size + BUFFER_PADSIZE - size % BUFFER_PADSIZE : size;
+	bufferDesc.ByteWidth = elements * stride; //(size % BUFFER_PADSIZE) ? size + BUFFER_PADSIZE - size % BUFFER_PADSIZE : size;
 
 	if(bufferDesc.ByteWidth > D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * sizeof(float))
 	{
@@ -161,7 +151,7 @@ bool UAVBufferD3D::create()
 	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
 	uavDesc.Buffer.FirstElement = 0; 
-	uavDesc.Buffer.NumElements = size / stride;
+	uavDesc.Buffer.NumElements = elements;
 	result = device->getD3DDevice()->CreateUnorderedAccessView(gpuBuffer, &uavDesc, &gpuView);
 	if(FAILED(result)) 
 	{
@@ -172,12 +162,19 @@ bool UAVBufferD3D::create()
 	return true;
 }
 
-void UAVBufferD3D::write(unsigned int offset, void* data, unsigned int size)
+void UAVBufferD3D::write(void* data)
 {
+	LOGFUNCERROR("Write to UAV not supported");
 }
 
-void* UAVBufferD3D::map(unsigned int offset, unsigned int size)
+void* UAVBufferD3D::map()
 {
+	if(!gpuBuffer) 
+	{
+		LOGFUNCERROR("No SRV created");
+		return nullptr;
+	}
+
 	ID3D11DeviceContext* context = device->getImmediate();
 	context->CopyResource(stagingBuffer, gpuBuffer);
 	D3D11_MAPPED_SUBRESOURCE mapped;
@@ -193,27 +190,11 @@ void UAVBufferD3D::unmap()
 	context->CopyResource(gpuBuffer, stagingBuffer);
 }
 
-ShaderVariableDirect3D::ShaderVariableDirect3D(const std::string name, int offset, int size, BufferD3D* buffer) : IShaderVariable(name), offset(offset), sizeInBytes(size), buffer(buffer)
+ShaderVariableDirect3D::ShaderVariableDirect3D(const std::string& name, int offset, int size, ConstantBufferD3D* buffer) : IShaderVariable(name, buffer), offset(offset), sizeInBytes(size)
 {
 }
 
 void ShaderVariableDirect3D::write(void* data)
 {
-	buffer->write(offset, data, sizeInBytes);
-}
-
-void ShaderVariableDirect3D::finalize()
-{
-	ConstantBufferD3D* cbuffer = static_cast<ConstantBufferD3D*>(buffer);
-	cbuffer->finalize();
-}
-
-void* ShaderVariableDirect3D::map()
-{
-	return buffer->map(offset, sizeInBytes);
-}
-
-void ShaderVariableDirect3D::unmap()
-{
-	return buffer->unmap();
+	static_cast<ConstantBufferD3D*>(getParent())->write(offset, data, sizeInBytes);
 }

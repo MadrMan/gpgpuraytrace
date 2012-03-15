@@ -98,22 +98,6 @@ ComputeShader3D::~ComputeShader3D()
 		delete *it;
 	}
 }
-
-IShaderVariable* ComputeShader3D::getVariable(const std::string& name)
-{
-	for(auto it = buffers.begin(); it != buffers.end(); ++it)
-	{
-		BufferD3D* buff = *it;
-		for(auto var = buff->variables.begin(); var != buff->variables.end(); ++var)
-		{
-			if(name == (*var)->getName())
-			{
-				return *var;
-			}
-		}
-	}
-	return nullptr;
-}	
 		
 ComputeDirect3D::ComputeDirect3D(DeviceDirect3D* device) : device(device)
 {
@@ -130,7 +114,52 @@ ComputeDirect3D::~ComputeDirect3D()
 IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
 {
 	if(!shader) return nullptr;
-	return shader->getVariable(name);
+
+	std::vector<ShaderVariableDirect3D*>& vars = shader->getVariables();
+	for(auto it = vars.begin(); it != vars.end(); ++it)
+	{
+		IShaderVariable* buff = *it;
+		if(buff->getName() == name)
+		{
+			return buff;
+		}
+	}
+
+	return nullptr;
+}
+
+IShaderArray* ComputeDirect3D::getArray(const std::string& name)
+{
+	if(!shader) return nullptr;
+
+	std::vector<UAVBufferD3D*>& vars = shader->getArrays();
+	for(auto it = vars.begin(); it != vars.end(); ++it)
+	{
+		IShaderArray* buff = *it;
+		if(buff->getName() == name)
+		{
+			return buff;
+		}
+	}
+
+	return nullptr;
+}
+
+IShaderBuffer* ComputeDirect3D::getBuffer(const std::string& name)
+{
+	if(!shader) return nullptr;
+
+	std::vector<ConstantBufferD3D*>& vars = shader->getConstantBuffers();
+	for(auto it = vars.begin(); it != vars.end(); ++it)
+	{
+		IShaderBuffer* buff = *it;
+		if(buff->getName() == name)
+		{
+			return buff;
+		}
+	}
+
+	return nullptr;
 }
 
 bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int index, ComputeShader3D* createdShader)
@@ -145,11 +174,11 @@ bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int
 		LOGERROR(result, "reflectionBuffer->GetDesc");
 		return false;
 	}
-	
+
 	if(reflectionBufferDesc.Type == D3D_CT_CBUFFER)
 	{
-		ConstantBufferD3D* newBuffer = new ConstantBufferD3D(device, reflectionBufferDesc);
-		if(!newBuffer->create())
+		ConstantBufferD3D* newBuffer = new ConstantBufferD3D(device, reflectionBufferDesc.Name, reflectionBufferDesc.Size);
+		if(!newBuffer->create(true))
 			return false;
 
 		ID3D11ShaderReflectionVariable* shaderReflectionVar = nullptr;
@@ -169,16 +198,17 @@ bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int
 			shaderReflectionVarType = shaderReflectionVar->GetType();
 			shaderReflectionVarType->GetDesc(&shaderTypeDesc);
 			ShaderVariableDirect3D* shaderVariable = new ShaderVariableDirect3D(shaderVarDesc.Name, shaderVarDesc.StartOffset,  shaderVarDesc.Size, newBuffer);
-			newBuffer->variables.push_back(shaderVariable);
+			newBuffer->addVariable(shaderVariable);
+			createdShader->getVariables().push_back(shaderVariable);
 	
 			//check if this variable needs to be send to the variablemanager
-			if(newBuffer->name[0] == VariableManager::PREFIX)
+			if(newBuffer->getName()[0] == VariableManager::PREFIX)
 			{
 				Variable v;
 				v.name = shaderVarDesc.Name;
 				v.sizeInBytes = shaderVarDesc.Size;
 				v.type = shaderTypeDesc.Name; //Can be null
-				v.pointer = newBuffer->data + shaderVarDesc.StartOffset;
+				v.pointer = (char*)newBuffer->getData() + shaderVarDesc.StartOffset;
 				v.callback = new ICallback<ComputeDirect3D, const Variable&>(this, &ComputeDirect3D::onVariableChangedCallback);
 				v.tag = shaderVariable;
 				VariableManager::get()->registerVariable(v);
@@ -186,23 +216,7 @@ bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int
 		}
 
 		createdShader->getConstantBuffers().push_back(newBuffer);
-		createdShader->getBuffers().push_back(newBuffer);
 	} 
-	else if(reflectionBufferDesc.Type == D3D_CT_RESOURCE_BIND_INFO) 
-	{
-		D3D11_SHADER_VARIABLE_DESC variableDesc;
-		ID3D11ShaderReflectionVariable* variable = reflectionBuffer->GetVariableByIndex(0);
-		variable->GetDesc(&variableDesc);
-
-		UAVBufferD3D* newBuffer = new UAVBufferD3D(device, reflectionBufferDesc, variableDesc.Size);
-		newBuffer->create();
-
-		ShaderVariableDirect3D* shaderVariable = new ShaderVariableDirect3D(reflectionBufferDesc.Name, 0, reflectionBufferDesc.Size, newBuffer);
-		newBuffer->variables.push_back(shaderVariable);
-
-		createdShader->getUAVBuffers().push_back(newBuffer);
-		createdShader->getBuffers().push_back(newBuffer);
-	}
 
 	return true;
 }
@@ -210,7 +224,7 @@ bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int
 void ComputeDirect3D::onVariableChangedCallback(const Variable& var)
 {
 	ShaderVariableDirect3D* shaderVariable = static_cast<ShaderVariableDirect3D*>(var.tag);
-	shaderVariable->getBuffer()->change();
+	static_cast<ConstantBufferD3D*>(shaderVariable->getParent())->change();
 }
 
 bool ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader)
@@ -230,6 +244,35 @@ bool ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	{
 		LOGERROR(result, "D3DReflectDesc could not be created");
 		return false;
+	}
+
+	D3D11_SHADER_INPUT_BIND_DESC bindDesc;
+	for(UINT x = 0; x < reflectionDesc.BoundResources; ++x)
+	{
+		reflection->GetResourceBindingDesc(x, &bindDesc);
+		std::vector<UAVBufferD3D*>& buffers = createdShader->getArrays();
+
+		UAVBufferD3D* newBuffer = nullptr;
+		switch(bindDesc.Type)
+		{
+		case D3D_SIT_UAV_RWSTRUCTURED:
+			newBuffer = new UAVBufferD3D(device, bindDesc.Name, bindDesc.NumSamples);
+			//newBuffer->addVariable().push_back(new ShaderVariableDirect3D(newBuffer->name, 0, newBuffer->size, newBuffer));
+			/*if(!newBuffer->create(true))
+			{
+				LOGFUNCERROR("UAVBufferD3D " << bindDesc.Name << "could not be created");
+			}*/
+			break;
+		case D3D_SIT_UAV_RWTYPED:
+			newBuffer = new UAVBufferD3D(device, bindDesc.Name, device->getSwapUAV());
+			break;
+		}
+
+		if(newBuffer)
+		{
+			//buffers[bindDesc.BindPoint] = newBuffer;
+			buffers.push_back(newBuffer);
+		}
 	}
 
 	//loop to find all constant shader buffers
@@ -318,6 +361,7 @@ HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std
 
 	//No usable cached version was found, so compile and save
 	result = D3DCompile(preprocBlob->GetBufferPointer(), preprocBlob->GetBufferSize(), fileName.c_str(), nullptr, 0, main.c_str(), csProfile.c_str(), shaderFlags, 0, shaderBlob, errorBlob);
+	preprocBlob->Release();
 	if(FAILED(result)) return result;
 
 	CreateDirectory(cachedDirectory.c_str(), nullptr);
@@ -411,10 +455,10 @@ void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader)
 	for(auto it1 = createdShader->getConstantBuffers().begin(); it1 != createdShader->getConstantBuffers().end(); ++it1)
 	{
 		ConstantBufferD3D* newShaderBuffer = *it1;	
-		if(newShaderBuffer->name[0] != VariableManager::PREFIX) continue;
+		if(newShaderBuffer->getName()[0] != VariableManager::PREFIX) continue;
 		
 		//for each variable in a watched buffer
-		for(auto it2 = newShaderBuffer->variables.begin(); it2 != newShaderBuffer->variables.end(); ++it2)
+		for(auto it2 = newShaderBuffer->getVariables().begin(); it2 != newShaderBuffer->getVariables().end(); ++it2)
 		{
 			ShaderVariableDirect3D* shaderVarNew = (ShaderVariableDirect3D*)*it2;
 			
@@ -422,17 +466,17 @@ void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader)
 			for(auto it3 = shader->getConstantBuffers().begin(); it3 != shader->getConstantBuffers().end(); ++it3)
 			{
 				ConstantBufferD3D* oldShaderBuffer = *it3;	
-				if(oldShaderBuffer->name[0] != VariableManager::PREFIX ||
-					oldShaderBuffer->name.compare(newShaderBuffer->name) != 0) continue;
+				if(oldShaderBuffer->getName()[0] != VariableManager::PREFIX ||
+					oldShaderBuffer->getName().compare(newShaderBuffer->getName()) != 0) continue;
 
 				//for each variable in the old buffer (that is watched)
-				for(auto it4 = oldShaderBuffer->variables.begin(); it4 != oldShaderBuffer->variables.end(); ++it4)
+				for(auto it4 = oldShaderBuffer->getVariables().begin(); it4 != oldShaderBuffer->getVariables().end(); ++it4)
 				{
 					ShaderVariableDirect3D* shaderVarOld = (ShaderVariableDirect3D*)*it4;
 					if(shaderVarNew->getName().compare(shaderVarOld->getName()) != 0 ||
 						shaderVarNew->getSizeInBytes() != shaderVarOld->getSizeInBytes()) continue;
 				
-					shaderVarNew->write(static_cast<ConstantBufferD3D*>(shaderVarOld->getBuffer())->data);
+					shaderVarNew->write(static_cast<ConstantBufferD3D*>(shaderVarOld->getParent())->getData());
 				}
 			}
 		}
@@ -463,40 +507,32 @@ bool ComputeDirect3D::swap()
 	return false;
 }
 
-void ComputeDirect3D::run()
+void ComputeDirect3D::run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ)
 {
 	if(!shader) return;
 
 	for(auto it = shader->getConstantBuffers().begin(); it != shader->getConstantBuffers().end(); ++it)
 	{
 		ConstantBufferD3D* buffer = *it;
-		if(buffer->dirty)
-		{
-			buffer->dirty = false;
-			device->getImmediate()->UpdateSubresource(buffer->gpuBuffer, 0, 0, buffer->data, buffer->size, 0);
-		}
+		buffer->update(device->getImmediate());
 	}
 
 	ID3D11Buffer* gpuBuffers[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT];
 	ID3D11UnorderedAccessView* uavViews[4];
 
 	size_t maxCB = shader->getConstantBuffers().size();
-	size_t maxUAV = shader->getUAVBuffers().size();
+	size_t maxUAV = shader->getArrays().size();
 	for(size_t x = 0; x < maxCB; ++x)
-		gpuBuffers[x] = shader->getConstantBuffers()[x]->gpuBuffer;
+		gpuBuffers[x] = shader->getConstantBuffers()[x]->getGpuBuffer();
 	for(size_t x = 0; x < maxUAV; ++x)
-		uavViews[x] = shader->getUAVBuffers()[x]->gpuView;
+		uavViews[x] = shader->getArrays()[x]->getView();
 
 	device->getImmediate()->CSSetConstantBuffers(0, maxCB, gpuBuffers);
-	device->getImmediate()->CSSetUnorderedAccessViews(1, maxUAV, uavViews, 0);
+	device->getImmediate()->CSSetUnorderedAccessViews(0, maxUAV, uavViews, 0);
 
 	ID3D11DeviceContext* dc = device->getImmediate();
 	dc->CSSetShader(shader->getShader(), 0, 0);
-	dc->Dispatch(device->getWindow()->getWindowSettings().width / 16, device->getWindow()->getWindowSettings().height / 16, 1);
-	
-	//dc->CSSetShader(shader, nullptr, 0);
-	//dc->CSSetUnorderedAccessViews(
-	//dc->
+	dc->Dispatch(dispatchX, dispatchY, dispatchZ);
 }
 
 void ComputeDirect3D::setTexture(int stage, ITexture* texture)

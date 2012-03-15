@@ -87,15 +87,17 @@ void Camera::move()
 	position = XMVectorAdd(position, right * moveSide->getState() * moveSpeed);
 }
 
-void Camera::update()
+void Camera::rotate()
 {
 	//Move camera
 	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
 	front = XMVector3Rotate(XM_FRONT, rotation);
+}
 
+void Camera::update()
+{
 	//Update matrices
-	XMVECTOR direction = XMVector3Rotate(XM_FRONT, rotation);
-	matView = XMMatrixLookToLH(position, direction, XM_UP);
+	matView = XMMatrixLookToLH(position, front, XM_UP);
 
 	matViewProjection = XMMatrixMultiply(matView, matProjection);
 }
