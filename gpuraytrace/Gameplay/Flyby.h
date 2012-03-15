@@ -12,9 +12,11 @@ struct CameraVision
 	float depth;
 };
 
-class Flyby
+CLASSALIGN class Flyby
 {
 public:
+	ALLOCALIGN;
+
 	Flyby(Camera* camera);
 	virtual ~Flyby();
 
@@ -23,7 +25,13 @@ public:
 	CameraVision* getCameraView() const
 	{ return cameraView; }
 
+	void reset();
+
 private:
+	XMVECTOR target;
+	XMVECTOR lastTarget;
+	bool resetTarget;
+
 	CameraVision* cameraView;
 	Camera* camera;
 };

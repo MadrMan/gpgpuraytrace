@@ -111,7 +111,11 @@ void Raytracer::run()
 	bool isFlybyMode = false;
 	while(escape->getState() < 0.5f)
 	{
-		if(toggleFlyby->isTriggered()) isFlybyMode = !isFlybyMode;
+		if(toggleFlyby->isTriggered()) 
+		{
+			isFlybyMode = !isFlybyMode;
+			flyby->reset();
+		}
 		if(isFlybyMode)
 		{
 			flyby->fly();
