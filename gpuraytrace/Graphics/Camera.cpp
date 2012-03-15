@@ -49,6 +49,8 @@ void Camera::setWindow(IWindow* window)
 	moveSide->registerKeyboard('A', -1.0f, TriggerType::OnHold);
 	moveSide->registerKeyboard('D', 1.0f, TriggerType::OnHold);
 	moveForward->registerKeyboard('W', 1.0f, TriggerType::OnHold);
+	moveForward->registerMouseButton(MouseButtons::LeftButton, 1.0f, TriggerType::OnHold);
+	moveForward->registerMouseButton(MouseButtons::RightButton, -1.0f, TriggerType::OnHold);
 	moveForward->registerKeyboard('S', -1.0f, TriggerType::OnHold);
 	disableMouse->registerKeyboard(VK_CONTROL, 1.0f, TriggerType::OnHold);
 	warpDrive->registerKeyboard(VK_SHIFT, 1.0f, TriggerType::OnHold);
