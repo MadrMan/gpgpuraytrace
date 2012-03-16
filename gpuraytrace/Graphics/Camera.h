@@ -23,6 +23,7 @@ public:
 
 	void move();
 	void update();
+	void rotate();
 
 //private:
 	XMVECTOR position;

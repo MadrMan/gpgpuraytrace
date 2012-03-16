@@ -26,6 +26,9 @@ public:
 	ID3D11DeviceContext* getImmediate() const
 	{ return context; }
 
+	ID3D11UnorderedAccessView* getSwapUAV() const
+	{ return uavSwapBuffer; }
+
 private:
 	ID3D11Device* device;
 	ID3D11DeviceContext* context;

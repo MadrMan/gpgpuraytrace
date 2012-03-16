@@ -1,12 +1,14 @@
 #pragma once
 
 class IShaderVariable;
+class IShaderArray;
 class IDevice;
 class IWindow;
 class ICompute;
 class ITexture;
 class Camera;
 class Noise;
+class Flyby;
 
 //! Main class for the raytrace project
 //! Calling run on this class will block and run the raytracing program
@@ -35,16 +37,28 @@ private:
 	IDevice* device;
 	IWindow* window;
 	ICompute* compute;
+	ICompute* cameraCompute;
 	ITexture* texNoise1D;
 	ITexture* texNoise2D;
 	Camera* camera;
 	Noise* noise;
+	Flyby* flyby;
 
+	//Screen vars
 	IShaderVariable* varView;
-	IShaderVariable* varProjection;
 	IShaderVariable* varEye;
-	IShaderVariable* varFrameData;
+	IShaderArray* varFrameData;
 	IShaderVariable* varMinDistance;
 	IShaderVariable* varMaxDistance;
 	IShaderVariable* varTime;
+
+	//Camera equivs
+	IShaderVariable* varCamView;
+	IShaderVariable* varCamEye;
+	IShaderVariable* varCamMinDistance;
+	IShaderVariable* varCamMaxDistance;
+	IShaderArray* varCamResults;
+
+	float curMinDistance;
+	float curMaxDistance;
 };

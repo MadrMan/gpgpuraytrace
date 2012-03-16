@@ -124,8 +124,6 @@ bool DeviceDirect3D::create()
 		return false;
 	}
 
-	context->CSSetUnorderedAccessViews(0, 1, &uavSwapBuffer, 0);
-
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; //D3D11_FILTER_ANISOTROPIC;

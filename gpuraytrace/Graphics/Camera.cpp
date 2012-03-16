@@ -71,7 +71,7 @@ void Camera::move()
 		rotationEuler[1] -= rotateLR->getState() * 0.01f;
 		
 		//maximize up/down so camera control does not flip
-		rotationEuler[0] = std::max(-XM_PI * 1.5f, std::min(-XM_PIDIV2 - 0.0001f, rotationEuler[0]));
+		rotationEuler[0] = std::max(-XM_PI * 1.5f + 0.0001f, std::min(-XM_PIDIV2 - 0.0001f, rotationEuler[0]));
 	}
 
 	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
@@ -89,15 +89,17 @@ void Camera::move()
 	position = XMVectorAdd(position, right * moveSide->getState() * moveSpeed);
 }
 
-void Camera::update()
+void Camera::rotate()
 {
 	//Move camera
 	rotation = XMQuaternionRotationRollPitchYaw(rotationEuler[0], rotationEuler[1], 0.0f);
 	front = XMVector3Rotate(XM_FRONT, rotation);
+}
 
+void Camera::update()
+{
 	//Update matrices
-	XMVECTOR direction = XMVector3Rotate(XM_FRONT, rotation);
-	matView = XMMatrixLookToLH(position, direction, XM_UP);
+	matView = XMMatrixLookToLH(position, front, XM_UP);
 
 	matViewProjection = XMMatrixMultiply(matView, matProjection);
 }
