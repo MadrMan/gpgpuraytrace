@@ -233,7 +233,7 @@ void Raytracer::updateTerrain()
 			res += '\n';
 		}*/
 
-		memcpy(flyby->getCameraView(), fd, CAMERA_VIEW_RES * CAMERA_VIEW_RES * sizeof(CameraVision));
+		memcpy(flyby->getCameraView().data(), fd, CAMERA_VIEW_RES * CAMERA_VIEW_RES * sizeof(CameraVision));
 
 		varCamResults->unmap();
 	}

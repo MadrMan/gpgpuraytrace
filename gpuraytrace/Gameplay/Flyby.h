@@ -22,7 +22,7 @@ public:
 
 	void fly();
 
-	CameraVision* getCameraView() const
+	std::vector<CameraVision>& getCameraView()
 	{ return cameraView; }
 
 	void reset();
@@ -31,7 +31,8 @@ private:
 	XMVECTOR target;
 	XMVECTOR orgDirToTarget;
 	bool resetTarget;
+	float avgHeight;
 
-	CameraVision* cameraView;
+	std::vector<CameraVision> cameraView;
 	Camera* camera;
 };
