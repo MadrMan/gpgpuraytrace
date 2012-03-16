@@ -29,15 +29,8 @@ public:
 
 private:
 	XMVECTOR target;
-	XMVECTOR targetFront;
-	XMVECTOR lastTarget;
-	XMVECTOR lastTargetFront;
-	XMVECTOR curvePoint;
-	XMVECTOR nextCurvePoint;
-
+	XMVECTOR orgDirToTarget;
 	bool resetTarget;
-	float curveProgress;
-	float curveSmooth;
 
 	CameraVision* cameraView;
 	Camera* camera;

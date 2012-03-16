@@ -19,7 +19,6 @@ Flyby::~Flyby()
 void Flyby::reset()
 {
 	resetTarget = true;
-	lastTarget = camera->position;
 }
 
 void Flyby::fly()
@@ -34,7 +33,7 @@ void Flyby::fly()
 	XMVECTOR dirToBest;
 	XMVECTOR force = XMVectorZero();
 
-	float score = 0.0f;
+	float score = -10000.0f;
 	for(int y = 0; y < CAMERA_VIEW_RES; y++)
 	{
 		for(int x = 0; x < CAMERA_VIEW_RES; x++)
@@ -80,17 +79,8 @@ void Flyby::fly()
 	if(distance < camSpeed * 5.0f)
 	{
 		Logger() << "Setting new target with score " << score;
-
-		lastTarget = target;
 		target = best;
-		
-		lastTargetFront = camera->front;
-		targetFront = -XMVector3Normalize(dirToBest);
-
-		curveProgress = 0.0f;
-		curveSmooth = XMVectorGetX(XMVector3Length(target)) * 0.15f;
-		curvePoint = position;
-		nextCurvePoint = curvePoint;
+		orgDirToTarget = XMVector3Normalize(dirToBest);
 	}
 
 	//XMVectorHermite / XMVectorCatmullRom 
@@ -99,24 +89,12 @@ void Flyby::fly()
 	
 
 	//Push force towards target
-	//XMVECTOR direction = XMVector3Normalize(target - position); 
-	XMVECTOR direction;
-	curveProgress += 0.002f * c;
-	for(;;)
-	{
-		float directionLength = XMVectorGetX(XMVector3Length(curvePoint - position));
-		float nextDirectionLength = XMVectorGetX(XMVector3Length(nextCurvePoint - position));
-		if(directionLength < camSpeed || directionLength > nextDirectionLength)
-		{
-			curvePoint = nextCurvePoint;
-			curveProgress += 0.001f;
-			nextCurvePoint = XMVectorHermite(lastTarget, lastTargetFront * curveSmooth, target, targetFront * curveSmooth, curveProgress);
-		} else {
-			break;
-		}
-	}
+	float distToTarget = XMVectorGetX(XMVector3LengthEst(target - position)); 
+	float smoothPath = std::min(distToTarget, 5.0f);
+	XMVECTOR curvePoint = XMVectorCatmullRom(position, position + camera->front * smoothPath, target - orgDirToTarget, target, 0.1f);
 
-	direction = XMVector3Normalize(curvePoint - position);
+	//Set direction to next curve point
+	XMVECTOR direction = XMVector3Normalize(curvePoint - position);
 
 	//Always look at target
 	camera->front = direction;
