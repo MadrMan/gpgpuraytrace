@@ -1,9 +1,12 @@
 #pragma once
 
 #include "../Factories/IDevice.h"
+#include "../Factories/IRecorder.h"
 
 #include <d3d11.h>
 
+class TextureDirect3D;
+class RecorderWinAPI;
 class DeviceDirect3D : public IDevice
 {
 public:
@@ -16,6 +19,8 @@ public:
 	virtual ICompute* createCompute() override;
 
 	virtual ITexture* createTexture() override;
+
+	void setRecorder(RecorderWinAPI* recorder);
 
 	ID3D11Device* getD3DDevice() const
 	{ return device; }
@@ -37,5 +42,8 @@ private:
 	ID3D11ShaderResourceView* swapBackBufferSRV;
 	D3D_FEATURE_LEVEL featureLevel;
 	ID3D11UnorderedAccessView* uavSwapBuffer;
+
+	TextureDirect3D* swapStaging;
+	RecorderWinAPI* recorder;
 };
 

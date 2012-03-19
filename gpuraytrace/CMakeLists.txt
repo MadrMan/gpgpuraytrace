@@ -32,6 +32,8 @@ set(PROJ_ADAPTER
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/TimerWinAPI.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/TextureDirect3D.h
 	${gpgpuraytrace_SOURCE_DIR}/Adapters/TextureDirect3D.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/RecorderWinAPI.h
+	${gpgpuraytrace_SOURCE_DIR}/Adapters/RecorderWinAPI.cpp
 )
 
 set(PROJ_FACTORY
@@ -40,10 +42,13 @@ set(PROJ_FACTORY
 	${gpgpuraytrace_SOURCE_DIR}/Factories/WindowFactory.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Factories/DeviceFactory.h
 	${gpgpuraytrace_SOURCE_DIR}/Factories/DeviceFactory.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Factories/RecorderFactory.h
+	${gpgpuraytrace_SOURCE_DIR}/Factories/RecorderFactory.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Factories/ICompute.h
 	${gpgpuraytrace_SOURCE_DIR}/Factories/IWindow.h
 	${gpgpuraytrace_SOURCE_DIR}/Factories/IDevice.h
 	${gpgpuraytrace_SOURCE_DIR}/Factories/ITexture.h
+	${gpgpuraytrace_SOURCE_DIR}/Factories/IRecorder.h
 )
 
 set (PROJ_GRAPHICS
@@ -96,7 +101,7 @@ if(MSVC_VERSION LESS 1700)
 	include_directories("$ENV{DXSDK_DIR}/include")
 	link_directories("$ENV{DXSDK_DIR}/lib/x86")
 endif()
-link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib)
+link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib mfreadwrite.lib mfplat.lib mfuuid.lib)
 
 add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON} ${PROJ_GAMEPLAY})
 

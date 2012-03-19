@@ -6,6 +6,7 @@
 #include "TextureDirect3D.h"
 
 #include "../Common/Logger.h"
+#include "../Adapters/RecorderWinAPI.h"
 
 #include <D3Dcompiler.h>
 #include <fstream>
@@ -18,10 +19,15 @@ DeviceDirect3D::DeviceDirect3D(IWindow* window) : IDevice(DeviceAPI::Direct3D, w
 	swapBackBuffer = nullptr;
 	swapBackBufferSRV = nullptr;
 	uavSwapBuffer = nullptr;
+
+	recorder = nullptr;
+	swapStaging = nullptr;
 }
 
 DeviceDirect3D::~DeviceDirect3D()
 {
+	if(swapStaging) delete swapStaging;
+
 	if(uavSwapBuffer) uavSwapBuffer->Release();
 	if(device) device->Release();
 	if(context) context->Release();
@@ -44,6 +50,10 @@ bool DeviceDirect3D::create()
 		Logger() << "Could not load d3dcompiler_43.dll, try updating your DirectX";
 		return false;
 	}
+
+	//Release handles
+	FreeLibrary(libD3D11);
+	FreeLibrary(libCompiler43);
 
 	UINT createDeviceFlags = 0;
 #if defined(_DEBUG)
@@ -72,7 +82,6 @@ bool DeviceDirect3D::create()
 	
 	HRESULT result = D3D11CreateDeviceAndSwapChain(0 , D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, featureLevels,
                         _countof(featureLevels), D3D11_SDK_VERSION, &sd, &swapChain, &device, &featureLevel, &context);
-	FreeLibrary(libD3D11);
 
 	if(result != S_OK)
 	{
@@ -109,7 +118,17 @@ bool DeviceDirect3D::create()
         return false;
     }
 
-	//Create the UAV for the swapbuffer
+	//Create trace result texture/RT
+	swapStaging = static_cast<TextureDirect3D*>(createTexture());
+	swapStaging->create(TextureDimensions::Texture2D, TextureFormat::R8G8B8A8_UNORM, sd.BufferDesc.Width, sd.BufferDesc.Height, nullptr, TextureBinding::Staging, CPUAccess::Read);
+	/*result = device->CreateRenderTargetView(traceResultTexture->getResource(), nullptr, &traceResultRT);
+	if(FAILED(result))
+	{
+		LOGERROR(result, "CreateRenderTargetView");
+		return false;
+	}*/
+
+	//Create the UAV for the trace result
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
 	ZeroMemory(&uavDesc, sizeof(uavDesc));
 	uavDesc.Format = sd.BufferDesc.Format;
@@ -124,6 +143,7 @@ bool DeviceDirect3D::create()
 		return false;
 	}
 
+	//Setup sampler
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; //D3D11_FILTER_ANISOTROPIC;
@@ -144,9 +164,34 @@ bool DeviceDirect3D::create()
 	return true;
 }
 
+void DeviceDirect3D::setRecorder(RecorderWinAPI* recorder)
+{
+	this->recorder = recorder;
+}
+
 void DeviceDirect3D::present()
 {
-	swapChain->Present(0, 0);
+	if(recorder && recorder->isRecording())
+	{
+		ID3D11Resource* resource = swapStaging->getResource();
+		context->CopyResource(resource, swapBackBuffer);
+
+		D3D11_MAPPED_SUBRESOURCE mapped;
+		HRESULT result = context->Map(resource, 0, D3D11_MAP_READ, 0, &mapped);
+		if(SUCCEEDED(result))
+		{
+			recorder->write(mapped.pData, mapped.RowPitch);
+			context->Unmap(resource, 0);
+		} else {
+			LOGERROR(result, "Map");
+		}
+	}
+	
+	HRESULT result = swapChain->Present(0, 0);
+	if(FAILED(result))
+	{
+		LOGERROR(result, "Present");
+	}
 }
 
 ICompute* DeviceDirect3D::createCompute()
