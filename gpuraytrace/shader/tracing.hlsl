@@ -41,8 +41,6 @@ float4 getFog(float3 p)
 
 float getDensity(float3 p)
 {
-	//float r = length(p - Eye.xyz);
-
 	float d = 0.0f;
 
 	/*p += float3(
@@ -153,7 +151,7 @@ float3 getColor(float3 p, float3 n)
 
 float3 getNormal(float4 pd)
 {
-	float2 normalDistance = float2(length(pd.xyz - Eye.xyz) * 0.005f, 0.0f);
+	float2 normalDistance = float2(distance(pd.xyz, Eye.xyz) * 0.005f, 0.0f);
 	return normalize(float3(
 		 getDensity(pd.xyz - normalDistance.xyy) - pd.w,
 		 getDensity(pd.xyz - normalDistance.yxy) - pd.w,
