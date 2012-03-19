@@ -31,7 +31,7 @@ float getRayleighPhase(float fCos2)
 
 
 
-const static float g = -0.75;
+const static float g = -0.999;
 float4 getSkyColor(
 			float4 c0,			//Rayleigh color
 			float4 c1,  		// The Mie color
@@ -47,12 +47,12 @@ float4 getSkyColor(
 }
 
 
-const static float ESun = 20.0f;
+const static float ESun = 100.0f; //20.0f;
 const static float kr   = 0.0025f;
 const static float km   = 0.0010f;
 const static float pi   = 3.14159265;
-const static float innerRadius = 10.0f;			//is dit in km??
-const static float outerRadius = 10.25f;
+const static float innerRadius = 10.0f;			
+const static float outerRadius = 12.0f;	//10.25f;
 const static float waveLenghtR = 0.650f;
 const static float waveLengthG = 0.570f;
 const static float waveLengthB = 0.475f;
@@ -61,23 +61,23 @@ float4 blaat(float3 dir, float3 camPos)
 {
 	float3 v3CameraPos = camPos;		// The camera's current position
 	float3 v3LightPos = SunDirection;	// The direction vector to the light source
-	
 	float3 waveLenght4 = float3(pow(waveLenghtR,4), pow(waveLengthG,4), pow(waveLengthB,4));
-
 	float3 v3InvWavelength 	= 	1.0f / waveLenght4; 		// 1 / pow(wavelength, 4) for the red, green, and blue channels
-		
-	float fKrESun			=	ESun * kr;			// Kr * ESun
-	float fKmESun			=	ESun * km;			// Km * ESun
-	float fKr4PI			= 	kr * 4.0f * pi;		// Kr * 4 * PI
-	float fKm4PI			=	km * 4.0f * pi;		// Km * 4 * PI
-	float fScale 			= 	1.0f / (outerRadius - innerRadius);	// 1 / (fOuterRadius - fInnerRadius)
+	float fKrESun			=	ESun * kr;								// Kr * ESun
+	float fKmESun			=	ESun * km;								// Km * ESun
+	float fKr4PI			= 	kr * 4.0f * pi;							// Kr * 4 * PI
+	float fKm4PI			=	km * 4.0f * pi;							// Km * 4 * PI
+	float fScale 			= 	1.0f / (outerRadius - innerRadius);				// 1 / (fOuterRadius - fInnerRadius)
 	float fScaleOverScaleDepth	=	fScale /fScaleDepth;						// fScale / fScaleDepth
-	float fCameraHeight		= 	10.02f;				// The camera's current height
+	float fCameraHeight		= 	innerRadius;											// The camera's current height
+	
+	fCameraHeight		+= (camPos.y/1000.0f);										
+	if(fCameraHeight < 0.0f) fCameraHeight = 0.0f;
 	
 	float fDistToTop = outerRadius - fCameraHeight;
-	float fFar = (outerRadius - fCameraHeight) + (1.0f - dir.y) * fDistToTop * 2.0f;
-	//float fFar = 10.11f;
+	float fFar = fDistToTop + (1.0f - dir.y) * fDistToTop * 2.0f;
 	float3 v3Ray = dir; // normalized cam direction 
+
 
 	// Calculate the ray's starting position, then calculate its scattering offset
 	float3 v3Start = float3(0, fCameraHeight, 0); //camPos
@@ -111,7 +111,6 @@ float4 blaat(float3 dir, float3 camPos)
 		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);
 		v3SamplePoint += v3SampleRay;
 	}
-
 	// Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
 	//vertout OUT;
 	//OUT.pos = mul(gl_ModelViewProjectionMatrix, gl_Vertex); 

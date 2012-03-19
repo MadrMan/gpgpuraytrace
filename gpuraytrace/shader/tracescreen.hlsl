@@ -27,9 +27,8 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		InterlockedMax(FrameData[0].MaxHitDistance, asuint(rr.pd.w));
 		InterlockedMin(FrameData[0].MinHitDistance, asuint(rr.pd.w));
 	} else { 								// -- we've hit nothing
-		float3 scolor = getSky(pd.dir);
+		float3 scolor = getSky(pd.dir, rr.pd.xyz);
 		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
 	}
-
 	texOut[DTid.xy] = float4(color, 1.0f);
 }

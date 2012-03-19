@@ -33,6 +33,7 @@ Raytracer::Raytracer()
 	varCamEye = nullptr;
 	varCamMinDistance = nullptr;
 	varCamMaxDistance = nullptr;
+	varCamResults = nullptr;
 
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
@@ -237,9 +238,7 @@ void Raytracer::updateTerrain()
 
 void Raytracer::updateCompute()
 {
-	bool result = compute->swap();
-	result |= cameraCompute->swap();
-	if(result) updateComputeVars();
+	updateComputeVars();
 
 	updateTerrain();
 
@@ -265,59 +264,69 @@ void Raytracer::updateCompute()
 
 void Raytracer::updateComputeVars()
 {
-	varView = compute->getVariable("ViewInverse");
-	varEye = compute->getVariable("Eye");
-	varMinDistance = compute->getVariable("StartDistance");
-	varMaxDistance = compute->getVariable("EndDistance");
-	varTime = compute->getVariable("Time");
-
-	varCamView = cameraCompute->getVariable("ViewInverse");
-	varCamEye = cameraCompute->getVariable("Eye");
-	varCamMinDistance = cameraCompute->getVariable("StartDistance");
-	varCamMaxDistance = cameraCompute->getVariable("EndDistance");
-	
-	varFrameData = compute->getArray("FrameData");
-	if(varFrameData)
-	{
-		varFrameData->create(true, 1);
-	}
-
-	varCamResults = cameraCompute->getArray("CameraResults");
-	if(varCamResults) 
-	{
-		varCamResults->create(false, CAMERA_VIEW_RES * CAMERA_VIEW_RES);
-	}
-
-	IShaderVariable* varProjection = compute->getVariable("Projection");
-	IShaderVariable* varCamProjection = cameraCompute->getVariable("Projection");
 	XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
-	if(varProjection) varProjection->write(&transProjection);
-	if(varCamProjection) varCamProjection->write(&transProjection);
 
 	//Set resolution in the shader
-	IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
-	IShaderVariable* varCamScreenSize = cameraCompute->getVariable("ScreenSize");
 	float screenSize[2] = { (float)window->getWindowSettings().width, (float)window->getWindowSettings().height };
-	if(varScreenSize) varScreenSize->write(screenSize);
-	if(varCamScreenSize) varCamScreenSize->write(screenSize);
 
-	//Set other variables
-	IShaderVariable* varSunDirection = compute->getVariable("SunDirection");
-	if(varSunDirection)
+	if(compute->swap())
 	{
-		XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f);
-		sunDirection = XMVector3Normalize(sunDirection);
-		varSunDirection->write(&sunDirection);
+		varView = compute->getVariable("ViewInverse");
+		varEye = compute->getVariable("Eye");
+		varMinDistance = compute->getVariable("StartDistance");
+		varMaxDistance = compute->getVariable("EndDistance");
+		varTime = compute->getVariable("Time");
+
+		varFrameData = compute->getArray("FrameData");
+		if(varFrameData)
+		{
+			varFrameData->create(true, 1);
+		}
+
+		IShaderVariable* varProjection = compute->getVariable("Projection");
+		if(varProjection) varProjection->write(&transProjection);
+		IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
+		if(varScreenSize) varScreenSize->write(screenSize);
+		IShaderVariable* varNoiseGrads = compute->getVariable("permGradients");
+		if(varNoiseGrads) varNoiseGrads->write(noise->permutations1D);
+
+		//Set other variables
+		IShaderVariable* varSunDirection = compute->getVariable("SunDirection");
+		if(varSunDirection)
+		{
+			//XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f); //
+			//XMVECTOR sunDirection = XMVectorSet(0.0f, -0.1f, 0.91f, 0.0f); //sunset
+			XMVECTOR sunDirection = XMVectorSet(0.0f, 0.9f, 0.1f, 0.0f); //noon
+
+			sunDirection = XMVector3Normalize(sunDirection);
+			varSunDirection->write(&sunDirection);
+		}
+
+		compute->setTexture(0, texNoise2D);
 	}
 
-	IShaderVariable* varNoiseGrads = compute->getVariable("permGradients");
-	IShaderVariable* varCamNoiseGrads = cameraCompute->getVariable("permGradients");
-	if(varNoiseGrads) varNoiseGrads->write(noise->permutations1D);
-	if(varCamNoiseGrads) varCamNoiseGrads->write(noise->permutations1D);
+	if(cameraCompute->swap())
+	{
+		varCamView = cameraCompute->getVariable("ViewInverse");
+		varCamEye = cameraCompute->getVariable("Eye");
+		varCamMinDistance = cameraCompute->getVariable("StartDistance");
+		varCamMaxDistance = cameraCompute->getVariable("EndDistance");
 
-	compute->setTexture(0, texNoise2D);
-	cameraCompute->setTexture(0, texNoise2D);
-	//compute->setTexture(1, texNoise1D);
+		varCamResults = cameraCompute->getArray("CameraResults");
+		if(varCamResults) 
+		{
+			varCamResults->create(false, CAMERA_VIEW_RES * CAMERA_VIEW_RES);
+		}
+
+		IShaderVariable* varCamProjection = cameraCompute->getVariable("Projection");
+		if(varCamProjection) varCamProjection->write(&transProjection);
+		IShaderVariable* varCamScreenSize = cameraCompute->getVariable("ScreenSize");
+		if(varCamScreenSize) varCamScreenSize->write(screenSize);
+		IShaderVariable* varCamNoiseGrads = cameraCompute->getVariable("permGradients");
+		if(varCamNoiseGrads) varCamNoiseGrads->write(noise->permutations1D);
+
+		cameraCompute->setTexture(0, texNoise2D);
+	}
 }
 
 void Raytracer::loadComputeShader()
