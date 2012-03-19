@@ -112,7 +112,11 @@ void Raytracer::run()
 	bool isFlybyMode = false;
 	while(escape->getState() < 0.5f)
 	{
-		if(toggleFlyby->isTriggered()) isFlybyMode = !isFlybyMode;
+		if(toggleFlyby->isTriggered()) 
+		{
+			isFlybyMode = !isFlybyMode;
+			flyby->reset();
+		}
 		if(isFlybyMode)
 		{
 			flyby->fly();
@@ -230,7 +234,7 @@ void Raytracer::updateTerrain()
 			res += '\n';
 		}*/
 
-		memcpy(flyby->getCameraView(), fd, CAMERA_VIEW_RES * CAMERA_VIEW_RES * sizeof(CameraVision));
+		memcpy(flyby->getCameraView().data(), fd, CAMERA_VIEW_RES * CAMERA_VIEW_RES * sizeof(CameraVision));
 
 		varCamResults->unmap();
 	}

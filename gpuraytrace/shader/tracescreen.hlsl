@@ -16,7 +16,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	PixelData pd = getPixelRay(DTid.xy);
 	
 	float3 color = 0.0f;
-	RayResult rr = traceRay(pd.p, StartDistance, 1.0f, pd.dir, true);
+	RayResult rr = traceRay(pd.p, StartDistance, EndDistance, 1.0f, pd.dir, true);
 
 	if(rr.density > 0.0f) 							//-- we've hit something
 	{

@@ -78,10 +78,10 @@ struct RayResult
 
 const static float RAY_STEP = 0.03f;
 //const static uint RAY_STEPS = 500000;
-const static float MAX_DIST = 100.0f;
 const static float RAY_STEP_FACTOR = 1.014f;
+const static float SHADOW_LENGTH = 100.0f;
 
-RayResult traceRay(float3 p, float dist, float stepmod, float3 dir, bool calcfog)
+RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog)
 {
 	RayResult rr;
 	float4 f = 0.0;
@@ -93,7 +93,7 @@ RayResult traceRay(float3 p, float dist, float stepmod, float3 dir, bool calcfog
 	f += middleFog * dist;
 	
 	float3 rayp;
-	[loop] while(dist < EndDistance && (step > RAY_STEP * 0.2f))
+	[loop] while(dist < enddist && (step > RAY_STEP * 0.2f))
 	{
 		rayp = p + dir * dist;
 		
@@ -138,7 +138,7 @@ float3 getColor(float3 p, float3 n)
 	//color = lerp(cliffColor, color , saturate(abs(n.y) * 1.5f));
 	
 	//Calculate shadow
-	RayResult rr = traceRay(p, 0.1f, 3.0f, SunDirection, true);
+	RayResult rr = traceRay(p, 0.1f, SHADOW_LENGTH, 3.0f, SunDirection, true);
 	
 	if(rr.density > 0.0f)
 	{
