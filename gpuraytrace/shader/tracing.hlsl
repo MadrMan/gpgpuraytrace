@@ -19,12 +19,12 @@ cbuffer CBPermanent
 }
 
 #include "noise.hlsl"
-#include "sky.hlsl"
 
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
 float4 getFog(float3 p)
 {
+	//return 0.0f;
 	/*float d = (noise3d(p * 0.003f) * noise3d(p * 0.009f)) * 6.8f + 0.4f;
 	d *= 0.005f;
 	d -= abs(p.y - 250.0f) * 0.0002f;
@@ -50,7 +50,7 @@ float getDensity(float3 p)
 		noise3d(p * 0.00474),
 		noise3d(p * 0.00641)) * 16.0f;*/
 	p *= 0.1f;
-	d += -p.y;
+	d += -p.y;		
 	d += noise3d(p * 0.124f) * 8.362f;
 	d += noise3d(p * 0.237f) * 4.162f;
 	d += noise3d(p * 0.52f) * 2.062f;

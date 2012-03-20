@@ -1,4 +1,5 @@
 #include "tracing.hlsl"
+#include "sky.hlsl"
 
 //float3 h2r(float h,float s,float v){return lerp(saturate((abs(frac(h+float3(1,2,3)/3)*6-3)-1)),1,s)*v;}
 
@@ -27,7 +28,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		InterlockedMax(FrameData[0].MaxHitDistance, asuint(rr.pd.w));
 		InterlockedMin(FrameData[0].MinHitDistance, asuint(rr.pd.w));
 	} else { 								// -- we've hit nothing
-		float3 scolor = getSky(pd.dir, rr.pd.xyz);
+		float3 scolor = getSky(pd.dir);
 		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
 	}
 	texOut[DTid.xy] = float4(color, 1.0f);
