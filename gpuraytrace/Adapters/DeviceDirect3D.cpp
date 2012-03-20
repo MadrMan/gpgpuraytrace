@@ -171,6 +171,12 @@ void DeviceDirect3D::setRecorder(RecorderWinAPI* recorder)
 
 void DeviceDirect3D::present()
 {
+	HRESULT result = swapChain->Present(0, 0);
+	if(FAILED(result))
+	{
+		LOGERROR(result, "Present");
+	}
+
 	if(recorder && recorder->isRecording())
 	{
 		ID3D11Resource* resource = swapStaging->getResource();
@@ -185,12 +191,6 @@ void DeviceDirect3D::present()
 		} else {
 			LOGERROR(result, "Map");
 		}
-	}
-	
-	HRESULT result = swapChain->Present(0, 0);
-	if(FAILED(result))
-	{
-		LOGERROR(result, "Present");
 	}
 }
 
