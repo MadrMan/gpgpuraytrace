@@ -28,11 +28,10 @@ public:
 	//! Reload the compute shader
 	void loadComputeShader();
 
-	void updateCompute();
-	void updateComputeVars();
-
 private:
-	void updateTerrain();
+	void updateTerrain(float time);
+	void updateCompute(float time);
+	void updateComputeVars();
 
 	IDevice* device;
 	IWindow* window;
@@ -51,6 +50,7 @@ private:
 	IShaderVariable* varMinDistance;
 	IShaderVariable* varMaxDistance;
 	IShaderVariable* varTime;
+	IShaderVariable* varSunDirection;
 
 	//Camera equivs
 	IShaderVariable* varCamView;
@@ -61,4 +61,7 @@ private:
 
 	float curMinDistance;
 	float curMaxDistance;
+
+	float timeOfDay;
+	float timeOfYear;
 };

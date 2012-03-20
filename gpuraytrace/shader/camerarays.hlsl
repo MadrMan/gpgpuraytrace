@@ -1,7 +1,7 @@
 #include "tracing.hlsl"
 
-const static uint DISPATCH_SIZE = 1;
-const static uint GROUP_SIZE = 32;
+const static uint DISPATCH_SIZE = 2;
+const static uint GROUP_SIZE = 16;
 const static uint TOTAL_SIZE = GROUP_SIZE * DISPATCH_SIZE;
 const static float CAMERA_DISTANCE = 1000.0f;
 

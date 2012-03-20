@@ -35,9 +35,13 @@ Raytracer::Raytracer()
 	varCamMinDistance = nullptr;
 	varCamMaxDistance = nullptr;
 	varCamResults = nullptr;
+	varSunDirection = nullptr;
 
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
+
+	timeOfDay = 0.0f;
+	timeOfYear = 0.0f;
 }
 
 Raytracer::~Raytracer()
@@ -55,8 +59,8 @@ void Raytracer::run()
 	//ws.width = 800;
 	//ws.height = 600;
 
-	ws.width = 1920 / 2;
-	ws.height = 1080 / 2;
+	ws.width = 1920 / 4;
+	ws.height = 1080 / 4;
 	ws.fullscreen = false;
 
 	//ws.width = 1920;
@@ -113,9 +117,10 @@ void Raytracer::run()
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
 
-	const int FIXED_FRAME_RATE = 0; //30;
+	bool FIXED_FRAME_RATE = false;
+	static const int TARGET_FRAME_RATE = 30;
 
-	IRecorder* recorder = RecorderFactory::construct(device, FIXED_FRAME_RATE);
+	IRecorder* recorder = RecorderFactory::construct(device, TARGET_FRAME_RATE);
 
 	//Run while not exiting
 	Logger() << "Running";
@@ -130,7 +135,8 @@ void Raytracer::run()
 	{
 		timer->update();
 
-		float thisFrameTime = !FIXED_FRAME_RATE ? timer->getConstant() : 1.0f / (float)FIXED_FRAME_RATE;
+		float thisFrameTime = FIXED_FRAME_RATE ?  1.0f / TARGET_FRAME_RATE : timer->getConstant();
+
 		frameTime += thisFrameTime;
 		frames++;
 		if(frameTime > 1.0f)
@@ -170,7 +176,7 @@ void Raytracer::run()
 		}
 
 		camera->update();
-		updateCompute();
+		updateCompute(thisFrameTime);
 
 		//And present on screen
 		device->present();
@@ -197,8 +203,12 @@ struct SBFrameData
 	float maxDistance;
 };
 
-void Raytracer::updateTerrain()
+void Raytracer::updateTerrain(float time)
 {
+	//Scale 'time' to a proper time value
+	const float secondsInDay = 60.0f;
+	timeOfDay += time / secondsInDay;
+
 	//Fetch some data from the frame and calculate new constants
 	if(varFrameData)
 	{
@@ -274,11 +284,11 @@ void Raytracer::updateTerrain()
 	}
 }
 
-void Raytracer::updateCompute()
+void Raytracer::updateCompute(float time)
 {
 	updateComputeVars();
 
-	updateTerrain();
+	updateTerrain(time);
 
 	XMVECTOR determinant;
 	XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
@@ -295,9 +305,23 @@ void Raytracer::updateCompute()
 		varTime->write(&time);
 	}
 
+	if(varSunDirection)
+	{
+		//XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f); //
+		//XMVECTOR sunDirection = XMVectorSet(0.0f, -0.1f, 0.91f, 0.0f); //sunset
+
+		float sunY = -cosf(timeOfDay * XM_2PI);
+		float sunX = -sinf(timeOfDay * XM_2PI);
+
+		XMVECTOR sunDirection = XMVectorSet(sunX, sunY, 0.1f, 0.0f); //noon
+
+		sunDirection = XMVector3Normalize(sunDirection);
+		varSunDirection->write(&sunDirection);
+	}
+
 	//Run shader
 	compute->run(device->getWindow()->getWindowSettings().width / 16, device->getWindow()->getWindowSettings().height / 16, 1);
-	cameraCompute->run(1, 1, 1);
+	cameraCompute->run(2, 2, 1);
 }
 
 void Raytracer::updateComputeVars()
@@ -314,6 +338,7 @@ void Raytracer::updateComputeVars()
 		varMinDistance = compute->getVariable("StartDistance");
 		varMaxDistance = compute->getVariable("EndDistance");
 		varTime = compute->getVariable("Time");
+		varSunDirection = compute->getVariable("SunDirection");
 
 		varFrameData = compute->getArray("FrameData");
 		if(varFrameData)
@@ -327,18 +352,6 @@ void Raytracer::updateComputeVars()
 		if(varScreenSize) varScreenSize->write(screenSize);
 		IShaderVariable* varNoiseGrads = compute->getVariable("permGradients");
 		if(varNoiseGrads) varNoiseGrads->write(noise->permutations1D);
-
-		//Set other variables
-		IShaderVariable* varSunDirection = compute->getVariable("SunDirection");
-		if(varSunDirection)
-		{
-			//XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f); //
-			//XMVECTOR sunDirection = XMVectorSet(0.0f, -0.1f, 0.91f, 0.0f); //sunset
-			XMVECTOR sunDirection = XMVectorSet(0.0f, 0.9f, 0.1f, 0.0f); //noon
-
-			sunDirection = XMVector3Normalize(sunDirection);
-			varSunDirection->write(&sunDirection);
-		}
 
 		compute->setTexture(0, texNoise2D);
 	}
