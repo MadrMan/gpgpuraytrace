@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 MACRO(ADD_PROJECT_PCH fileName)
 	if(MSVC) 
-		set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "/Yu${fileName}") 
-		set_source_files_properties(main.cpp PROPERTIES COMPILE_FLAGS "/Yc${fileName}")
+		set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "/Yu${fileName}.h") 
+		set_source_files_properties(${fileName}.cpp PROPERTIES COMPILE_FLAGS "/Yc${fileName}.h")
 	endif() 
 ENDMACRO() 
 
@@ -63,10 +63,11 @@ set(PROJ_SOURCES
 	${gpgpuraytrace_SOURCE_DIR}/Raytracer.h
 	${gpgpuraytrace_SOURCE_DIR}/main.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Raytracer.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Common.h
+	${gpgpuraytrace_SOURCE_DIR}/Common.cpp
 )
 
 set(PROJ_COMMON
-	${gpgpuraytrace_SOURCE_DIR}/Common/Common.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/Types.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/Directory.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/Directory.cpp
@@ -105,5 +106,5 @@ link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib mfreadwrite.lib m
 
 add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON} ${PROJ_GAMEPLAY})
 
-ADD_PROJECT_PCH("Common.h")
+ADD_PROJECT_PCH("Common")
 DELAYLOAD_DX11()
