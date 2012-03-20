@@ -3,6 +3,7 @@
 
 #include "./Factories/DeviceFactory.h"
 #include "./Factories/WindowFactory.h"
+#include "./Factories/RecorderFactory.h"
 #include "./Factories/ICompute.h"
 #include "./Factories/ITexture.h"
 #include "./Graphics/Camera.h"
@@ -73,9 +74,9 @@ void Raytracer::run()
 	noise->generate();
 
 	texNoise2D = device->createTexture();
-	texNoise2D->create(TextureDimensions::Texture2D, Noise::TEXTURE_SIZE, Noise::TEXTURE_SIZE, noise->permutations2D);
+	texNoise2D->create(TextureDimensions::Texture2D, TextureFormat::R8G8B8A8_UINT, Noise::TEXTURE_SIZE, Noise::TEXTURE_SIZE, noise->permutations2D, TextureBinding::Texture, CPUAccess::None);
 	//texNoise1D = device->createTexture();
-	//texNoise1D->create(TextureDimensions::Texture1D, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
+	//texNoise1D->create(TextureDimensions::Texture1D, TextureFormat::R8G8B8A8_SNORM, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
 	//texNoise1D->create("Media/noise1_small.png");
 
 	//Create camera
@@ -103,6 +104,9 @@ void Raytracer::run()
 
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
+
+	IRecorder* recorder = RecorderFactory::construct(device);
+	//if(recorder) recorder->start();
 
 	//Run while not exiting
 	Logger() << "Running";
@@ -148,6 +152,8 @@ void Raytracer::run()
 
 		//Logger() << "Y: " << XMVectorGetY(camera->position);
 	}
+
+	//if(recorder) recorder->stop();
 
 	window->getInput()->destroyAction(escape);
 
