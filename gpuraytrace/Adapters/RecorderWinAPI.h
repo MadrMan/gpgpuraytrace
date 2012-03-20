@@ -10,7 +10,7 @@
 class RecorderWinAPI : public IRecorder
 {
 public:
-	RecorderWinAPI(IDevice* device);
+	RecorderWinAPI(IDevice* device, int frameRate);
 	virtual ~RecorderWinAPI();
 	
 	virtual bool create() override;
@@ -23,7 +23,7 @@ private:
 	static bool initialize();
 
 	IDevice* device;
-	int width, height;
+	int width, height, frameRate;
 	IMFSinkWriter* pSinkWriter;
 	IMFMediaBuffer *pBuffer;
 	DWORD streamIndex;

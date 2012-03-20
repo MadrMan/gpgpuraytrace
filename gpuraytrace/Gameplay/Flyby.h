@@ -20,7 +20,7 @@ public:
 	Flyby(Camera* camera);
 	virtual ~Flyby();
 
-	void fly();
+	void fly(float time);
 
 	std::vector<CameraVision>& getCameraView()
 	{ return cameraView; }
@@ -32,6 +32,7 @@ private:
 	XMVECTOR orgDirToTarget;
 	bool resetTarget;
 	float avgHeight;
+	float noTargetTime;
 
 	std::vector<CameraVision> cameraView;
 	Camera* camera;

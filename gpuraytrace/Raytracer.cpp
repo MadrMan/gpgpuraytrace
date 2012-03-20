@@ -54,9 +54,14 @@ void Raytracer::run()
 	WindowSettings ws;
 	//ws.width = 800;
 	//ws.height = 600;
-	ws.width = 1920 / 4;
-	ws.height = 1080 / 4;
+
+	ws.width = 1920 / 2;
+	ws.height = 1080 / 2;
 	ws.fullscreen = false;
+
+	//ws.width = 1920;
+	//ws.height = 1080;
+	//ws.fullscreen = true;
 
 	//Create window
 	window = WindowFactory::construct(WindowAPI::WinAPI, ws);
@@ -99,14 +104,18 @@ void Raytracer::run()
 	IInputAction* toggleFlyby = window->getInput()->createAction();
 	toggleFlyby->registerKeyboard(VK_F1, 1.0f);
 
+	IInputAction* toggleRecording = window->getInput()->createAction();
+	toggleRecording->registerKeyboard(VK_F2, 1.0f);
+
 	//Flyby mode
 	flyby = new Flyby(camera);
 
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
 
-	IRecorder* recorder = RecorderFactory::construct(device);
-	//if(recorder) recorder->start();
+	const int FIXED_FRAME_RATE = 0; //30;
+
+	IRecorder* recorder = RecorderFactory::construct(device, FIXED_FRAME_RATE);
 
 	//Run while not exiting
 	Logger() << "Running";
@@ -114,16 +123,47 @@ void Raytracer::run()
 	float frameTime = 0.0f;
 	int frames = 0;
 	bool isFlybyMode = false;
+
+	timer->update(); //Update for loading time
+
 	while(escape->getState() < 0.5f)
 	{
+		timer->update();
+
+		float thisFrameTime = !FIXED_FRAME_RATE ? timer->getConstant() : 1.0f / (float)FIXED_FRAME_RATE;
+		frameTime += thisFrameTime;
+		frames++;
+		if(frameTime > 1.0f)
+		{
+			Logger() << "FPS: " << frames / frameTime;
+
+			frameTime = fmod(frameTime, 1.0f);
+			frames = 0;
+		}
+
 		if(toggleFlyby->isTriggered()) 
 		{
 			isFlybyMode = !isFlybyMode;
 			flyby->reset();
 		}
+
+		if(recorder && toggleRecording->isTriggered())
+		{
+			if(recorder->isRecording())
+			{
+				recorder->stop();
+				Logger() << "=== Finished recording ===";
+			}
+			else
+			{
+				Logger() << "=== Starting recording ===";
+				recorder->start();
+			}
+		}
+
 		if(isFlybyMode)
 		{
-			flyby->fly();
+			flyby->fly(thisFrameTime);
 		} else {
 			camera->rotate();
 			camera->move();
@@ -137,25 +177,13 @@ void Raytracer::run()
 
 		//Update input and check if window still open
 		if(window->update()) break;
-
-		timer->update();
-
-		frameTime += timer->getConstant();
-		frames++;
-		if(frameTime > 1.0f)
-		{
-			Logger() << "FPS: " << frames / frameTime;
-
-			frameTime = fmod(frameTime, 1.0f);
-			frames = 0;
-		}
-
-		//Logger() << "Y: " << XMVectorGetY(camera->position);
 	}
 
-	//if(recorder) recorder->stop();
+	if(recorder && recorder->isRecording()) recorder->stop();
 
 	window->getInput()->destroyAction(escape);
+	window->getInput()->destroyAction(toggleFlyby);
+	window->getInput()->destroyAction(toggleRecording);
 
 	//Cleanup
 	delete camera;

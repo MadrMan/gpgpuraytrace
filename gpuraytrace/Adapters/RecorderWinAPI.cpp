@@ -10,7 +10,7 @@
 //DEFINE_MEDIATYPE_GUID(MFVideoFormat_DXGI_R8G8B8A8, DXGI_FORMAT_R8G8B8A8_UNORM);
 DEFINE_MEDIATYPE_GUID(MFVideoFormat_DXGI_R8G8B8A8, D3DFMT_X8R8G8B8);
 
-RecorderWinAPI::RecorderWinAPI(IDevice* device) : device(device)
+RecorderWinAPI::RecorderWinAPI(IDevice* device, int frameRate) : device(device), frameRate(frameRate)
 {
 	width = device->getWindow()->getWindowSettings().width;
 	height = device->getWindow()->getWindowSettings().height;
@@ -61,9 +61,6 @@ bool RecorderWinAPI::create()
 		return false;
 	}
 
-	const UINT32 VIDEO_FPS = 25;
-	
-
 	//Set the output media type.
 	hr = MFCreateMediaType(&pMediaTypeOut);   
 	hr = pMediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);     
@@ -71,7 +68,7 @@ bool RecorderWinAPI::create()
     hr = pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 800000);
     hr = pMediaTypeOut->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
     hr = MFSetAttributeSize(pMediaTypeOut, MF_MT_FRAME_SIZE, width, height);
-    hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_FRAME_RATE, VIDEO_FPS, 1);
+    hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_FRAME_RATE, frameRate, 1);
     hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
     hr = pSinkWriter->AddStream(pMediaTypeOut, &streamIndex);
 	if(FAILED(hr))
@@ -86,7 +83,7 @@ bool RecorderWinAPI::create()
     hr = pMediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_DXGI_R8G8B8A8); //MFVideoFormat_RGB32
     hr = pMediaTypeIn->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
     hr = MFSetAttributeSize(pMediaTypeIn, MF_MT_FRAME_SIZE, width, height);
-    hr = MFSetAttributeRatio(pMediaTypeIn, MF_MT_FRAME_RATE, VIDEO_FPS, 1); 
+    hr = MFSetAttributeRatio(pMediaTypeIn, MF_MT_FRAME_RATE, frameRate, 1); 
     hr = MFSetAttributeRatio(pMediaTypeIn, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
     hr = pSinkWriter->SetInputMediaType(streamIndex, pMediaTypeIn, NULL);
 	if(FAILED(hr))
@@ -108,7 +105,7 @@ bool RecorderWinAPI::create()
     pMediaTypeIn->Release();
 
 	rtStart = 0;
-	MFFrameRateToAverageTimePerFrame(VIDEO_FPS, 1, &rtDuration);
+	MFFrameRateToAverageTimePerFrame(frameRate, 1, &rtDuration);
 
 	static_cast<DeviceDirect3D*>(device)->setRecorder(this);
 
@@ -132,7 +129,6 @@ void RecorderWinAPI::stop()
 void RecorderWinAPI::write(void* frame, int stride)
 {
     IMFSample *pSample = NULL;
-    IMFMediaBuffer *pBuffer = NULL;
 	HRESULT hr;
 
     const DWORD cbWidth = sizeof(DWORD) * width;
@@ -146,15 +142,16 @@ void RecorderWinAPI::write(void* frame, int stride)
     hr = pBuffer->Lock(&pData, NULL, NULL);
 
     hr = MFCopyImage(pData, cbWidth, (BYTE*)frame, stride, cbWidth, height);
-	/*for(DWORD y = 0; y < height; y++)
+	for(int y = 0; y < height; y++)
 	{
-		for(DWORD x = 0; x < cbWidth; x++)
+		for(int x = 0; x < width; x++)
 		{
-			DWORD* dw = ((DWORD*)pData) + y * cbWidth + x;
-			DWORD dwo = *dw;
-			*dw = dwo & 0xFF000000;
+			DWORD* dw = ((DWORD*)pData) + y * width + x;
+			*dw = *dw & 0x0000FF00 | (*dw & 0x000000FF) << 16 | (*dw & 0x00FF0000) >> 16;
+			//ARGB
+			//ABGR
 		}
-	}*/
+	}
 
 	hr = pBuffer->Unlock();
 

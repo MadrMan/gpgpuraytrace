@@ -24,10 +24,10 @@ void Flyby::reset()
 	resetTarget = true;
 }
 
-void Flyby::fly()
+void Flyby::fly(float time)
 {
-	const float c = Timer::get()->getConstant();
-	const float camSpeed = c * 5.0f;
+	const float CAM_SPEED_MULT = 6.0f;
+	const float camSpeed = time * CAM_SPEED_MULT;
 
 	XMVECTOR front = camera->front;
 	XMVECTOR position = camera->position;
@@ -55,10 +55,13 @@ void Flyby::fly()
 				force += (position - vec) * strength * 0.0005f;
 			}
 
+			//Make depth a little less deep so as to prevent a wall collision as a target
+			float movedDepth = std::max(cv->depth - 0.2f, 0.0f); 
+
 			const float PREF_DEPTH = 100.0f;
 			//const float PREF_Y = 2.0f;
 			float pointScore = 0.0f;
-			pointScore += PREF_DEPTH - abs(cv->depth - PREF_DEPTH);
+			pointScore += PREF_DEPTH - abs(movedDepth - PREF_DEPTH);
 			//pointScore += (10.0f - abs(cv->y - PREF_Y)) * 50.0f;
 			float heightBonus = (cv->y - avgHeight);
 			pointScore += abs(heightBonus) * 10.0f;
@@ -69,7 +72,7 @@ void Flyby::fly()
 				score = pointScore;
 
 				dirToBest = vec - position;
-				depthToBest = cv->depth;
+				depthToBest = movedDepth;
 				best = position + dirToBest * 0.15f; //Go a certain distance towards the point
 			}
 		}
@@ -82,6 +85,7 @@ void Flyby::fly()
 		resetTarget = false;
 		target = position;
 		avgHeight = XMVectorGetY(position);
+		noTargetTime = 0.0f;
 	} else {
 		distance = XMVectorGetX(XMVector3LengthEst(position - target));
 	}
@@ -96,22 +100,33 @@ void Flyby::fly()
 	);
 	float medianDepth = middleIt->depth;
 
-	//Stop trying to go there, cant pass
-	if(medianDepth < 1.5f) 
+	//Stop trying to go there, cant pass - but we could also be looking at the sky (0.0)
+	if(medianDepth > 0.01f && medianDepth < 1.5f) 
 	{
 		distance = 0.0f;
 		score = 0.0f;
 	}
 
 	//Logger() << "Distance to target: " << distance;
-	const float POINT_REACHED = camSpeed * 8.0f;
+	const float POINT_REACHED = CAM_SPEED_MULT * 0.3f;
 	if(distance < POINT_REACHED)
 	{
 		if(isnull(score)) 
 		{
 			Logger() << "No new target found";
 			depthToBest = 0.0f;
+			noTargetTime += time;
+
+			if(noTargetTime > 5.0f)
+			{
+				target = position - camera->front * 0.5f;
+				Logger() << "Turning around cause of no target";
+
+				noTargetTime = 0.0f;
+			}
 		} else {
+			noTargetTime = 0.0f;
+
 			Logger() << "Setting new target with score " << score;
 			target = best;
 			orgDirToTarget = XMVector3Normalize(dirToBest);
@@ -134,9 +149,11 @@ void Flyby::fly()
 	}
 
 	//Calculate next position in the curve
-	float distToTarget = XMVectorGetX(XMVector3LengthEst(target - position)); 
-	float smoothPath = std::max(distToTarget * 0.3f, 0.01f); //std::min(distToTarget * 0.2f, 6.0f);
-	XMVECTOR curvePoint = XMVectorCatmullRom(position, position + camera->front * smoothPath, target - orgDirToTarget * smoothPath * 0.2f, target, 0.04f);
+	const float SMOOTH_AMOUNT = 1.8f;
+	float distToTarget = sqrt(XMVectorGetX(XMVector3LengthEst(target - position))); 
+	distToTarget -=  2.2f; //Compensate for when the target is really close at an odd angle
+	float smoothPath = std::max(distToTarget * SMOOTH_AMOUNT, 0.01f); //std::min(distToTarget * 0.2f, 6.0f);
+	XMVECTOR curvePoint = XMVectorCatmullRom(position, position + camera->front * smoothPath, target - orgDirToTarget * smoothPath * 0.2f, target, 0.045f);
 
 	//Set direction to next curve point
 	XMVECTOR direction = XMVector3Normalize(curvePoint - position);
@@ -149,6 +166,6 @@ void Flyby::fly()
 	camera->position = XMVectorAdd(position, XMVector3Normalize(force) * camSpeed);
 
 	//Update average height
-	float avgSmoother = 1.0f - c * 0.1f;
+	float avgSmoother = 1.0f - time * 0.1f;
 	avgHeight = avgHeight * avgSmoother + XMVectorGetY(camera->position) * (1.0f - avgSmoother);
 }
