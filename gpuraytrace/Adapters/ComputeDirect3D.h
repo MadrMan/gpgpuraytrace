@@ -1,9 +1,10 @@
 #pragma once
 
 #include "../Factories/ICompute.h"
-#include "D3D11Shader.h"
-#include "ShaderVariableDirect3D.h"
-#include "VariableManager.h"
+#include "./Common/VariableManager.h"
+
+#include "./D3D11Shader.h"
+#include "./ShaderVariableDirect3D.h"
 
 class ComputeShader3D
 {

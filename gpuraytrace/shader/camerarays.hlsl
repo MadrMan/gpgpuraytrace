@@ -15,6 +15,6 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	
 	float3 color = 0.0f;
 	RayResult rr = traceRay(pd.p, StartDistance, CAMERA_DISTANCE, 1.0f, pd.dir, false);
-	if(rr.density < 0.0f) rr.pd = 0; //Set sky to 0
+	if(rr.density < 0.0f) rr.pd.w = 0.0f; //Set sky to distance 0
 	CameraResults[DTid.y * TOTAL_SIZE + DTid.x] = rr.pd;
 }

@@ -3,8 +3,8 @@
 
 #include "../Factories/IWindow.h"
 #include "../Common/Timer.h"
-#include "IInput.h"
-#include "Logger.h"
+#include "../Common/IInput.h"
+#include "../Common/Logger.h"
 
 Camera::Camera()
 {

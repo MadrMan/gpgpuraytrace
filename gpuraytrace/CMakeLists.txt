@@ -95,7 +95,7 @@ source_group(Graphics FILES ${PROJ_GRAPHICS})
 source_group(Gameplay FILES ${PROJ_GAMEPLAY})
 source_group("" FILES ${PROJ_SOURCES})
 
-include_directories("${gpgpuraytrace_SOURCE_DIR}/Common")
+include_directories("${gpgpuraytrace_SOURCE_DIR}")
 
 if(MSVC_VERSION LESS 1700)
 	add_definitions(-DRT_HAS_DXSDK)
