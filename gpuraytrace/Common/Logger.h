@@ -2,7 +2,7 @@
 
 #include <ostream>
 
-#define LOGERROR(x, f) Logger() << __FUNCTION__ << " failed at " << (f) << " with 0x" << std::hex << (x) << std::dec;
+#define LOGERROR(x, f) Logger() << __FUNCTION__ << " failed at " << f << " = 0x" << std::hex << x << std::dec;
 #define LOGFUNCERROR(x) Logger() << __FUNCTION__ << " failed: " << x;
 
 //! Buffer which logs all the text from the Logger to the outputs

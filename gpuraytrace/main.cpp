@@ -2,7 +2,7 @@
 
 #include "Raytracer.h"
 #include "./Common/Logger.h"
-#include "VariableManager.h"
+#include "./Common/VariableManager.h"
 
 int main(int argc, char** argv)
 {

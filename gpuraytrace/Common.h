@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Types.h"
+#include "./Common/Types.h"
 
 #if defined(_WIN32)
 	#define NOMINMAX
@@ -18,6 +18,7 @@
 	#endif
 #endif
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <ostream>

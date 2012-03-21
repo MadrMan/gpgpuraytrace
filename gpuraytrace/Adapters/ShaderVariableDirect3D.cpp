@@ -1,6 +1,7 @@
-#include "Common.h"
-#include "ShaderVariableDirect3D.h"
-#include "Logger.h"
+#include <Common.h>
+#include "./ShaderVariableDirect3D.h"
+
+#include "./Common/Logger.h"
 
 const int BUFFER_PADSIZE = 16;
 

@@ -2,11 +2,8 @@
 
 #include "../Factories/IRecorder.h"
 
-#include <mfapi.h>
-#include <mfidl.h>
-#include <Mfreadwrite.h>
-#include <mferror.h>
-
+struct IMFSinkWriter;
+struct IMFMediaBuffer;
 class RecorderWinAPI : public IRecorder
 {
 public:

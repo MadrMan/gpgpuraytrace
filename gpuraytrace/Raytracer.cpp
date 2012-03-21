@@ -11,9 +11,9 @@
 #include "./Graphics/Noise.h"
 #include "./Gameplay/Flyby.h"
 
-#include "IInput.h"
-#include "Directory.h"
-#include "Timer.h"
+#include "./Common/IInput.h"
+#include "./Common/Directory.h"
+#include "./Common/Timer.h"
 
 Raytracer::Raytracer()
 {
@@ -40,7 +40,7 @@ Raytracer::Raytracer()
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
 
-	timeOfDay = 0.0f;
+	timeOfDay = 0.3f; //6:30AM
 	timeOfYear = 0.0f;
 }
 
@@ -59,13 +59,20 @@ void Raytracer::run()
 	//ws.width = 800;
 	//ws.height = 600;
 
-	ws.width = 1920 / 4;
-	ws.height = 1080 / 4;
-	ws.fullscreen = false;
+	const bool HD_RECORD_MODE = true;
+	bool FIXED_FRAME_RATE = HD_RECORD_MODE;
+	static const int TARGET_FRAME_RATE = 25;
 
-	//ws.width = 1920;
-	//ws.height = 1080;
-	//ws.fullscreen = true;
+	if(HD_RECORD_MODE)
+	{
+		ws.width = 1920;
+		ws.height = 1080;
+		ws.fullscreen = true;
+	} else {
+		ws.width = 1920 / 8;
+		ws.height = 1080 / 8;
+		ws.fullscreen = false;
+	}
 
 	//Create window
 	window = WindowFactory::construct(WindowAPI::WinAPI, ws);
@@ -117,9 +124,6 @@ void Raytracer::run()
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
 
-	bool FIXED_FRAME_RATE = false;
-	static const int TARGET_FRAME_RATE = 30;
-
 	IRecorder* recorder = RecorderFactory::construct(device, TARGET_FRAME_RATE);
 
 	//Run while not exiting
@@ -131,20 +135,30 @@ void Raytracer::run()
 
 	timer->update(); //Update for loading time
 
+	if(HD_RECORD_MODE) 
+	{
+		if(recorder) recorder->start();
+		flyby->reset();
+		isFlybyMode = true;
+	}
+
 	while(escape->getState() < 0.5f)
 	{
 		timer->update();
 
 		float thisFrameTime = FIXED_FRAME_RATE ?  1.0f / TARGET_FRAME_RATE : timer->getConstant();
 
-		frameTime += thisFrameTime;
-		frames++;
-		if(frameTime > 1.0f)
+		if(!FIXED_FRAME_RATE)
 		{
-			Logger() << "FPS: " << frames / frameTime;
+			frameTime += thisFrameTime;
+			frames++;
+			if(frameTime > 1.0f)
+			{
+				Logger() << "FPS: " << frames / frameTime;
 
-			frameTime = fmod(frameTime, 1.0f);
-			frames = 0;
+				frameTime = fmod(frameTime, 1.0f);
+				frames = 0;
+			}
 		}
 
 		if(toggleFlyby->isTriggered()) 
@@ -206,7 +220,7 @@ struct SBFrameData
 void Raytracer::updateTerrain(float time)
 {
 	//Scale 'time' to a proper time value
-	const float secondsInDay = 60.0f;
+	const float secondsInDay = 300.0f;
 	timeOfDay += time / secondsInDay;
 
 	//Fetch some data from the frame and calculate new constants

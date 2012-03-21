@@ -4,11 +4,29 @@
 #include "../Common/Logger.h"
 #include "../Adapters/DeviceDirect3D.h"
 
-#include <D3D9Types.h>
+//#include <D3D9Types.h>
 #include <InitGuid.h>
 
+#include <mfapi.h>
+#include <mfidl.h>
+#include <Mfreadwrite.h>
+#include <mferror.h>
+//#include <Ks.h>
+//#include <Codecapi.h>
+//#include <DShow.h>
+
+#define STRSTR(x) #x
+#define CHECKHR(x) if(FAILED(hr = (x))) \
+	{ \
+		DWORD last = GetLastError(); \
+		if(hr == E_FAIL) \
+			{ LOGERROR(last, STRSTR((x)) << " with E_FAIL"); } \
+		else \
+			{ LOGERROR(hr, STRSTR((x))); } \
+	}
+
 //DEFINE_MEDIATYPE_GUID(MFVideoFormat_DXGI_R8G8B8A8, DXGI_FORMAT_R8G8B8A8_UNORM);
-DEFINE_MEDIATYPE_GUID(MFVideoFormat_DXGI_R8G8B8A8, D3DFMT_X8R8G8B8);
+//DEFINE_MEDIATYPE_GUID(MFVideoFormat_DXGI_R8G8B8A8, D3DFMT_X8R8G8B8);
 
 RecorderWinAPI::RecorderWinAPI(IDevice* device, int frameRate) : device(device), frameRate(frameRate)
 {
@@ -61,30 +79,37 @@ bool RecorderWinAPI::create()
 		return false;
 	}
 
+	const GUID exportFormat = MFVideoFormat_H264; //MFVideoFormat_WMV3; //MFVideoFormat_H264
+	const GUID importFormat = MFVideoFormat_RGB32; //MFVideoFormat_DXGI_R8G8B8A8; //MFVideoFormat_RGB32
+
 	//Set the output media type.
-	hr = MFCreateMediaType(&pMediaTypeOut);   
-	hr = pMediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);     
-    hr = pMediaTypeOut->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_WMV3); //MFVideoFormat_H264 
-    hr = pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 800000);
-    hr = pMediaTypeOut->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-    hr = MFSetAttributeSize(pMediaTypeOut, MF_MT_FRAME_SIZE, width, height);
-    hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_FRAME_RATE, frameRate, 1);
-    hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
-    hr = pSinkWriter->AddStream(pMediaTypeOut, &streamIndex);
-	if(FAILED(hr))
-	{
-		LOGERROR(hr, "AddStream");
-		return false;
-	}
+	CHECKHR(MFCreateMediaType(&pMediaTypeOut));   
+	CHECKHR(pMediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));     
+    CHECKHR(pMediaTypeOut->SetGUID(MF_MT_SUBTYPE, exportFormat));
+
+    CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 16 * 1024 * 1024)); //16mb
+	CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_Main));
+
+	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_UnconstrainedVBR));
+	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_CBR));
+	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonQuality, 95));
+	//ICodecAPI* h264Codec = nullptr;
+	//pMediaTypeOut->QueryInterface(IID_ICodecAPI, (void**)&h264Codec);
+
+    CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive));
+    CHECKHR(MFSetAttributeSize(pMediaTypeOut, MF_MT_FRAME_SIZE, width, height));
+    CHECKHR(MFSetAttributeRatio(pMediaTypeOut, MF_MT_FRAME_RATE, frameRate, 1));
+    CHECKHR(MFSetAttributeRatio(pMediaTypeOut, MF_MT_PIXEL_ASPECT_RATIO, 1, 1));
+    CHECKHR(pSinkWriter->AddStream(pMediaTypeOut, &streamIndex));
 
 	//Set the input media type.
-    hr = MFCreateMediaType(&pMediaTypeIn);
-    hr = pMediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-    hr = pMediaTypeIn->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_DXGI_R8G8B8A8); //MFVideoFormat_RGB32
-    hr = pMediaTypeIn->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-    hr = MFSetAttributeSize(pMediaTypeIn, MF_MT_FRAME_SIZE, width, height);
-    hr = MFSetAttributeRatio(pMediaTypeIn, MF_MT_FRAME_RATE, frameRate, 1); 
-    hr = MFSetAttributeRatio(pMediaTypeIn, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+    CHECKHR(MFCreateMediaType(&pMediaTypeIn));
+    CHECKHR(pMediaTypeIn->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));
+    CHECKHR(pMediaTypeIn->SetGUID(MF_MT_SUBTYPE, importFormat)); 
+    CHECKHR(pMediaTypeIn->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive));
+    CHECKHR(MFSetAttributeSize(pMediaTypeIn, MF_MT_FRAME_SIZE, width, height));
+    CHECKHR(MFSetAttributeRatio(pMediaTypeIn, MF_MT_FRAME_RATE, frameRate, 1)); 
+    CHECKHR(MFSetAttributeRatio(pMediaTypeIn, MF_MT_PIXEL_ASPECT_RATIO, 1, 1));
     hr = pSinkWriter->SetInputMediaType(streamIndex, pMediaTypeIn, NULL);
 	if(FAILED(hr))
 	{
@@ -105,7 +130,7 @@ bool RecorderWinAPI::create()
     pMediaTypeIn->Release();
 
 	rtStart = 0;
-	MFFrameRateToAverageTimePerFrame(frameRate, 1, &rtDuration);
+	CHECKHR(MFFrameRateToAverageTimePerFrame(frameRate, 1, &rtDuration));
 
 	static_cast<DeviceDirect3D*>(device)->setRecorder(this);
 
@@ -116,14 +141,20 @@ void RecorderWinAPI::start()
 {
 	IRecorder::start();
 
-	HRESULT hr = pSinkWriter->BeginWriting();
+	HRESULT hr;
+	CHECKHR(pSinkWriter->BeginWriting());
+	if(FAILED(hr))
+	{
+		DWORD err = GetLastError();
+	}
 }
 
 void RecorderWinAPI::stop()
 {
 	IRecorder::stop();
 
-	HRESULT hr = pSinkWriter->Finalize();
+	HRESULT hr;
+	CHECKHR(pSinkWriter->Finalize());
 }
 
 void RecorderWinAPI::write(void* frame, int stride)
@@ -135,43 +166,45 @@ void RecorderWinAPI::write(void* frame, int stride)
     const DWORD cbTotal = cbWidth * height;
 
     // Create a new memory buffer.
-    if(!pBuffer) MFCreateMemoryBuffer(cbTotal, &pBuffer);
+    if(!pBuffer) CHECKHR(MFCreateMemoryBuffer(cbTotal, &pBuffer));
 
     // Lock the buffer and copy the video frame to the buffer.
 	BYTE *pData = NULL;
-    hr = pBuffer->Lock(&pData, NULL, NULL);
+    CHECKHR(pBuffer->Lock(&pData, NULL, NULL));
 
-    hr = MFCopyImage(pData, cbWidth, (BYTE*)frame, stride, cbWidth, height);
+    //CHECKHR(MFCopyImage(pData, cbWidth, (BYTE*)frame, stride, cbWidth, height));
+
 	for(int y = 0; y < height; y++)
 	{
 		for(int x = 0; x < width; x++)
 		{
+			//DWORD* dwo = (DWORD*)((char*)frame + y * stride) + x;
+			DWORD* dwo = (DWORD*)((char*)frame + (height - y - 1) * stride) + x;
 			DWORD* dw = ((DWORD*)pData) + y * width + x;
-			*dw = *dw & 0x0000FF00 | (*dw & 0x000000FF) << 16 | (*dw & 0x00FF0000) >> 16;
+
+			DWORD dwc = *dwo;
+			*dw = dwc & 0x0000FF00 | (dwc & 0x000000FF) << 16 | (dwc & 0x00FF0000) >> 16;
 			//ARGB
 			//ABGR
 		}
 	}
 
-	hr = pBuffer->Unlock();
+	CHECKHR(pBuffer->Unlock());
 
 	//Set length of valid data
-	hr = pBuffer->SetCurrentLength(cbTotal);
+	CHECKHR(pBuffer->SetCurrentLength(cbTotal));
 
     // Create a media sample and add the buffer to the sample.
-    hr = MFCreateSample(&pSample);
-	hr = pSample->AddBuffer(pBuffer);
+    CHECKHR(MFCreateSample(&pSample));
+	CHECKHR(pSample->AddBuffer(pBuffer));
 
     // Set the time stamp and the duration.
-    hr = pSample->SetSampleTime(rtStart);
-    hr = pSample->SetSampleDuration(rtDuration);
+    CHECKHR(pSample->SetSampleTime(rtStart));
+    CHECKHR(pSample->SetSampleDuration(rtDuration));
 	rtStart += rtDuration;
 
     // Send the sample to the Sink Writer.
-    if (SUCCEEDED(hr))
-    {
-        hr = pSinkWriter->WriteSample(streamIndex, pSample);
-    }
+    CHECKHR(pSinkWriter->WriteSample(streamIndex, pSample));
 
     pSample->Release();
 }
