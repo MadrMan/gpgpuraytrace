@@ -29,14 +29,15 @@ Raytracer::Raytracer()
 	varMinDistance = nullptr;
 	varMaxDistance = nullptr;
 	varTime = nullptr;
+	varThreadOffset = nullptr;
+	varSunDirection = nullptr;
 
 	varCamView = nullptr;
 	varCamEye = nullptr;
 	varCamMinDistance = nullptr;
 	varCamMaxDistance = nullptr;
 	varCamResults = nullptr;
-	varSunDirection = nullptr;
-
+	
 	texNoise1D = nullptr;
 	texNoise2D = nullptr;
 
@@ -69,8 +70,8 @@ void Raytracer::run()
 		ws.height = 1080;
 		ws.fullscreen = true;
 	} else {
-		ws.width = 1920 / 8;
-		ws.height = 1080 / 8;
+		ws.width = 1920 / 4;
+		ws.height = 1080 / 4;
 		ws.fullscreen = false;
 	}
 
@@ -373,8 +374,6 @@ void Raytracer::runCompute()
 	cameraCompute->run(2, 2, 1);
 
 	//Then, draw rest of the screen in a tiled manner
-	IShaderVariable* varThreadOffset = compute->getVariable("ThreadOffset");
-
 	if(varThreadOffset)
 	{
 		for(int x = 0; x < tilesX; ++x)
@@ -408,6 +407,7 @@ void Raytracer::updateComputeVars()
 		varMaxDistance = compute->getVariable("EndDistance");
 		varTime = compute->getVariable("Time");
 		varSunDirection = compute->getVariable("SunDirection");
+		varThreadOffset = compute->getVariable("ThreadOffset");
 
 		varFrameData = compute->getArray("FrameData");
 		if(varFrameData)

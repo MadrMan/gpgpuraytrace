@@ -54,6 +54,7 @@ private:
 	IShaderVariable* varMaxDistance;
 	IShaderVariable* varTime;
 	IShaderVariable* varSunDirection;
+	IShaderVariable* varThreadOffset;
 
 	//Camera equivs
 	IShaderVariable* varCamView;
