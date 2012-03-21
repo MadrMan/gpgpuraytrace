@@ -32,6 +32,9 @@ private:
 	void updateTerrain(float time);
 	void updateCompute(float time);
 	void updateComputeVars();
+	void runCompute();
+
+	void calculateTileSizes();
 
 	IDevice* device;
 	IWindow* window;
@@ -64,4 +67,9 @@ private:
 
 	float timeOfDay;
 	float timeOfYear;
+
+	int threadSizeX, threadSizeY;
+	int tilesX, tilesY;
+	int dispatchSizeX, dispatchSizeY;
+	int tileSizeX, tileSizeY;
 };

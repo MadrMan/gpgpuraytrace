@@ -10,10 +10,16 @@ struct SBFrameData
 };
 globallycoherent RWStructuredBuffer<SBFrameData> FrameData;
 
+cbuffer PerDispatch
+{
+	uint2 ThreadOffset;
+};
+
 RWTexture2D<float4> texOut : register(u0);
-[numthreads(16, 16, 1)]
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
+	DTid.xy += ThreadOffset;
 	PixelData pd = getPixelRay(DTid.xy);
 	
 	float3 color = 0.0f;

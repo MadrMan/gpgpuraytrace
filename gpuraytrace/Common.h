@@ -27,6 +27,7 @@
 #include <cmath>
 #include <ctime>
 #include <map>
+#include <sstream>
 
 #define finline __forceinline
 
@@ -77,4 +78,12 @@ public:
 private:
 	T* obj;
 	Fptr fptr;
+};
+
+template<class A>
+std::string convert(const A& value) 
+{
+	std::stringstream s;
+	s << value;
+	return s.str();
 };

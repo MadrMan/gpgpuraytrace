@@ -311,17 +311,31 @@ HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std
 
 	//Open main shader file
 	UINT fileSize = 0;
-	LPCVOID fileData = 0;
+	LPCVOID fileData = nullptr;
 	HRESULT result = handler.Open(D3D_INCLUDE_LOCAL, fileName.c_str(), nullptr, &fileData, &fileSize);
+
+	//Add macros
+	const std::string sizeXStr = convert(threadSize.x);
+	const std::string sizeYStr = convert(threadSize.y);
+	const std::string sizeZStr = convert(threadSize.z);
+	D3D_SHADER_MACRO macros[] =
+	{
+		{"GROUP_SIZE_X", sizeXStr.c_str()},
+		{"GROUP_SIZE_Y", sizeYStr.c_str()},
+		{"GROUP_SIZE_Z", sizeZStr.c_str()},
+		{nullptr, nullptr}
+	};
 
 	//Compile main shader file and includes
 	ID3DBlob* preprocBlob;
-	result = D3DPreprocess(fileData, fileSize, fileName.c_str(), nullptr, &handler, &preprocBlob, errorBlob);
+	result = D3DPreprocess(fileData, fileSize, fileName.c_str(), macros, &handler, &preprocBlob, errorBlob);
 	if(FAILED(result)) return result;
 
 	handler.Close(fileData);
 
+	//Calculate checksum for precompiled thing based on file contents, macros, and compiler flags
 	checksum_t preChecksum = CRC32::hash(preprocBlob->GetBufferPointer(), preprocBlob->GetBufferSize());
+	preChecksum = CRC32::hash(&shaderFlags, sizeof(shaderFlags), preChecksum);
 
 	const std::string cachedDirectory = directory + "/cache";
 	const std::string cachedFile = cachedDirectory + "/" + fileName + ".bin";
@@ -381,8 +395,10 @@ HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std
 	return S_OK;
 }
 
-bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main)
+bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts)
 {
+	threadSize = ts;
+
 	//clear variables in variablemanager, this also tells the client (if there is one) to clear their variables
 	VariableManager::get()->clear();
 

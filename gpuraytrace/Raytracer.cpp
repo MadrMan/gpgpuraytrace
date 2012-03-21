@@ -59,7 +59,7 @@ void Raytracer::run()
 	//ws.width = 800;
 	//ws.height = 600;
 
-	const bool HD_RECORD_MODE = true;
+	const bool HD_RECORD_MODE = false;
 	bool FIXED_FRAME_RATE = HD_RECORD_MODE;
 	static const int TARGET_FRAME_RATE = 25;
 
@@ -84,6 +84,9 @@ void Raytracer::run()
 
 	//Show window after device creation
 	window->show();
+
+	//Get tile sizes for the rendering
+	calculateTileSizes();
 
 	//Load textures
 	noise = new Noise();
@@ -211,6 +214,33 @@ void Raytracer::run()
 	Logger() << "Raytracer exit";
 }
 
+void Raytracer::calculateTileSizes()
+{
+	int resx = device->getWindow()->getWindowSettings().width;
+	int resy = device->getWindow()->getWindowSettings().height;
+
+	const int DEFAULT_THREADSIZE = 16;
+	const int DEFAULT_TILEPIXELS = 512;
+
+	//Calculate amount of tiles needed
+	tilesX = (int)ceilf(resx / (float)DEFAULT_TILEPIXELS);
+	tilesY = (int)ceilf(resy / (float)DEFAULT_TILEPIXELS);
+
+	//Amount of pixels per tile
+	tileSizeX = resx / tilesX;
+	tileSizeY = resy / tilesY;
+
+	//Calculate fitting thread sizes
+	threadSizeX = DEFAULT_THREADSIZE;
+	threadSizeY = DEFAULT_THREADSIZE;
+	while(tileSizeX % threadSizeX) ++threadSizeX;
+	while(tileSizeY % threadSizeY) ++threadSizeY;
+
+	//These are the blocks to be dispatched per tile
+	dispatchSizeX = tileSizeX / threadSizeX;
+	dispatchSizeY = tileSizeY / threadSizeY;
+}
+
 struct SBFrameData
 {
 	float minDistance;
@@ -333,9 +363,34 @@ void Raytracer::updateCompute(float time)
 		varSunDirection->write(&sunDirection);
 	}
 
-	//Run shader
-	compute->run(device->getWindow()->getWindowSettings().width / 16, device->getWindow()->getWindowSettings().height / 16, 1);
+	runCompute();
+}
+
+void Raytracer::runCompute()
+{
+	//Run shaders
+	//First, trace a downsampled version of the entire screen to determine distance and such
 	cameraCompute->run(2, 2, 1);
+
+	//Then, draw rest of the screen in a tiled manner
+	IShaderVariable* varThreadOffset = compute->getVariable("ThreadOffset");
+
+	if(varThreadOffset)
+	{
+		for(int x = 0; x < tilesX; ++x)
+		{
+			for(int y = 0; y < tilesY; ++y)
+			{
+				unsigned int offset[] = { x * dispatchSizeX * threadSizeX, y * dispatchSizeY * threadSizeY};
+				varThreadOffset->write(offset);
+				compute->run(dispatchSizeX, dispatchSizeY, 1);
+				
+				//device->present();
+			}
+		}
+	} else {
+		compute->run(dispatchSizeX * tilesX, dispatchSizeY * tilesY, 1);
+	}
 }
 
 void Raytracer::updateComputeVars()
@@ -396,8 +451,11 @@ void Raytracer::updateComputeVars()
 
 void Raytracer::loadComputeShader()
 {
-	if(!compute->create("shader", "tracescreen.hlsl", "CSMain"))
+	ThreadSize screenThreads = {threadSizeX, threadSizeY, 1};
+	if(!compute->create("shader", "tracescreen.hlsl", "CSMain", screenThreads))
 		Logger() << "Could not create screen shader";
-	if(!cameraCompute->create("shader", "camerarays.hlsl", "CSMain"))
+
+	ThreadSize cameraThreads = {16, 16, 1};
+	if(!cameraCompute->create("shader", "camerarays.hlsl", "CSMain", cameraThreads))
 		Logger() << "Could not create camera shader";
 }

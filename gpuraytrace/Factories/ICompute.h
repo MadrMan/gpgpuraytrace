@@ -4,6 +4,11 @@
 
 class ITexture;
 
+struct ThreadSize
+{
+	int x, y, z;
+};
+
 //! Interfaces inherited by all devices
 class ICompute
 {
@@ -11,7 +16,7 @@ public:
 	//! Destructor
 	virtual ~ICompute() { }
 
-	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main) = 0;
+	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts) = 0;
 
 	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) = 0;
 
@@ -23,7 +28,15 @@ public:
 
 	virtual void setTexture(int stage, ITexture* texture) = 0;
 
+	const ThreadSize& getThreadSize() const
+	{ return threadSize; }
+
 protected:
 	ICompute() { }
+
+	ThreadSize threadSize;
+
+private:
+
 };
 

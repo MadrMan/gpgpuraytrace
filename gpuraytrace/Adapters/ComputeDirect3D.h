@@ -43,7 +43,7 @@ public:
 	ComputeDirect3D(DeviceDirect3D* device);
 	virtual ~ComputeDirect3D();
 
-	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main) override;
+	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts) override;
 	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) override;
 	virtual IShaderVariable* getVariable(const std::string& name) override;
 	virtual IShaderArray* getArray(const std::string& name) override;

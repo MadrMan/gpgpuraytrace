@@ -68,10 +68,9 @@ static unsigned int polypattern[256] = {
     0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-checksum_t CRC32::hash(void* data, size_t length)
+checksum_t CRC32::hash(void* data, size_t length, checksum_t hash)
 {
 	const char* cdata = static_cast<const char*>(data);
-	checksum_t s = 0;
-	while(length--) s = polypattern[(s ^ (*cdata++)) % 256u] ^ (s >> 8); 
-	return s;
+	while(length--) hash = polypattern[(hash ^ (*cdata++)) % 256u] ^ (hash >> 8); 
+	return hash;
 }
