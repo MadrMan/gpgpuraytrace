@@ -61,7 +61,7 @@ void Raytracer::run()
 
 	const bool HD_RECORD_MODE = true;
 	bool FIXED_FRAME_RATE = HD_RECORD_MODE;
-	static const int TARGET_FRAME_RATE = 30;
+	static const int TARGET_FRAME_RATE = 25;
 
 	if(HD_RECORD_MODE)
 	{

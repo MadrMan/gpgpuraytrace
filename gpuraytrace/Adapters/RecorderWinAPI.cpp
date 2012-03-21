@@ -11,6 +11,9 @@
 #include <mfidl.h>
 #include <Mfreadwrite.h>
 #include <mferror.h>
+//#include <Ks.h>
+//#include <Codecapi.h>
+//#include <DShow.h>
 
 #define STRSTR(x) #x
 #define CHECKHR(x) if(FAILED(hr = (x))) \
@@ -83,7 +86,16 @@ bool RecorderWinAPI::create()
 	CHECKHR(MFCreateMediaType(&pMediaTypeOut));   
 	CHECKHR(pMediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));     
     CHECKHR(pMediaTypeOut->SetGUID(MF_MT_SUBTYPE, exportFormat));
-    CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 2000000)); //800000
+
+    CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 16 * 1024 * 1024)); //16mb
+	CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_Main));
+
+	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_UnconstrainedVBR));
+	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_CBR));
+	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonQuality, 95));
+	//ICodecAPI* h264Codec = nullptr;
+	//pMediaTypeOut->QueryInterface(IID_ICodecAPI, (void**)&h264Codec);
+
     CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive));
     CHECKHR(MFSetAttributeSize(pMediaTypeOut, MF_MT_FRAME_SIZE, width, height));
     CHECKHR(MFSetAttributeRatio(pMediaTypeOut, MF_MT_FRAME_RATE, frameRate, 1));
