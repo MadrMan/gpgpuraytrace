@@ -3,7 +3,7 @@ const static float fSamples = 3.0f;
 // The number of sample points taken along the ray
 const static uint nSamples = 3;
 // The scale depth (the altitude at which the average atmospheric density is found)
-const static float scaleDepth = 0.25f; 			
+const static float scaleDepth = 0.21f;	
 
 // The scale equation calculated by Vernier's Graphical Analysis
 float scale(float fCos)
@@ -21,11 +21,10 @@ float getMiePhase(float fCos, float fCos2, float g, float g2)
 // Calculates the Rayleigh phase function
 float getRayleighPhase(float fCos2)
 {
-	//return 1.0;
 	return 0.75f + 0.75f*fCos2;
 }
 
-const static float g = -0.999f;	// should be between -0.75 and -0.999 
+const static float g = -0.99f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
 float3 applyPhase(
 			float3 c0, //Rayleigh color
 			float3 c1, // The Mie color
@@ -38,7 +37,7 @@ float3 applyPhase(
 	return color;
 }
 
-const static float ESun = 100.0f;    //20.0f;
+const static float ESun = 50.0f;
 const static float kr   = 0.0025f;
 const static float km   = 0.0010f;
 const static float pi   = 3.14159265;
@@ -106,6 +105,7 @@ float3 getSkyColor(float3 rayDir)
 
 float3 getSky(float3 rayDir)
 {
+	rayDir = normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
 	return getSkyColor( rayDir).rgb;
 	
 	//old sky	

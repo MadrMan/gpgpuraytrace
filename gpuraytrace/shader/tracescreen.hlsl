@@ -29,7 +29,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		InterlockedMin(FrameData[0].MinHitDistance, asuint(rr.pd.w));
 	} else { //we've hit nothing
 		float3 scolor = 0;
-		if(pd.dir.y > -0.5f) scolor = getSky(pd.dir);	
+		scolor = getSky(pd.dir);	
 		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
 	}
 	texOut[DTid.xy] = float4(color, 1.0f);
