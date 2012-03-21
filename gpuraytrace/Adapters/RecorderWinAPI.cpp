@@ -11,8 +11,8 @@
 #include <mfidl.h>
 #include <Mfreadwrite.h>
 #include <mferror.h>
-//#include <Ks.h>
-//#include <Codecapi.h>
+#include <Ks.h>
+#include <Codecapi.h>
 //#include <DShow.h>
 
 #define STRSTR(x) #x
