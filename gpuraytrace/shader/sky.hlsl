@@ -1,9 +1,36 @@
+
 // The number of sample points taken along the ray
 const static float fSamples = 3.0f;
 // The number of sample points taken along the ray
 const static uint nSamples = 3;
 // The scale depth (the altitude at which the average atmospheric density is found)
 const static float scaleDepth = 0.21f;	
+const static float eSpace = 1.0f;
+const static float eSun = 30.0f;
+const static float kr = 0.0025f;
+const static float km = 0.0010f;
+const static float pi = 3.14159265;
+const static float innerRadius = 10.0f;			
+const static float outerRadius = 12.0f;	//10.25f;
+const static float3 waveLength = float3(0.650f, 0.570f, 0.475f);
+const static float3 waveLength4 = pow(waveLength, 4);
+
+float3 getSpace(float3 dir)
+{	
+	//to remove artifacts on horizon
+	if(dir.y <= 0.0f) return 0.0f;	
+	
+	float3 space = 0.0f;
+	space = noise3d(dir * 100.445f);
+	space = noise3d(dir * 100.445f);
+	space -= abs(noise3d(dir * 13.2f));
+	space -= abs(noise3d(dir * 19.2f));
+	space -= abs(noise3d(dir * 49.2f));
+	space -= abs(noise3d(dir * 38.2f));
+
+	return saturate(space) * eSpace;
+}
+
 
 // The scale equation calculated by Vernier's Graphical Analysis
 float scale(float fCos)
@@ -37,18 +64,10 @@ float3 applyPhase(
 	return color;
 }
 
-const static float ESun = 50.0f;
-const static float kr   = 0.0025f;
-const static float km   = 0.0010f;
-const static float pi   = 3.14159265;
-const static float innerRadius = 10.0f;			
-const static float outerRadius = 12.0f;	//10.25f;
-const static float3 waveLength = float3(0.650f, 0.570f, 0.475f);
-const static float3 waveLength4 = pow(waveLength, 4);
 
 const static float3 v3InvWavelength = 1.0f / waveLength4;
-const static float fKrESun = ESun * kr; 
-const static float fKmESun = ESun * km; 
+const static float fKrESun = eSun * kr; 
+const static float fKmESun = eSun * km; 
 const static float fKr4PI = kr * 4.0f * pi;
 const static float fKm4PI = km * 4.0f * pi; 
 const static float fScale = 1.0f / (outerRadius - innerRadius); 
@@ -106,7 +125,10 @@ float3 getSkyColor(float3 rayDir)
 float3 getSky(float3 rayDir)
 {
 	rayDir = normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
-	return getSkyColor( rayDir).rgb;
+	
+	float3 skyColor = getSkyColor(rayDir);
+	float3 spaceColor = getSpace(rayDir);
+	return skyColor + spaceColor * 0.5f;
 	
 	//old sky	
 	float3 c = float3(0.0f, 0.0f, 1.0f - rayDir.y * 0.6f);
