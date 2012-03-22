@@ -165,11 +165,13 @@ void Flyby::fly(float time)
 	//Calculate next position in the curve
 	const float SMOOTH_AMOUNT = 1.8f;
 	float distToTarget = sqrt(XMVectorGetX(XMVector3LengthEst(target - position))); 
-	distToTarget -=  1.0f; //Compensate for when the target is really close at an odd angle
+	distToTarget -=  1.2f; //Compensate for when the target is really close at an odd angle
 	float smoothPath = std::max(distToTarget * SMOOTH_AMOUNT, 0.01f); //std::min(distToTarget * 0.2f, 6.0f);
 
 	float angleToTarget = XMVectorGetX(XMVector3AngleBetweenVectors(camera->front, target - position));
-	float aimSpeed = std::max(2.0f - angleToTarget * 1.5f, 0.4f);
+	float aimSpeedValues = (2.0f - angleToTarget * 2.5f) + distToTarget * 0.1f;
+
+	float aimSpeed = std::max(std::min(aimSpeedValues, 5.0f), 0.1f);
 	camSpeed *= aimSpeed;
 
 	XMVECTOR curvePoint = XMVectorCatmullRom(position, position + camera->front * smoothPath, target - orgDirToTarget * smoothPath * 0.2f, target, 0.03f);
