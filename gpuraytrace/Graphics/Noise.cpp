@@ -37,7 +37,8 @@ Noise::~Noise()
 
 void Noise::generate()
 {
-	srand((unsigned int)time(0));
+	unsigned int seed = 300; //(unsigned int)time(0)
+	srand(seed);
 	permutations = new int[TEXTURE_SIZE];
 	for(int x = 0; x < TEXTURE_SIZE; x++)
 		permutations[x] = x;
