@@ -6,13 +6,11 @@ public:
 	Noise();
 	virtual ~Noise();
 
-	int setSeed(int seed);
-	void generate();
+	void generate(bool random = true);
 
 	static const int TEXTURE_SIZE = 128;
 	unsigned char* permutations2D;
 	float* permutations1D;
-	//char* permutations1D;
 private:
 	void generatePermutations2D();
 	void generatePermuationsGradient1D();

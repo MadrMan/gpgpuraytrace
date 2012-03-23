@@ -35,9 +35,14 @@ Noise::~Noise()
 	delete[] permutations1D;
 }
 
-void Noise::generate()
+void Noise::generate(bool random)
 {
-	unsigned int seed = 300; //(unsigned int)time(0)
+	unsigned int seed = 300;
+	
+	if(random){
+		unsigned int seed = (unsigned int)time(0);
+	}
+
 	srand(seed);
 	permutations = new int[TEXTURE_SIZE];
 	for(int x = 0; x < TEXTURE_SIZE; x++)

@@ -81,6 +81,7 @@ set(PROJ_COMMON
 	${gpgpuraytrace_SOURCE_DIR}/Common/Timer.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Common/CRC32.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/CRC32.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Common/Settings.h
 )
 
 set(PROJ_GAMEPLAY

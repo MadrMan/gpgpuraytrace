@@ -14,6 +14,7 @@
 #include "./Common/IInput.h"
 #include "./Common/Directory.h"
 #include "./Common/Timer.h"
+#include "./Common/Settings.h"
 
 Raytracer::Raytracer()
 {
@@ -56,27 +57,11 @@ Raytracer::~Raytracer()
 
 void Raytracer::run()
 {
-	WindowSettings ws;
-	//ws.width = 800;
-	//ws.height = 600;
-
-	const bool HD_RECORD_MODE = false;
-	bool FIXED_FRAME_RATE = HD_RECORD_MODE;
 	static const int TARGET_FRAME_RATE = 25;
-
-	if(HD_RECORD_MODE)
-	{
-		ws.width = 1920;
-		ws.height = 1080;
-		ws.fullscreen = true;
-	} else {
-		ws.width = 1920 / 4;
-		ws.height = 1080 / 4;
-		ws.fullscreen = false;
-	}
+	Mode mode = MODE_TEST;
 
 	//Create window
-	window = WindowFactory::construct(WindowAPI::WinAPI, ws);
+	window = WindowFactory::construct(WindowAPI::WinAPI, mode.ws);
 	if(!window) return;
 
 	//Create device
@@ -91,7 +76,7 @@ void Raytracer::run()
 
 	//Load textures
 	noise = new Noise();
-	noise->generate();
+	noise->generate(mode.randomLandscape);
 
 	texNoise2D = device->createTexture();
 	texNoise2D->create(TextureDimensions::Texture2D, TextureFormat::R8G8B8A8_UINT, Noise::TEXTURE_SIZE, Noise::TEXTURE_SIZE, noise->permutations2D, TextureBinding::Texture, CPUAccess::None);
@@ -139,7 +124,7 @@ void Raytracer::run()
 
 	timer->update(); //Update for loading time
 
-	if(HD_RECORD_MODE) 
+	if(mode.recordMode) 
 	{
 		if(recorder) recorder->start();
 		flyby->reset();
@@ -150,9 +135,9 @@ void Raytracer::run()
 	{
 		timer->update();
 
-		float thisFrameTime = FIXED_FRAME_RATE ?  1.0f / TARGET_FRAME_RATE : timer->getConstant();
+		float thisFrameTime = mode.fixedFrameRate ?  1.0f / TARGET_FRAME_RATE : timer->getConstant();
 
-		if(!FIXED_FRAME_RATE)
+		if(!mode.fixedFrameRate)
 		{
 			frameTime += thisFrameTime;
 			frames++;
