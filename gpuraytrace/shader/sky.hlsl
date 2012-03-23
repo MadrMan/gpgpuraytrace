@@ -127,9 +127,9 @@ float3 getSky(float3 rayDir)
 	rayDir = normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
 	
 	float3 skyColor = getSkyColor(rayDir);
-	float3 spaceColor = getSpace(rayDir);
-	return skyColor + spaceColor * 0.5f;
+	float3 spaceColor = getSpace(rayDir) * saturate(-SunDirection.y); 
 	
+	return skyColor + spaceColor;
 	//old sky	
 	float3 c = float3(0.0f, 0.0f, 1.0f - rayDir.y * 0.6f);
 	c.rg += (c.b - 0.6f) * 1.0f;
