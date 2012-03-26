@@ -2,8 +2,9 @@
 #include "TextureDirect3D.h"
 
 #include "../Common/Logger.h"
-
 #include "DeviceDirect3D.h"
+
+#include <D3DX11.h>
 
 TextureDirect3D::TextureDirect3D(DeviceDirect3D* device) : device(device)
 {
@@ -21,7 +22,6 @@ bool TextureDirect3D::create(const std::string& path)
 {
 	UNREFERENCED_PARAMETER(path);
 
-	/*device->getD3DDevice()->CreateTexture2D(
 	HRESULT result = D3DX11CreateTextureFromFile(device->getD3DDevice(), path.c_str(), nullptr, nullptr, &resource, nullptr);
 	if(FAILED(result))
 	{
@@ -32,9 +32,9 @@ bool TextureDirect3D::create(const std::string& path)
 	if(FAILED(result))
 	{
 		return false;
-	}*/
+	}
 
-	return false;
+	return true;
 }
 
 bool TextureDirect3D::create(TextureDimensions::T dimensions, TextureFormat::T format, int width, int height, const void* dataptr, TextureBinding::T binding, CPUAccess::T cpuFlags)

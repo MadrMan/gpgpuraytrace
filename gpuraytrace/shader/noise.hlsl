@@ -94,7 +94,7 @@ float noise2d(float2 pin)
 
 #endif
 #if 0
-Texture2D<float> texNoise;
+Texture2D<float> texNoise : register(t0);
 const static float TEXSIZE = 128.0f;
 
 float2 fade(float2 t)

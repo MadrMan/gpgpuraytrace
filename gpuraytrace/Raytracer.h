@@ -46,6 +46,9 @@ private:
 	Noise* noise;
 	Flyby* flyby;
 
+	//Texturing of the landscape
+	ITexture* texDiffuse[6];
+
 	//Screen vars
 	IShaderVariable* varView;
 	IShaderVariable* varEye;

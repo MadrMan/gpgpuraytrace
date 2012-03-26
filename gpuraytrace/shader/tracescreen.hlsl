@@ -28,7 +28,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	if(rr.density > 0.0f) //we've hit something
 	{
 		float3 n = getNormal(float4(rr.pd.xyz, rr.density));
-		float3 tcolor = getColor(rr.pd.xyz, n);
+		float3 tcolor = getColor(rr.pd.xyz, n, pd.dir, rr.pd.w);
 		color = lerp(tcolor, rr.fcolord.xyz, rr.fcolord.w);
 		
 		InterlockedMax(FrameData[0].MaxHitDistance, asuint(rr.pd.w));

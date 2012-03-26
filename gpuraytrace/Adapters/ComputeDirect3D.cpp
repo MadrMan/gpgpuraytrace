@@ -448,7 +448,7 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 	//{
 	//	shader = createdShader;
 	//} else {
-		if (shader) copyShaderVarsToNewShader(createdShader);
+		//if (shader) copyShaderVarsToNewShader(createdShader);
 		newShader = createdShader;
 	//}
 

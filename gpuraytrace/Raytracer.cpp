@@ -84,6 +84,42 @@ void Raytracer::run()
 	//texNoise1D->create(TextureDimensions::Texture1D, TextureFormat::R8G8B8A8_SNORM, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
 	//texNoise1D->create("Media/noise1_small.png");
 
+	//1 = smudgey brown forest floor
+	//2 = brown mossy rock
+	//3 = gray/lumpy repetative rock
+	//4 = exploded mushroom brown
+	//5 = brown mud metal
+	//6 = mossy rock
+	//7 = grass
+	//8 = muddy forest floor
+	//9 = reef-ish gray
+	//10 = graygreenbrown rock
+	//11 = brown rocksand
+	//12 = organic brown/yellow things
+	//13 = gray rock
+	//14 = brown forest floor
+	//15 = gray searock
+	//16 = dirt with gray moss patches
+	//17 = rock wall
+	//18 = forest pebblefloor
+	//19 = icey snowrock
+
+	for(int x = 0; x < 6; x++)
+		texDiffuse[x] = device->createTexture();
+	texDiffuse[0]->create("Media/textures/lichen9.dds");
+	texDiffuse[1]->create("Media/textures/lichen13.dds");
+	texDiffuse[2]->create("Media/textures/lichen16.dds");
+	texDiffuse[3]->create("Media/textures/lichen7.dds");
+	//texDiffuse[4]->create("Media/textures/lichen10.dds");
+	//texDiffuse[5]->create("Media/textures/lichen16.dds");
+
+	/*texDiffuse[0]->create("Media/textures/lichen19.dds");
+	texDiffuse[1]->create("Media/textures/lichen19.dds");
+	texDiffuse[2]->create("Media/textures/lichen19.dds");
+	texDiffuse[3]->create("Media/textures/lichen7.dds");
+	texDiffuse[4]->create("Media/textures/lichen13.dds");
+	texDiffuse[5]->create("Media/textures/lichen15.dds");*/
+
 	//Create camera
 	camera = new Camera();
 	camera->setWindow(window);
@@ -408,6 +444,8 @@ void Raytracer::updateComputeVars()
 		if(varNoiseGrads) varNoiseGrads->write(noise->permutations1D);
 
 		compute->setTexture(0, texNoise2D);
+		for(int x = 0; x < 6; x++)
+			compute->setTexture(x + 1, texDiffuse[x]);
 	}
 
 	if(cameraCompute->swap())

@@ -103,7 +103,7 @@ if(MSVC_VERSION LESS 1700)
 	include_directories("$ENV{DXSDK_DIR}/include")
 	link_directories("$ENV{DXSDK_DIR}/lib/x86")
 endif()
-link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib mfreadwrite.lib mfplat.lib mfuuid.lib)
+link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib mfreadwrite.lib mfplat.lib mfuuid.lib d3dx11.lib)
 
 add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON} ${PROJ_GAMEPLAY})
 

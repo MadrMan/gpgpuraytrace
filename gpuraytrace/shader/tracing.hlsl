@@ -18,10 +18,24 @@ cbuffer CBPermanent
 	float4x4 Projection;
 }
 
-#include "noise.hlsl"
+struct RayResult
+{
+	float4 pd; //position : 3, depth : 1
+	float4 fcolord; //fog color : 3, fog density : 1
+	float density;
+};
 
+const static float RAY_STEP = 0.03f;
+//const static uint RAY_STEPS = 500000;
+const static float RAY_STEP_FACTOR = 1.014f;
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
+
+RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog);
+
+#include "noise.hlsl"
+#include "color.hlsl"
+
 float4 getFog(float3 p)
 {
 	//return 0.0f;
@@ -67,18 +81,6 @@ float getDensity(float3 p)
 	return d;
 }
 
-struct RayResult
-{
-	float4 pd; //position : 3, depth : 1
-	float4 fcolord; //fog color : 3, fog density : 1
-	float density;
-};
-
-const static float RAY_STEP = 0.03f;
-//const static uint RAY_STEPS = 500000;
-const static float RAY_STEP_FACTOR = 1.014f;
-const static float SHADOW_LENGTH = 100.0f;
-
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog)
 {
 	RayResult rr;
@@ -87,8 +89,11 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	float d = 0.0f;
 	float step = RAY_STEP * stepmod - dist * (1.0f - RAY_STEP_FACTOR);
 
-	float4 middleFog = getFog(p + dir * dist * 0.5f);
-	f += middleFog * dist;
+	if(calcfog) 
+	{
+		float4 middleFog = getFog(p + dir * dist * 0.5f);
+		f += middleFog * dist;
+	}
 	
 	float3 rayp;
 	[loop] while(dist < enddist && (step > RAY_STEP * 0.2f))
@@ -98,7 +103,10 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 		float4 fogstep = 0;
 
 		d = getDensity(rayp);
-		if(calcfog) fogstep = getFog(rayp) * step;
+		if(calcfog) 
+		{
+			fogstep = getFog(rayp) * step;
+		}
 
 		if(f.a > 1.0f || d > 0.0f) 
 		{
@@ -116,37 +124,6 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	rr.fcolord = f;
 	rr.density = d;
 	return rr;
-}
-
-const static float3 ShadowColor = float3(0.1f, 0.1f, 0.13f);
-float3 getColor(float3 p, float3 n)
-{
-	float3 color = 0.0f;
-
-	//Calculate landscape color
-	float h = p.y;
-	h += 100;
-	color = float3(h * 0.01f, h * 0.010f, (h - 80.0f) * 0.03);
-	float brightness = saturate(dot(n, SunDirection));
-	color *= brightness;
-	
-	//Cliffs
-	//float3 cliffColor = float3(0.5f, 0.3f, 0.1f);
-	//cliffColor *= noise3d(p * float3(1.0f, 0.1f, 1.0f)) * 0.5f + 0.5f;
-	//color = lerp(cliffColor, color , saturate(abs(n.y) * 1.5f));
-	
-	//Calculate shadow
-	RayResult rr = traceRay(p, 0.1f, SHADOW_LENGTH, 3.0f, SunDirection, true);
-	
-	if(rr.density > 0.0f)
-	{
-		//color *= lerp( ShadowColor, rr.fcolor, rr.f);
-		color *= ShadowColor;
-	} else {
-		color *= lerp(color, ShadowColor, rr.fcolord.w * 0.8f);
-	}
-	
-	return color;
 }
 
 float3 getNormal(float4 pd)
