@@ -13,7 +13,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	PixelData pd = getPixelRay(pixelScaled);
 	
 	float3 color = 0.0f;
-	RayResult rr = traceRay(pd.p, StartDistance, CAMERA_DISTANCE, 1.0f, pd.dir, false);
+	RayResult rr = traceRay(pd.p, StartDistance, CAMERA_DISTANCE, 1.0f, pd.dir, false, true);
 	if(rr.density < 0.0f) rr.pd.w = 0.0f; //Set sky to distance 0
 	CameraResults[DTid.y * TOTAL_SIZE_X + DTid.x] = rr.pd;
 }

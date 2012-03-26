@@ -31,7 +31,7 @@ const static float RAY_STEP_FACTOR = 1.014f;
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
 
-RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog);
+RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
 
 #include "noise.hlsl"
 #include "color.hlsl"
@@ -81,7 +81,7 @@ float getDensity(float3 p)
 	return d;
 }
 
-RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog)
+RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine)
 {
 	RayResult rr;
 	float4 f = 0.0;
@@ -112,6 +112,7 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 		{
 			dist -= step;
 			step *= 0.4f;
+			if(skiprefine) break;
 			f -= fogstep;
 		} else {
 			step *= RAY_STEP_FACTOR;

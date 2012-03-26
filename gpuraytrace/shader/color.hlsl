@@ -51,7 +51,7 @@ float3 getColor(float3 p, float3 n, float3 d, float dist)
 	float brightness = dot(n, SunDirection);
 
 	//Calculate shadow
-	RayResult rr = traceRay(p, 0.1f, SHADOW_LENGTH, 3.0f, SunDirection, true);
+	RayResult rr = traceRay(p, 0.4f, SHADOW_LENGTH, 8.0f, SunDirection, true, true);
 
 	if(rr.density > 0.0f)
 	{
