@@ -26,7 +26,7 @@ Raytracer::Raytracer()
 
 	varView = nullptr;
 	varEye = nullptr;
-	varFrameData = nullptr;
+	varCamFrameData = nullptr;
 	varMinDistance = nullptr;
 	varMaxDistance = nullptr;
 	varTime = nullptr;
@@ -276,53 +276,53 @@ void Raytracer::updateTerrain(float time)
 	timeOfDay += time / secondsInDay;
 
 	//Fetch some data from the frame and calculate new constants
-	if(varFrameData)
+	if(varCamFrameData)
 	{
-		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varFrameData->map());
+		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varCamFrameData->map());
 		if(!fd) return;
 		//Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
 
-		float minDist = std::max(0.05f, fd->minDistance * 0.9f);
-		float maxDist = std::min(std::max(40.0f, fd->maxDistance * 1.2f), 8000.0f);
+		//float minDist = std::max(0.05f, fd->minDistance * 0.9f);
+		//float maxDist = std::min(std::max(40.0f, fd->maxDistance * 1.2f), 8000.0f);
+
+		float minDist = fd->minDistance;
+		float maxDist = fd->maxDistance;
 
 		const float MIN_DEFAULT = 20.0f;
 		const float MAX_DEFAULT = 2000.0f;
 		const float MINIMAL_DIFFERENCE = 10.0f;
-		float difference = maxDist - minDist;
+		/*float difference = maxDist - minDist;
 		if(difference < 0.0f)
 		{
 			minDist = MIN_DEFAULT;
 			maxDist = MAX_DEFAULT;
 		} else if(difference < MINIMAL_DIFFERENCE) {
 			maxDist = minDist + MINIMAL_DIFFERENCE;
-		}
+		}*/
 
 		//Assign default inverse values (any large/small number would do)
 		fd->minDistance = MAX_DEFAULT; //Swapped
 		fd->maxDistance = MIN_DEFAULT; //Swapped
 
-		varFrameData->unmap();
+		varCamFrameData->unmap();
 
 		//Ignore minimal range differences to prevent 'noise'
-		float minDifference = minDist - curMinDistance;
+		/*float minDifference = minDist - curMinDistance;
 		if(abs(minDifference) < minDist * 0.02f) minDist = curMinDistance;
 		float maxDifference = maxDist - curMaxDistance;
-		if(abs(maxDifference) < maxDist * 0.02f) maxDist = curMaxDistance;
+		if(abs(maxDifference) < maxDist * 0.02f) maxDist = curMaxDistance;*/
 
-		if(varMinDistance && varMaxDistance)
-		{
+		//if(varMinDistance && varMaxDistance)
+		//{
 			varMinDistance->write(&minDist);
 			varMaxDistance->write(&maxDist);
-		}
+		//}
 
-		if(varCamMinDistance && varCamMaxDistance)
-		{
-			varCamMinDistance->write(&minDist);
-			varCamMaxDistance->write(&maxDist);
-		}
-
-		curMinDistance = minDist;
-		curMaxDistance = maxDist;
+		//if(varCamMinDistance && varCamMaxDistance)
+		//{
+			//varCamMinDistance->write(&minDist);
+			//varCamMaxDistance->write(&maxDist);
+		//}
 	}
 
 	if(varCamResults)
@@ -430,12 +430,6 @@ void Raytracer::updateComputeVars()
 		varSunDirection = compute->getVariable("SunDirection");
 		varThreadOffset = compute->getVariable("ThreadOffset");
 
-		varFrameData = compute->getArray("FrameData");
-		if(varFrameData)
-		{
-			varFrameData->create(true, 1);
-		}
-
 		IShaderVariable* varProjection = compute->getVariable("Projection");
 		if(varProjection) varProjection->write(&transProjection);
 		IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
@@ -459,6 +453,12 @@ void Raytracer::updateComputeVars()
 		if(varCamResults) 
 		{
 			varCamResults->create(false, CAMERA_VIEW_RES * CAMERA_VIEW_RES);
+		}
+
+		varCamFrameData = cameraCompute->getArray("FrameData");
+		if(varCamFrameData)
+		{
+			varCamFrameData->create(true, 1);
 		}
 
 		IShaderVariable* varCamProjection = cameraCompute->getVariable("Projection");

@@ -52,7 +52,6 @@ private:
 	//Screen vars
 	IShaderVariable* varView;
 	IShaderVariable* varEye;
-	IShaderArray* varFrameData;
 	IShaderVariable* varMinDistance;
 	IShaderVariable* varMaxDistance;
 	IShaderVariable* varTime;
@@ -65,9 +64,7 @@ private:
 	IShaderVariable* varCamMinDistance;
 	IShaderVariable* varCamMaxDistance;
 	IShaderArray* varCamResults;
-
-	float curMinDistance;
-	float curMaxDistance;
+	IShaderArray* varCamFrameData;
 
 	float timeOfDay;
 	float timeOfYear;

@@ -3,13 +3,6 @@
 
 //float3 h2r(float h,float s,float v){return lerp(saturate((abs(frac(h+float3(1,2,3)/3)*6-3)-1)),1,s)*v;}
 
-struct SBFrameData
-{
-	uint MinHitDistance;
-	uint MaxHitDistance;
-};
-globallycoherent RWStructuredBuffer<SBFrameData> FrameData;
-
 cbuffer PerDispatch
 {
 	uint2 ThreadOffset;
@@ -30,9 +23,6 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		float3 n = getNormal(float4(rr.pd.xyz, rr.density));
 		float3 tcolor = getColor(rr.pd.xyz, n, pd.dir, rr.pd.w);
 		color = lerp(tcolor, rr.fcolord.xyz, rr.fcolord.w);
-		
-		InterlockedMax(FrameData[0].MaxHitDistance, asuint(rr.pd.w));
-		InterlockedMin(FrameData[0].MinHitDistance, asuint(rr.pd.w));
 	} else { //we've hit nothing
 		float3 scolor = 0;
 		scolor = getSky(pd.dir);	
