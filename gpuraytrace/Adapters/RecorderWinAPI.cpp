@@ -70,17 +70,68 @@ bool RecorderWinAPI::create()
 {
 	initialize();
 
+	IMFAttributes* sinkAttributes = nullptr;
+	MFCreateAttributes(&sinkAttributes, 0);
+	sinkAttributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, TRUE);
+
 	IMFMediaType* pMediaTypeOut = nullptr;   
 	IMFMediaType* pMediaTypeIn = nullptr;  
-	HRESULT hr = MFCreateSinkWriterFromURL(L"output.wmv", NULL, NULL, &pSinkWriter);
+	HRESULT hr = MFCreateSinkWriterFromURL(L"output.wmv", nullptr, sinkAttributes, &pSinkWriter);
 	if(FAILED(hr)) 
 	{
 		LOGERROR(hr, "MFCreateSinkWriterFromURL");
 		return false;
 	}
 
-	const GUID exportFormat = MFVideoFormat_H264; //MFVideoFormat_WMV3; //MFVideoFormat_H264
+	const GUID exportFormat = MFVideoFormat_WMV3; //MFVideoFormat_WMV3; //MFVideoFormat_H264
 	const GUID importFormat = MFVideoFormat_RGB32; //MFVideoFormat_DXGI_R8G8B8A8; //MFVideoFormat_RGB32
+
+	//Enumerate available encoders
+	/*IMFActivate** activators;
+	UINT32 activatorCount;
+	MFT_REGISTER_TYPE_INFO info = { 0 };
+	info.guidMajorType = MFMediaType_Video;
+	info.guidSubtype = exportFormat;
+
+	IMFTransform* outputTransform = nullptr;
+	if(FAILED(hr = MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER, 
+		MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT | MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_TRANSCODE_ONLY,
+		nullptr,
+		&info,
+		&activators,
+		&activatorCount)))
+	{
+		LOGERROR(hr, "MFTEnumEx");
+	} else {
+		for(UINT32 x = 0; x < activatorCount; x++)
+		{
+			IMFActivate* act = activators[x];
+			if(!outputTransform)
+			{
+				WCHAR* szFriendlyName = nullptr;
+				UINT cchName = 0;
+
+				hr = act->GetAllocatedString(
+					MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,
+					&szFriendlyName, &cchName);
+
+				if (SUCCEEDED(hr))
+				{
+					Logger() << szFriendlyName;
+				}
+				CoTaskMemFree(szFriendlyName);
+
+				IMFTransform** pOutputTransform = &outputTransform;
+				hr = act->ActivateObject(IID_PPV_ARGS(pOutputTransform));
+				if(FAILED(hr))
+				{
+					LOGERROR(hr, "ActivateObject");
+				}
+			}
+			act->Release();
+		}
+		CoTaskMemFree(activators);
+	}*/
 
 	//Set the output media type.
 	CHECKHR(MFCreateMediaType(&pMediaTypeOut));   
@@ -88,7 +139,7 @@ bool RecorderWinAPI::create()
     CHECKHR(pMediaTypeOut->SetGUID(MF_MT_SUBTYPE, exportFormat));
 
     CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 16 * 1024 * 1024)); //16mb
-	CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_Main));
+	//CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_Main));
 
 	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_UnconstrainedVBR));
 	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_CBR));
@@ -178,14 +229,11 @@ void RecorderWinAPI::write(void* frame, int stride)
 	{
 		for(int x = 0; x < width; x++)
 		{
-			//DWORD* dwo = (DWORD*)((char*)frame + y * stride) + x;
-			DWORD* dwo = (DWORD*)((char*)frame + (height - y - 1) * stride) + x;
+			DWORD dwc = *((DWORD*)((char*)frame + y * stride) + x);
+			//DWORD dwc = *((DWORD*)((char*)frame + (height - y - 1) * stride) + x);
 			DWORD* dw = ((DWORD*)pData) + y * width + x;
 
-			DWORD dwc = *dwo;
 			*dw = dwc & 0x0000FF00 | (dwc & 0x000000FF) << 16 | (dwc & 0x00FF0000) >> 16;
-			//ARGB
-			//ABGR
 		}
 	}
 
