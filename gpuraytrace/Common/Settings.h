@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #include "./Factories/IWindow.h"
 
 struct Mode
@@ -7,6 +7,7 @@ struct Mode
 	bool recordMode;
 	bool fixedFrameRate;
 	bool randomLandscape;
+	bool incrementDayTime;
 };
 
 const Mode MODE_TEST = {
@@ -16,12 +17,14 @@ const Mode MODE_TEST = {
 	//{ 1920, 1080, false },
 	false, //record mode
 	false, //fixed framerate
-	false //random landscape
+	false, //random landscape
+	false //incrementDayTime
 };
 
 const Mode MODE_RECORD = {
 	{ 1920, 1080, true },
 	true, //record mode
 	true, //fixed framerate
-	true //random landscape
+	true, //random landscape
+	true //incrementDayTime
 };

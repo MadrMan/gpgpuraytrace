@@ -39,7 +39,7 @@ bool processParameter(Mode* mode, const std::string& str)
 		mode->ws.fullscreen = true;
 		Logger() << "Enabled fullscreen mode";
 	} else {
-		Logger() << "Usage: gpgpuraytrace [-r 123x456][-c][-f]";
+		Logger() << "Usage: gpgpuraytrace [-r=123x456][-c][-f]";
 		Logger() << "-r: set resolution";
 		Logger() << "-c: capture to file";
 		Logger() << "-f: fullscreen mode";

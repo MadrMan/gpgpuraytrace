@@ -171,7 +171,7 @@ void Raytracer::run(const Mode& mode)
 		timer->update();
 
 		float thisFrameTime = mode.fixedFrameRate ?  1.0f / TARGET_FRAME_RATE : timer->getConstant();
-
+		
 		if(!mode.fixedFrameRate)
 		{
 			frameTime += thisFrameTime;
@@ -214,7 +214,7 @@ void Raytracer::run(const Mode& mode)
 		}
 
 		camera->update();
-		updateCompute(thisFrameTime);
+		updateCompute(thisFrameTime, mode);
 
 		//And present on screen
 		device->present();
@@ -268,11 +268,11 @@ struct SBFrameData
 	float maxDistance;
 };
 
-void Raytracer::updateTerrain(float time)
+void Raytracer::updateTerrain(float time, const Mode& mode)
 {
 	//Scale 'time' to a proper time value
 	const float secondsInDay = 300.0f;
-	timeOfDay += time / secondsInDay;
+	if(mode.incrementDayTime) timeOfDay += time / secondsInDay;
 
 	//Fetch some data from the frame and calculate new constants
 	if(varCamFrameData)
@@ -349,11 +349,11 @@ void Raytracer::updateTerrain(float time)
 	}
 }
 
-void Raytracer::updateCompute(float time)
+void Raytracer::updateCompute(float time, const Mode& mode)
 {
 	updateComputeVars();
 
-	updateTerrain(time);
+	updateTerrain(time, mode);
 
 	XMVECTOR determinant;
 	XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));

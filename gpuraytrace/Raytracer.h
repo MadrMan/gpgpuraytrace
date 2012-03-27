@@ -1,4 +1,5 @@
 #pragma once
+#include "./Common/Settings.h"
 
 class IShaderVariable;
 class IShaderArray;
@@ -31,8 +32,8 @@ public:
 	void loadComputeShader();
 
 private:
-	void updateTerrain(float time);
-	void updateCompute(float time);
+	void updateTerrain(float times, const Mode& mode);
+	void updateCompute(float time, const Mode& mode);
 	void updateComputeVars();
 	void runCompute();
 
