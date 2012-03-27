@@ -55,10 +55,9 @@ Raytracer::~Raytracer()
 	delete texNoise2D;
 }
 
-void Raytracer::run()
+void Raytracer::run(const Mode& mode)
 {
 	static const int TARGET_FRAME_RATE = 25;
-	Mode mode = MODE_TEST;
 
 	//Create window
 	window = WindowFactory::construct(WindowAPI::WinAPI, mode.ws);

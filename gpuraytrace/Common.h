@@ -87,3 +87,11 @@ std::string convert(const A& value)
 	s << value;
 	return s.str();
 };
+
+template<class A>
+bool convert(const std::string& value, A* out) 
+{
+	std::stringstream s(value);
+	s >> *out;
+	return !s.fail();
+};
