@@ -38,11 +38,14 @@ bool processParameter(Mode* mode, const std::string& str)
 	} else if(command == "-f") {
 		mode->ws.fullscreen = true;
 		Logger() << "Enabled fullscreen mode";
+	} else if(command == "-t") {
+		mode->enableManager = true;
 	} else {
 		Logger() << "Usage: gpgpuraytrace [-r=123x456][-c][-f]";
 		Logger() << "-r: set resolution";
 		Logger() << "-c: capture to file";
 		Logger() << "-f: fullscreen mode";
+		Logger() << "-t: enable remote config tool";
 		return false;
 	}
 
@@ -62,7 +65,7 @@ int main(int argc, char** argv)
 
 	Logger() << "Startup";
 
-	VariableManager::get()->start();
+	if(mode.enableManager) VariableManager::get()->start();
 
 	Raytracer* raytracer = new Raytracer();
 	raytracer->run(mode);

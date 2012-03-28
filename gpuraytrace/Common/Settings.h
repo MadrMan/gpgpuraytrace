@@ -7,6 +7,7 @@ struct Mode
 	bool recordMode;
 	bool fixedFrameRate;
 	bool randomLandscape;
+	bool enableManager;
 	bool incrementDayTime;
 };
 
@@ -18,6 +19,11 @@ const Mode MODE_TEST = {
 	false, //record mode
 	false, //fixed framerate
 	false, //random landscape
+#ifdef _DEBUG
+	true,
+#else
+	false,
+#endif
 	false //incrementDayTime
 };
 
@@ -26,5 +32,6 @@ const Mode MODE_RECORD = {
 	true, //record mode
 	true, //fixed framerate
 	true, //random landscape
+	false,
 	true //incrementDayTime
 };
