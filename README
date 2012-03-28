@@ -1,1 +1,19 @@
-README for gpgpuraytrace
+Frosttrace is a GPGPU-accelerated raytracer for landscapes.
+
+Currently it only runs on Windows Vista or later, and requires a DirectX 11 GPU.
+
+Binaries for Win32 are released occasionally - see downloads for those.
+Command line options are available to change the window settings and such.
+(Note: on first run it might take a while to compile the shaders)
+
+Controls:
+	WASD + Mouse = Camera movement
+	F1 = Toggle fly-by mode
+	F2 = Toggle recording mode
+
+How to compile:
+	- Have VS10 or VS11 installed, together with the latest DX SDK (comes with VS11)
+	- Use CMake to configure the project
+	- Open the solution and compile
+To run the project from within VS make sure the debug directory is set to the correct path ($(ProjectDir)/../.. should do)
+
