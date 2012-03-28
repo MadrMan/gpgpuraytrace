@@ -88,6 +88,7 @@ void Camera::move()
 	if(moveDown->getState()) position = XMVectorSubtract(position, XMVectorSet(0.0f, moveSpeed, 0.0f, 0.0f));
 
 	XMVECTOR right = XMVectorSetY(XMVector3Rotate(front, XMQuaternionRotationRollPitchYaw(0.0f, -XM_PIDIV2, 0.0f)), 0.0f);
+	right = XMVector3Normalize(right);
 	position = XMVectorAdd(position, right * moveSide->getState() * moveSpeed);
 }
 
