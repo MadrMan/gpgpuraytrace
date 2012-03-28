@@ -11,7 +11,7 @@ struct Mode
 	bool incrementDayTime;
 };
 
-const Mode MODE_TEST = {
+const Mode MODE_BENCHMARK = {
 	{ 480, 270, false }, //window settings
 	//{ 800, 600, false }, 
 	//{ 960, 540, false },
@@ -19,11 +19,7 @@ const Mode MODE_TEST = {
 	false, //record mode
 	false, //fixed framerate
 	false, //random landscape
-#ifdef _DEBUG
-	true,
-#else
-	false,
-#endif
+	true, //tool enabled
 	false //incrementDayTime
 };
 
@@ -32,6 +28,15 @@ const Mode MODE_RECORD = {
 	true, //record mode
 	true, //fixed framerate
 	true, //random landscape
-	false,
+	true, //tool enabled
+	true //incrementDayTime
+};
+
+const Mode MODE_RELEASE = {
+	{ 480, 270, false }, //window settings
+	false, //record mode
+	false, //fixed framerate
+	true, //random landscape
+	false, //tool enabled
 	true //incrementDayTime
 };

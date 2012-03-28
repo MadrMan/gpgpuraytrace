@@ -54,7 +54,12 @@ bool processParameter(Mode* mode, const std::string& str)
 
 int main(int argc, char** argv)
 {
-	Mode mode = MODE_TEST; //Take standard settings from this mode
+#ifdef _DEBUG
+	Mode mode = MODE_BENCHMARK; //Take standard settings from this mode
+#else
+	Mode mode = MODE_RELEASE;
+#endif
+
 	for(int x = 1; x < argc; x++)
 	{
 		if(!processParameter(&mode, argv[x]))
