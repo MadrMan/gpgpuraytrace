@@ -40,7 +40,7 @@ void Noise::generate(bool random)
 	unsigned int seed = 300;
 	
 	if(random){
-		unsigned int seed = (unsigned int)time(0);
+		seed = (unsigned int)time(0);
 	}
 
 	srand(seed);
