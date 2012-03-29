@@ -34,7 +34,6 @@ const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
 
 #include "noise.hlsl"
-#include "color.hlsl"
 
 float4 getFog(float3 p)
 {
@@ -80,6 +79,7 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	
 	float d = 0.0f;
 	float step = RAY_STEP * stepmod - dist * (1.0f - RAY_STEP_FACTOR);
+
 
 	if(calcfog) 
 	{
