@@ -71,6 +71,7 @@ private:
 
 	float timeOfDay;
 	float timeOfYear;
+	float smoothFarDist;
 
 	int threadSizeX, threadSizeY;
 	int tilesX, tilesY;
