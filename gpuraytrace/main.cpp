@@ -34,6 +34,7 @@ bool processParameter(Mode* mode, const std::string& str)
 		}
 	} else if(command == "-c") {
 		mode->recordMode = true;
+		mode->fixedFrameRate = true;
 		Logger() << "Enabled record mode";
 	} else if(command == "-f") {
 		mode->ws.fullscreen = true;
