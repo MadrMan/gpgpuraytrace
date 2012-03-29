@@ -38,14 +38,6 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 
 float4 getFog(float3 p)
 {
-	//return 0.0f;
-	/*float d = (noise3d(p * 0.003f) * noise3d(p * 0.009f)) * 6.8f + 0.4f;
-	d *= 0.005f;
-	d -= abs(p.y - 250.0f) * 0.0002f;
-	d = saturate(d);
-	float fogd = (noise3d(p * 0.008f) + noise3d(p * 0.015f)) * 0.3f + 1.0f;
-	return float4(FOG_COLOR * fogd * d, d);*/
-	
 	float d = (noise3d(p * 0.004f) * noise3d(p * 0.016f)) * 0.006f + .01f;
 	d -= (p.y - 6.0f) * 0.001f;
 	d = saturate(d);

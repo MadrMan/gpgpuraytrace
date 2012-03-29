@@ -2,19 +2,20 @@
 // The number of sample points taken along the ray
 const static float fSamples = 3.0f;
 // The number of sample points taken along the ray
-const static uint nSamples = 3;
+const static uint nSamples = 3; 
+
 // The scale depth (the altitude at which the average atmospheric density is found)
 const static float scaleDepth = 0.21f;	
 const static float eSpace = 1.0f;
 const static float eSun = 30.0f;
-const static float kr = 0.0025f;
-const static float km = 0.0010f;
+const static float kr = 0.0075f;	// 0.0025f
+const static float km = 0.0005f;
 const static float pi = 3.14159265;
 const static float innerRadius = 10.0f;			
-const static float outerRadius = 12.0f;	//10.25f;
+const static float outerRadius = 12.0f;
 const static float3 waveLength = float3(0.650f, 0.570f, 0.475f);
 const static float3 waveLength4 = pow(waveLength, 4);
-
+const static float g = -0.950f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
 float3 getSpace(float3 dir)
 {	
 	//to remove artifacts on horizon
@@ -51,11 +52,10 @@ float getRayleighPhase(float fCos2)
 	return 0.75f + 0.75f*fCos2;
 }
 
-const static float g = -0.99f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
 float3 applyPhase(
-			float3 c0, //Rayleigh color
-			float3 c1, // The Mie color
-			float3 camDir	//camdirection (inverted?)
+			const float3 c0, //Rayleigh color
+			const float3 c1, // The Mie color
+			const float3 camDir	//camdirection (inverted?)
 			)
 {
 	float fCos = dot(SunDirection, camDir) / length(camDir);
@@ -125,14 +125,20 @@ float3 getSkyColor(float3 rayDir)
 float3 getSky(float3 rayDir)
 {
 	rayDir = normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
-	
 	float3 skyColor = getSkyColor(rayDir);
-	float3 spaceColor = getSpace(rayDir) * saturate(-SunDirection.y); 
+	float3 spaceColor = getSpace(rayDir) * saturate(-SunDirection.y); 	
+	float hemi = saturate(dot(rayDir, SunDirection));
+	float col = pow(hemi,300.0f);
 	
-	return skyColor + spaceColor;
-	//old sky	
+	return skyColor + spaceColor + col  * 5.0f;
+	
+	
+	return skyColor + spaceColor ;
+	/*old sky
 	float3 c = float3(0.0f, 0.0f, 1.0f - rayDir.y * 0.6f);
 	c.rg += (c.b - 0.6f) * 1.0f;
 	float hemi = saturate(dot(rayDir, SunDirection));
+
 	return lerp(c.rgb, float3(2.0f, 2.0f, 1.2f), pow(hemi, 14.0f));
+	*/
 }
