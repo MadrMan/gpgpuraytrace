@@ -1,5 +1,6 @@
 #include "tracing.hlsl"
 #include "sky.hlsl"
+#include "color.hlsl"
 
 //float3 h2r(float h,float s,float v){return lerp(saturate((abs(frac(h+float3(1,2,3)/3)*6-3)-1)),1,s)*v;}
 
