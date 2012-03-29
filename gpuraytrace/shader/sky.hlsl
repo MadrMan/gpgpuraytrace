@@ -5,17 +5,17 @@ const static float fSamples = 3.0f;
 const static uint nSamples = 3; 
 
 // The scale depth (the altitude at which the average atmospheric density is found)
-const static float scaleDepth = 0.21f;	
+const static float scaleDepth = 0.19f;
 const static float eSpace = 1.0f;
-const static float eSun = 30.0f;
-const static float kr = 0.0075f;	// 0.0025f
-const static float km = 0.0005f;
+const static float eSun = 22.0f;
+const static float kr = 0.003f;
+const static float km = 0.0015f;
 const static float pi = 3.14159265;
-const static float innerRadius = 10.0f;			
-const static float outerRadius = 12.0f;
+const static float innerRadius = 200.0f;			
+const static float outerRadius = innerRadius * 1.025f; 
 const static float3 waveLength = float3(0.650f, 0.570f, 0.475f);
 const static float3 waveLength4 = pow(waveLength, 4);
-const static float g = -0.950f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
+const static float g = -0.89f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
 float3 getSpace(float3 dir)
 {	
 	//to remove artifacts on horizon
@@ -28,10 +28,8 @@ float3 getSpace(float3 dir)
 	space -= abs(noise3d(dir * 19.2f));
 	space -= abs(noise3d(dir * 49.2f));
 	space -= abs(noise3d(dir * 38.2f));
-
 	return saturate(space) * eSpace;
 }
-
 
 // The scale equation calculated by Vernier's Graphical Analysis
 float scale(float fCos)
@@ -64,7 +62,6 @@ float3 applyPhase(
 	return color;
 }
 
-
 const static float3 v3InvWavelength = 1.0f / waveLength4;
 const static float fKrESun = eSun * kr; 
 const static float fKmESun = eSun * km; 
@@ -77,8 +74,9 @@ float3 getSkyColor(float3 rayDir)
 {
 	//Compute cameraHeigth
 	float camHeight	= innerRadius;	
-	camHeight += (Eye.y* 0.001f);										
-	camHeight = max(camHeight, 0.0f);
+
+	//camHeight += (Eye.y* 0.001f);										
+	//camHeight = max(camHeight, 0.0f);
 	
 	const float distToTop = outerRadius - camHeight;
 	const float far = distToTop + (1.0f - rayDir.y) * distToTop * 2.0f;
@@ -127,13 +125,7 @@ float3 getSky(float3 rayDir)
 	rayDir = normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
 	float3 skyColor = getSkyColor(rayDir);
 	float3 spaceColor = getSpace(rayDir) * saturate(-SunDirection.y); 	
-	float hemi = saturate(dot(rayDir, SunDirection));
-	float col = pow(hemi,300.0f);
-	
-	return skyColor + spaceColor + col  * 5.0f;
-	
-	
-	return skyColor + spaceColor ;
+	return skyColor + spaceColor;
 	/*old sky
 	float3 c = float3(0.0f, 0.0f, 1.0f - rayDir.y * 0.6f);
 	c.rg += (c.b - 0.6f) * 1.0f;
