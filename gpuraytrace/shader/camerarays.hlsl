@@ -4,7 +4,7 @@ const static uint TOTAL_SIZE_X = 32;
 const static uint TOTAL_SIZE_Y = 32;
 
 const static float CAMERA_NEAR = 0.05f;
-const static float CAMERA_FAR = 8000.0f;
+const static float CAMERA_FAR = 8000000.0f;
 
 RWStructuredBuffer<float4> CameraResults;
 
