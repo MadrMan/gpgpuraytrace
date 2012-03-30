@@ -1,9 +1,7 @@
-
 // The number of sample points taken along the ray
 const static float fSamples = 3.0f;
 // The number of sample points taken along the ray
 const static uint nSamples = 3; 
-
 // The scale depth (the altitude at which the average atmospheric density is found)
 const static float scaleDepth = 0.19f;
 const static float eSpace = 1.0f;
@@ -16,8 +14,17 @@ const static float outerRadius = innerRadius * 1.025f;
 const static float3 waveLength = float3(0.650f, 0.570f, 0.475f);
 const static float3 waveLength4 = pow(waveLength, 4);
 const static float g = -0.89f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
-float3 getSpace(float3 dir)
+
+//remove artifacts in fog when density is 0
+float3 modRayDir(float3 rayDir)
+{
+	return  normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
+}
+
+//retrievespaceColor
+float3 getSpaceColor(float3 dir)
 {	
+	dir = modRayDir(dir);
 	//to remove artifacts on horizon
 	if(dir.y <= 0.0f) return 0.0f;	
 	
@@ -28,7 +35,7 @@ float3 getSpace(float3 dir)
 	space -= abs(noise3d(dir * 19.2f));
 	space -= abs(noise3d(dir * 49.2f));
 	space -= abs(noise3d(dir * 38.2f));
-	return saturate(space) * eSpace;
+	return saturate(space) * eSpace * saturate(-SunDirection.y);
 }
 
 // The scale equation calculated by Vernier's Graphical Analysis
@@ -50,15 +57,20 @@ float getRayleighPhase(float fCos2)
 	return 0.75f + 0.75f*fCos2;
 }
 
-float3 applyPhase(
-			const float3 c0, //Rayleigh color
-			const float3 c1, // The Mie color
-			const float3 camDir	//camdirection (inverted?)
-			)
+struct SkyColor
+{
+	float3 mie;
+	float3 rayleigh;
+};
+
+//apply phase on rayleigh and mie scattering
+SkyColor applyPhase(const float3 rayleigh, const float3 mie, const float3 camDir)
 {
 	float fCos = dot(SunDirection, camDir) / length(camDir);
-	float fCos2 = fCos*fCos;
-	float3 color = getRayleighPhase(fCos2) * c0 + getMiePhase(fCos, fCos2, g, g*g) * c1;
+	float fCos2 = fCos*fCos;	
+	SkyColor color;
+	color.mie = getMiePhase(fCos, fCos2, g, g*g) * mie;
+	color.rayleigh = getRayleighPhase(fCos2) * rayleigh;
 	return color;
 }
 
@@ -70,11 +82,12 @@ const static float fKm4PI = km * 4.0f * pi;
 const static float fScale = 1.0f / (outerRadius - innerRadius); 
 const static float scaleOverScaleDepth	= fScale /scaleDepth; 
 	
-float3 getSkyColor(float3 rayDir)
+SkyColor getRayleighMieColor(float3 rayDir)
 {
+	rayDir = modRayDir(rayDir);
+	
 	//Compute cameraHeigth
 	float camHeight	= innerRadius;	
-
 	//camHeight += (Eye.y* 0.001f);										
 	//camHeight = max(camHeight, 0.0f);
 	
@@ -113,19 +126,18 @@ float3 getSkyColor(float3 rayDir)
 	}
 	
 	//scale the Mie and Rayleigh colors
-	float3 mieC = v3FrontColor * (v3InvWavelength * fKrESun);
-	float3 rayleighC = v3FrontColor * fKmESun;
+	float3 mie = v3FrontColor * (v3InvWavelength * fKrESun);
+	float3 rayleigh = v3FrontColor * fKmESun;
 	float3 t = -rayDir*far;
-
-	return applyPhase(mieC, rayleighC ,t);
+	return applyPhase(mie, rayleigh ,t);
 }
 
+//computes the complete sky color
 float3 getSky(float3 rayDir)
 {
-	rayDir = normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
-	float3 skyColor = getSkyColor(rayDir);
-	float3 spaceColor = getSpace(rayDir) * saturate(-SunDirection.y); 	
-	return skyColor + spaceColor;
+	SkyColor scat = getRayleighMieColor(rayDir);
+	float3 spaceColor = getSpaceColor(rayDir);
+	return scat.mie + scat.rayleigh + spaceColor;	
 	/*old sky
 	float3 c = float3(0.0f, 0.0f, 1.0f - rayDir.y * 0.6f);
 	c.rg += (c.b - 0.6f) * 1.0f;
