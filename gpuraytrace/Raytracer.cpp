@@ -146,7 +146,10 @@ void Raytracer::run(const Mode& mode)
 
 	//register keys to change timeofday
 	IInputAction* increaseTimeOfDay = window->getInput()->createAction();	
+	increaseTimeOfDay->registerKeyboard(VK_ADD, 1.0f, TriggerType::OnHold);	
 	increaseTimeOfDay->registerKeyboard(VK_OEM_PLUS, 1.0f, TriggerType::OnHold);	
+	increaseTimeOfDay->registerKeyboard(VK_OEM_MINUS, -1.0f, TriggerType::OnHold);
+	increaseTimeOfDay->registerKeyboard(VK_SUBTRACT, -1.0f, TriggerType::OnHold);
 	increaseTimeOfDay->registerKeyboard(VK_OEM_MINUS, -1.0f, TriggerType::OnHold);
 
 	flyby = new Flyby(camera);
@@ -219,7 +222,9 @@ void Raytracer::run(const Mode& mode)
 			camera->move();
 		}
 
-				timeOfDay += increaseTimeOfDay->getState() * (thisFrameTime/10.0f);		camera->update();
+		timeOfDay += increaseTimeOfDay->getState() * (thisFrameTime/25.0f);		
+		camera->update();
+
 		updateCompute(thisFrameTime, mode);
 
 		//And present on screen
@@ -320,11 +325,17 @@ void Raytracer::updateTerrain(float time, const Mode& mode)
 		float maxDifference = maxDist - curMaxDistance;
 		if(abs(maxDifference) < maxDist * 0.02f) maxDist = curMaxDistance;*/
 
-		if(varMinDistance && varMaxDistance)
-		{
+		//if(varMinDistance && varMaxDistance)
+		//{
 			varMinDistance->write(&minDist);
 			varMaxDistance->write(&smoothFarDist);
-		}
+		//}
+
+		//if(varCamMinDistance && varCamMaxDistance)
+		//{
+			//varCamMinDistance->write(&minDist);
+			//varCamMaxDistance->write(&maxDist);
+		//}
 	}
 
 	if(varCamResults)
