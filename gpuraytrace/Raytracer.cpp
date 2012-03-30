@@ -140,10 +140,15 @@ void Raytracer::run(const Mode& mode)
 	IInputAction* toggleFlyby = window->getInput()->createAction();
 	toggleFlyby->registerKeyboard(VK_F1, 1.0f);
 
+	//register key for recording
 	IInputAction* toggleRecording = window->getInput()->createAction();
 	toggleRecording->registerKeyboard(VK_F2, 1.0f);
 
-	IInputAction* increaseTimeOfDay = window->getInput()->createAction();	increaseTimeOfDay->registerKeyboard(VK_ADD,1.0f, TriggerType::OnHold);	increaseTimeOfDay->registerKeyboard(VK_SUBTRACT,-1.0f, TriggerType::OnHold);	//Flyby mode
+	//register keys to change timeofday
+	IInputAction* increaseTimeOfDay = window->getInput()->createAction();	
+	increaseTimeOfDay->registerKeyboard(VK_OEM_PLUS, 1.0f, TriggerType::OnHold);	
+	increaseTimeOfDay->registerKeyboard(VK_OEM_MINUS, -1.0f, TriggerType::OnHold);
+
 	flyby = new Flyby(camera);
 
 	Timer* timer = Timer::get();
