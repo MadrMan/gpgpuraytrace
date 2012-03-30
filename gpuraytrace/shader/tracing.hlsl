@@ -30,7 +30,7 @@ const static float RAY_STEP = 0.03f;
 const static float RAY_STEP_FACTOR = 1.014f;
 //const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
-
+const static float RAY_FINAL_PRECISION = RAY_STEP * 0.2f;
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
 
 #include "noise.hlsl"
@@ -88,7 +88,7 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	}
 	
 	float3 rayp;
-	[loop] while(dist < enddist && (step > RAY_STEP * 0.2f))
+	[loop] while(dist < enddist && (step > RAY_FINAL_PRECISION))
 	{
 		rayp = p + dir * dist;
 		
@@ -100,11 +100,12 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 			fogstep = getFog(rayp) * step;
 		}
 
-		if(f.a > 1.0f || d > 0.0f) 
+		if(/*f.a > 1.0f ||*/ d > 0.0f) 
 		{
+			if(skiprefine) break;
+		
 			dist -= step;
 			step *= 0.4f;
-			if(skiprefine) break;
 			f -= fogstep;
 		} else {
 			step *= RAY_STEP_FACTOR;

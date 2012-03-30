@@ -19,15 +19,19 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	float3 color = 0.0f;
 	RayResult rr = traceRay(pd.p, StartDistance, EndDistance, 1.0f, pd.dir, true, false);
 
+	float skyAmount = sqrt(max(rr.pd.w - 50.0f, 0.0f)) * 0.05f;
+	float3 skyColor = getSky(pd.dir);
 	if(rr.density > 0.0f) //we've hit something
 	{
 		float3 n = getNormal(float4(rr.pd.xyz, rr.density));
-		float3 tcolor = getColor(rr.pd.xyz, n, pd.dir, rr.pd.w);
-		color = lerp(tcolor, rr.fcolord.xyz, rr.fcolord.w);
+		color = getColor(rr.pd.xyz, n, pd.dir, rr.pd.w);
+		color = lerp(color, rr.fcolord.xyz, rr.fcolord.w);
 	} else { //we've hit nothing
 		float3 scolor = 0;
-		scolor = getSky(pd.dir);	
+		scolor = skyColor;
 		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
 	}
+	color = lerp(color, skyColor, saturate(skyAmount));
+	
 	texOut[DTid.xy] = float4(color, 1.0f);
 }

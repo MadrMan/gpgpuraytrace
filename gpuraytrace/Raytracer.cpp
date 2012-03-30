@@ -315,17 +315,11 @@ void Raytracer::updateTerrain(float time, const Mode& mode)
 		float maxDifference = maxDist - curMaxDistance;
 		if(abs(maxDifference) < maxDist * 0.02f) maxDist = curMaxDistance;*/
 
-		//if(varMinDistance && varMaxDistance)
-		//{
+		if(varMinDistance && varMaxDistance)
+		{
 			varMinDistance->write(&minDist);
 			varMaxDistance->write(&smoothFarDist);
-		//}
-
-		//if(varCamMinDistance && varCamMaxDistance)
-		//{
-			//varCamMinDistance->write(&minDist);
-			//varCamMaxDistance->write(&maxDist);
-		//}
+		}
 	}
 
 	if(varCamResults)
