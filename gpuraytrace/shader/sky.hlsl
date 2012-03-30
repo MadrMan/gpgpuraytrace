@@ -18,7 +18,7 @@ const static float g = -0.89f;	// The Mie phase asymmetry factor  should be betw
 //remove artifacts in fog when density is 0
 float3 modRayDir(float3 rayDir)
 {
-	return  normalize(float3(rayDir.x, saturate(rayDir.y), rayDir.z));
+	return  normalize(float3(rayDir.x, abs(rayDir.y), rayDir.z));
 }
 
 //retrievespaceColor
@@ -88,8 +88,8 @@ SkyColor getRayleighMieColor(float3 rayDir)
 	
 	//Compute cameraHeigth
 	float camHeight	= innerRadius;	
-	//camHeight += (Eye.y* 0.001f);										
-	//camHeight = max(camHeight, 0.0f);
+	camHeight += (Eye.y* 0.001f);										
+	camHeight = max(camHeight, 0.0f);
 	
 	const float distToTop = outerRadius - camHeight;
 	const float far = distToTop + (1.0f - rayDir.y) * distToTop * 2.0f;
