@@ -20,7 +20,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	RayResult rr = traceRay(pd.p, StartDistance, EndDistance, 1.0f, pd.dir, true, false);
 
 	float skyAmount = saturate(sqrt(max(rr.pd.w - 50.0f, 0.0f)) * 0.05f);
-	
+
 	SkyColor scat = getRayleighMieColor(pd.dir);
 	float3 spaceColor = getSpaceColor(pd.dir);
 	float3 skyColor = scat.mie + scat.rayleigh + spaceColor;	
