@@ -7,7 +7,7 @@ const static float scaleDepth = 0.19f;
 const static float eSpace = 1.0f;
 const static float eSun = 22.0f;
 const static float kr = 0.003f;
-const static float km = 0.0015f;
+const static float km = 0.0025f;
 const static float pi = 3.14159265;
 const static float innerRadius = 200.0f;			
 const static float outerRadius = innerRadius * 1.025f; 
@@ -15,17 +15,17 @@ const static float3 waveLength = float3(0.650f, 0.570f, 0.475f);
 const static float3 waveLength4 = pow(waveLength, 4);
 const static float g = -0.89f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
 
-//remove artifacts in fog when density is 0
 float3 modRayDir(float3 rayDir)
 {
-	return  float3(rayDir.x, abs(rayDir.y), rayDir.z);
+	//Continue drawing sky so it can be used to colorize landscape
+	float y =  saturate(rayDir.y);
+	return  normalize(float3(rayDir.x, y, rayDir.z));
 }
 
-//retrievespaceColor
 float3 getSpaceColor(float3 dir)
 {	
 	dir = modRayDir(dir);
-	//to remove artifacts on horizon
+	//to remove line artifacts on horizon
 	if(dir.y <= 0.0f) return 0.0f;	
 	
 	float3 space = 0.0f;
@@ -38,7 +38,7 @@ float3 getSpaceColor(float3 dir)
 	return saturate(space) * eSpace * saturate(-SunDirection.y);
 }
 
-// The scale equation calculated by Vernier's Graphical Analysis
+// Scale equation by Vernier's Graphical Analysis
 float scale(float fCos)
 {
 	float x = 1.0f - fCos;
@@ -63,7 +63,7 @@ struct SkyColor
 	float3 rayleigh;
 };
 
-//apply phase on rayleigh and mie scattering
+//Apply phase on rayleigh and mie scattering
 SkyColor applyPhase(const float3 rayleigh, const float3 mie, const float3 camDir)
 {
 	float fCos = dot(SunDirection, camDir) / length(camDir);
@@ -81,10 +81,11 @@ const static float fKr4PI = kr * 4.0f * pi;
 const static float fKm4PI = km * 4.0f * pi; 
 const static float fScale = 1.0f / (outerRadius - innerRadius); 
 const static float scaleOverScaleDepth	= fScale /scaleDepth; 
-	
-SkyColor getRayleighMieColor(float3 rayDir)
+
+//Retrieve sky color.	
+SkyColor getRayleighMieColor(float3 orgRayDir)
 {
-	rayDir = modRayDir(rayDir);
+	float3 rayDir = modRayDir(orgRayDir);
 	
 	//Compute cameraHeigth
 	float camHeight	= innerRadius;	
@@ -129,20 +130,24 @@ SkyColor getRayleighMieColor(float3 rayDir)
 	float3 mie = v3FrontColor * (v3InvWavelength * fKrESun);
 	float3 rayleigh = v3FrontColor * fKmESun;
 	float3 t = -rayDir*far;
-	return applyPhase(mie, rayleigh ,t);
+	
+	SkyColor sc = applyPhase(mie, rayleigh ,t);
+	sc.rayleigh *= saturate((orgRayDir.y * 0.5f + 0.5f) * 4.0f); 
+	return sc;
 }
 
+
+/*
 //computes the complete sky color
 float3 getSky(float3 rayDir)
 {
 	SkyColor scat = getRayleighMieColor(rayDir);
 	float3 spaceColor = getSpaceColor(rayDir);
 	return scat.mie + scat.rayleigh + spaceColor;	
-	/*old sky
-	float3 c = float3(0.0f, 0.0f, 1.0f - rayDir.y * 0.6f);
-	c.rg += (c.b - 0.6f) * 1.0f;
-	float hemi = saturate(dot(rayDir, SunDirection));
-
-	return lerp(c.rgb, float3(2.0f, 2.0f, 1.2f), pow(hemi, 14.0f));
-	*/
+	//old sky
+	//float3 c = float3(0.0f, 0.0f, 1.0f - rayDir.y * 0.6f);
+	//c.rg += (c.b - 0.6f) * 1.0f;
+	//float hemi = saturate(dot(rayDir, SunDirection));
+	//return lerp(c.rgb, float3(2.0f, 2.0f, 1.2f), pow(hemi, 14.0f));
 }
+*/
