@@ -43,11 +43,10 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	
 	float d = 0.0f;
 	float step = RAY_STEP * stepmod - dist * (1.0f - RAY_STEP_FACTOR);
-
-
+	
 	if(calcfog) 
 	{
-		float4 middleFog = getFog(p + dir * dist * 0.5f);
+		float4 middleFog = getFog(p + dir * dist * 0.5f, dist * 0.5f);
 		f += middleFog * dist;
 	}
 	
@@ -61,7 +60,7 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 		d = getDensity(rayp);
 		if(calcfog) 
 		{
-			fogstep = getFog(rayp) * step;
+			fogstep = getFog(rayp, dist) * step;
 		}
 
 		if(/*f.a > 1.0f ||*/ d > 0.0f) 
