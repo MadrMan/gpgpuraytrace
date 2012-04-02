@@ -44,7 +44,7 @@ Raytracer::Raytracer()
 
 	timeOfDay = 0.3f; //6:30AM
 	timeOfYear = 0.0f;
-	smoothFarDist = 0.0f;
+	curFarDist = 0.0f;
 }
 
 Raytracer::~Raytracer()
@@ -297,10 +297,15 @@ void Raytracer::updateTerrain(float time, const Mode& mode)
 
 		float minDist = fd->minDistance;
 		float maxDist = fd->maxDistance;
-		smoothFarDist = smoothFarDist * 0.9f + maxDist * 0.1f + 0.5f;
+
+		if(curFarDist < maxDist)
+			curFarDist = maxDist;
+		if(curFarDist / maxDist > 1.8f) //40% smaller
+			curFarDist = maxDist;
+		
 		//smoothFarDist = std::max(maxDist, smoothFarDist);
 
-		//Logger() << "Smooth: " << smoothFarDist << " Max: " << fd->maxDistance << " Final: " << maxDist;
+		Logger() << "Far: " << curFarDist;
 
 		const float MIN_DEFAULT = 5000.0f;
 		const float MAX_DEFAULT = 2.0f;
@@ -328,7 +333,7 @@ void Raytracer::updateTerrain(float time, const Mode& mode)
 		//if(varMinDistance && varMaxDistance)
 		//{
 			varMinDistance->write(&minDist);
-			varMaxDistance->write(&smoothFarDist);
+			varMaxDistance->write(&curFarDist);
 		//}
 
 		//if(varCamMinDistance && varCamMaxDistance)

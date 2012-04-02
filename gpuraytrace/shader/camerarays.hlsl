@@ -4,7 +4,7 @@ const static uint TOTAL_SIZE_X = 32;
 const static uint TOTAL_SIZE_Y = 32;
 
 const static float CAMERA_NEAR = 0.05f;
-const static float CAMERA_FAR = 8000000.0f;
+const static float CAMERA_FAR = 5000.0f;
 
 RWStructuredBuffer<float4> CameraResults;
 
@@ -22,7 +22,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	PixelData pd = getPixelRay(pixelScaled);
 	
 	float3 color = 0.0f;
-	RayResult rr = traceRay(pd.p, CAMERA_NEAR, CAMERA_FAR, 1.0f, pd.dir, false, true);
+	RayResult rr = traceRay(pd.p, CAMERA_NEAR, CAMERA_FAR, 5.0f, pd.dir, false, true);
 	if(rr.density < 0.0f) 
 	{
 		rr.pd.w = 0.0f; //Set sky to distance 0
