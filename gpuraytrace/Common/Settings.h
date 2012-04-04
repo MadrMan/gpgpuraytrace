@@ -28,7 +28,7 @@ const Mode MODE_RECORD = {
 	true, //record mode
 	true, //fixed framerate
 	true, //random landscape
-	true, //tool enabled
+	false, //tool enabled
 	true //incrementDayTime
 };
 
