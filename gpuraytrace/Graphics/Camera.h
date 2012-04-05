@@ -19,6 +19,10 @@ public:
 	virtual ~Camera();
 
 	void setWindow(IWindow* window);
+
+	IWindow* getWindow() const
+	{ return window; }
+
 	void setInput(IInput* input);
 
 	void move();
@@ -42,6 +46,8 @@ public:
 	IInputAction* moveUp;
 	IInputAction* moveDown;
 	IInput* input;
+
+	IWindow* window;
 
 	float rotationEuler[3];
 };

@@ -83,7 +83,7 @@ bool RecorderWinAPI::create()
 		return false;
 	}
 
-	const GUID exportFormat = MFVideoFormat_WMV3; //MFVideoFormat_WMV3; //MFVideoFormat_H264
+	const GUID exportFormat = MFVideoFormat_MPEG2; //MFVideoFormat_WMV3; //MFVideoFormat_H264
 	const GUID importFormat = MFVideoFormat_RGB32; //MFVideoFormat_DXGI_R8G8B8A8; //MFVideoFormat_RGB32
 
 	//Enumerate available encoders
@@ -138,7 +138,7 @@ bool RecorderWinAPI::create()
 	CHECKHR(pMediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));     
     CHECKHR(pMediaTypeOut->SetGUID(MF_MT_SUBTYPE, exportFormat));
 
-    CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 16 * 1024 * 1024)); //16mb
+    CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, 12 * 1024 * 1024)); //16mb
 	//CHECKHR(pMediaTypeOut->SetUINT32(MF_MT_MPEG2_PROFILE, eAVEncH264VProfile_Main));
 
 	//CHECKHR(pMediaTypeOut->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_UnconstrainedVBR));

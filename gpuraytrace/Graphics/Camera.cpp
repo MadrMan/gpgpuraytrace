@@ -14,6 +14,8 @@ Camera::Camera()
 	rotationEuler[0] = -3.0f;
 	rotationEuler[1] = -4.6f;
 	rotationEuler[2] = 0.0f;
+
+	window = nullptr;
 }
 
 Camera::~Camera()
@@ -30,7 +32,9 @@ Camera::~Camera()
 
 void Camera::setWindow(IWindow* window)
 {
-	const float FOV = XM_PIDIV2;
+	this->window = window;
+
+	const float FOV = XMConvertToRadians(75.0f);
 	const float ASPECT = (FLOAT)window->getWindowSettings().width / (FLOAT)window->getWindowSettings().height;
 
 	matProjection = XMMatrixPerspectiveFovLH(FOV, ASPECT, 0.1f, 1000.0f);

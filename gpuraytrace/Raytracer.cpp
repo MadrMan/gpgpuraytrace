@@ -6,54 +6,39 @@
 #include "./Factories/RecorderFactory.h"
 #include "./Factories/ICompute.h"
 #include "./Factories/ITexture.h"
+
 #include "./Graphics/Camera.h"
 #include "./Graphics/IShaderVariable.h"
 #include "./Graphics/Noise.h"
+#include "./Graphics/Terrain.h"
+
 #include "./Gameplay/Flyby.h"
 
 #include "./Common/IInput.h"
 #include "./Common/Directory.h"
 #include "./Common/Timer.h"
 #include "./Common/Settings.h"
+#include "./Common/VFS.h"
 
 Raytracer::Raytracer()
 {
 	device = nullptr;
 	window = nullptr;
-	compute = nullptr;
 	camera = nullptr;
 	flyby = nullptr;
-
-	varView = nullptr;
-	varEye = nullptr;
-	varCamFrameData = nullptr;
-	varMinDistance = nullptr;
-	varMaxDistance = nullptr;
-	varTime = nullptr;
-	varThreadOffset = nullptr;
-	varSunDirection = nullptr;
-
-	varCamView = nullptr;
-	varCamEye = nullptr;
-	varCamMinDistance = nullptr;
-	varCamMaxDistance = nullptr;
-	varCamResults = nullptr;
-	
-	texNoise1D = nullptr;
-	texNoise2D = nullptr;
+	terrain = nullptr;
 
 	timeOfDay = 0.3f; //6:30AM
 	timeOfYear = 0.0f;
-	curFarDist = 0.0f;
+
+	VFS::get()->addPath("Media/common");
 }
 
 Raytracer::~Raytracer()
 {
-	delete compute;
+	delete terrain;
 	delete device;
 	delete window;
-	delete texNoise1D;
-	delete texNoise2D;
 }
 
 void Raytracer::run(const Mode& mode)
@@ -71,67 +56,9 @@ void Raytracer::run(const Mode& mode)
 	//Show window after device creation
 	window->show();
 
-	//Get tile sizes for the rendering
-	calculateTileSizes();
-
-	//Load textures
-	noise = new Noise();
-	noise->generate(mode.randomLandscape);
-
-	texNoise2D = device->createTexture();
-	texNoise2D->create(TextureDimensions::Texture2D, TextureFormat::R8G8B8A8_UINT, Noise::TEXTURE_SIZE, Noise::TEXTURE_SIZE, noise->permutations2D, TextureBinding::Texture, CPUAccess::None);
-	//texNoise1D = device->createTexture();
-	//texNoise1D->create(TextureDimensions::Texture1D, TextureFormat::R8G8B8A8_SNORM, Noise::TEXTURE_SIZE, 0, noise->permutations1D);
-	//texNoise1D->create("Media/noise1_small.png");
-
-	//1 = smudgey brown forest floor
-	//2 = brown mossy rock
-	//3 = gray/lumpy repetative rock
-	//4 = exploded mushroom brown
-	//5 = brown mud metal
-	//6 = mossy rock
-	//7 = grass
-	//8 = muddy forest floor
-	//9 = reef-ish gray
-	//10 = graygreenbrown rock
-	//11 = brown rocksand
-	//12 = organic brown/yellow things
-	//13 = gray rock
-	//14 = brown forest floor
-	//15 = gray searock
-	//16 = dirt with gray moss patches
-	//17 = rock wall
-	//18 = forest pebblefloor
-	//19 = icey snowrock
-
-	for(int x = 0; x < 6; x++)
-		texDiffuse[x] = device->createTexture();
-	texDiffuse[0]->create("Media/textures/lichen9.dds");
-	texDiffuse[1]->create("Media/textures/lichen13.dds");
-	texDiffuse[2]->create("Media/textures/lichen16.dds");
-	texDiffuse[3]->create("Media/textures/lichen7.dds");
-	//texDiffuse[4]->create("Media/textures/lichen10.dds");
-	//texDiffuse[5]->create("Media/textures/lichen16.dds");
-
-	/*texDiffuse[0]->create("Media/textures/lichen19.dds");
-	texDiffuse[1]->create("Media/textures/lichen19.dds");
-	texDiffuse[2]->create("Media/textures/lichen19.dds");
-	texDiffuse[3]->create("Media/textures/lichen7.dds");
-	texDiffuse[4]->create("Media/textures/lichen13.dds");
-	texDiffuse[5]->create("Media/textures/lichen15.dds");*/
-
 	//Create camera
 	camera = new Camera();
 	camera->setWindow(window);
-
-	//Create a new compute shader instance
-	compute = device->createCompute();
-	cameraCompute = device->createCompute();
-	loadComputeShader();
-	updateComputeVars();
-
-	//Watch shader directory for changes
-	Directory::get()->watch("shader", this, &Raytracer::loadComputeShader);
 
 	//Register the escape key for exiting
 	IInputAction* escape = window->getInput()->createAction();
@@ -151,6 +78,16 @@ void Raytracer::run(const Mode& mode)
 	increaseTimeOfDay->registerKeyboard(VK_OEM_MINUS, -1.0f, TriggerType::OnHold);
 	increaseTimeOfDay->registerKeyboard(VK_SUBTRACT, -1.0f, TriggerType::OnHold);
 	increaseTimeOfDay->registerKeyboard(VK_OEM_MINUS, -1.0f, TriggerType::OnHold);
+
+	//Create terrain
+	terrain = new Terrain(device, "greenrocks");
+	terrain->create(mode);
+	terrain->setCamera(camera);
+
+	reloadTerrain();
+
+	//Watch media directory for changes
+	Directory::get()->watch("media", this, &Raytracer::reloadTerrain);
 
 	flyby = new Flyby(camera);
 
@@ -226,6 +163,7 @@ void Raytracer::run(const Mode& mode)
 		camera->update();
 
 		updateCompute(thisFrameTime, mode);
+		terrain->render();
 
 		//And present on screen
 		device->present();
@@ -246,257 +184,17 @@ void Raytracer::run(const Mode& mode)
 	Logger() << "Raytracer exit";
 }
 
-void Raytracer::calculateTileSizes()
-{
-	int resx = device->getWindow()->getWindowSettings().width;
-	int resy = device->getWindow()->getWindowSettings().height;
-
-	const int DEFAULT_THREADSIZE = 16;
-	const int DEFAULT_TILEPIXELS = 512;
-
-	//Calculate amount of tiles needed
-	tilesX = (int)ceilf(resx / (float)DEFAULT_TILEPIXELS);
-	tilesY = (int)ceilf(resy / (float)DEFAULT_TILEPIXELS);
-
-	//Amount of pixels per tile
-	tileSizeX = resx / tilesX;
-	tileSizeY = resy / tilesY;
-
-	//Calculate fitting thread sizes
-	threadSizeX = DEFAULT_THREADSIZE;
-	threadSizeY = DEFAULT_THREADSIZE;
-	while(tileSizeX % threadSizeX) ++threadSizeX;
-	while(tileSizeY % threadSizeY) ++threadSizeY;
-
-	//These are the blocks to be dispatched per tile
-	dispatchSizeX = tileSizeX / threadSizeX;
-	dispatchSizeY = tileSizeY / threadSizeY;
-}
-
-struct SBFrameData
-{
-	float minDistance;
-	float maxDistance;
-};
-
-void Raytracer::updateTerrain(float time, const Mode& mode)
+void Raytracer::updateCompute(float time, const Mode& mode)
 {
 	//Scale 'time' to a proper time value
 	const float secondsInDay = 300.0f;
 	if(mode.incrementDayTime) timeOfDay += time / secondsInDay;
 
-	//Fetch some data from the frame and calculate new constants
-	if(varCamFrameData)
-	{
-		SBFrameData* fd = reinterpret_cast<SBFrameData*>(varCamFrameData->map());
-		if(!fd) return;
-		//Logger() << "Distance min: " << fd->minDistance << " max: " << fd->maxDistance;
-
-		//float minDist = std::max(0.05f, fd->minDistance * 0.9f);
-		//float maxDist = std::min(std::max(40.0f, fd->maxDistance * 1.2f), 8000.0f);
-
-		float minDist = fd->minDistance;
-		float maxDist = fd->maxDistance;
-
-		if(curFarDist < maxDist)
-			curFarDist = maxDist;
-		if(curFarDist / maxDist > 1.8f) //40% smaller
-			curFarDist = maxDist;
-		
-		//smoothFarDist = std::max(maxDist, smoothFarDist);
-
-		Logger() << "Far: " << curFarDist;
-
-		const float MIN_DEFAULT = 5000.0f;
-		const float MAX_DEFAULT = 2.0f;
-		const float MINIMAL_DIFFERENCE = 10.0f;
-		/*float difference = maxDist - minDist;
-		if(difference < 0.0f)
-		{
-			minDist = MIN_DEFAULT;
-			maxDist = MAX_DEFAULT;
-		} else if(difference < MINIMAL_DIFFERENCE) {
-			maxDist = minDist + MINIMAL_DIFFERENCE;
-		}*/
-
-		fd->minDistance = MIN_DEFAULT;
-		fd->maxDistance = MAX_DEFAULT;
-
-		varCamFrameData->unmap();
-
-		//Ignore minimal range differences to prevent 'noise'
-		/*float minDifference = minDist - curMinDistance;
-		if(abs(minDifference) < minDist * 0.02f) minDist = curMinDistance;
-		float maxDifference = maxDist - curMaxDistance;
-		if(abs(maxDifference) < maxDist * 0.02f) maxDist = curMaxDistance;*/
-
-		//if(varMinDistance && varMaxDistance)
-		//{
-			varMinDistance->write(&minDist);
-			varMaxDistance->write(&curFarDist);
-		//}
-
-		//if(varCamMinDistance && varCamMaxDistance)
-		//{
-			//varCamMinDistance->write(&minDist);
-			//varCamMaxDistance->write(&maxDist);
-		//}
-	}
-
-	if(varCamResults)
-	{
-		float* fd = reinterpret_cast<float*>(varCamResults->map());
-		if(!fd) return;
-
-		//char buf[32];
-		//std::string res;
-		//res.reserve(1000);
-		//system("cls");
-		/*for(int y = 0; y < CAMERA_DIST_RES; ++y)
-		{
-			for(int x = 0; x < CAMERA_DIST_RES; ++x)
-			{
-				sprintf(buf, "%5u", (unsigned int)fd[y * CAMERA_DIST_RES + x]);
-				res += buf;
-			}
-			res += '\n';
-		}*/
-
-		memcpy(flyby->getCameraView().data(), fd, CAMERA_VIEW_RES * CAMERA_VIEW_RES * sizeof(CameraVision));
-
-		varCamResults->unmap();
-	}
+	terrain->updateTerrain(time, mode);
+	terrain->setTimeOfDay(timeOfDay);
 }
 
-void Raytracer::updateCompute(float time, const Mode& mode)
+void Raytracer::reloadTerrain()
 {
-	updateComputeVars();
-
-	updateTerrain(time, mode);
-
-	XMVECTOR determinant;
-	XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));
-
-	//Set variables
-	if(varView) varView->write(&invTransView);
-	if(varEye) varEye->write(&camera->position);
-	if(varCamView) varCamView->write(&invTransView);
-	if(varCamEye) varCamEye->write(&camera->position);
-
-	if(varTime)
-	{
-		float time = Timer::get()->getTime();
-		varTime->write(&time);
-	}
-
-	if(varSunDirection)
-	{
-		//XMVECTOR sunDirection = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f); //
-		//XMVECTOR sunDirection = XMVectorSet(0.0f, -0.1f, 0.91f, 0.0f); //sunset
-
-		float sunY = -cosf(timeOfDay * XM_2PI);
-		float sunX = -sinf(timeOfDay * XM_2PI);
-
-		XMVECTOR sunDirection = XMVectorSet(sunX, sunY, 0.1f, 0.0f); //noon
-
-		sunDirection = XMVector3Normalize(sunDirection);
-		varSunDirection->write(&sunDirection);
-	}
-
-	runCompute();
-}
-
-void Raytracer::runCompute()
-{
-	//Run shaders
-	//First, trace a downsampled version of the entire screen to determine distance and such
-	cameraCompute->run(2, 2, 1);
-
-	//Then, draw rest of the screen in a tiled manner
-	if(varThreadOffset)
-	{
-		for(int x = 0; x < tilesX; ++x)
-		{
-			for(int y = 0; y < tilesY; ++y)
-			{
-				unsigned int offset[] = { x * dispatchSizeX * threadSizeX, y * dispatchSizeY * threadSizeY};
-				varThreadOffset->write(offset);
-				compute->run(dispatchSizeX, dispatchSizeY, 1);
-				
-				//device->present();
-			}
-		}
-	} else {
-		compute->run(dispatchSizeX * tilesX, dispatchSizeY * tilesY, 1);
-	}
-}
-
-void Raytracer::updateComputeVars()
-{
-	XMMATRIX transProjection = XMMatrixTranspose(camera->matProjection);
-
-	//Set resolution in the shader
-	float screenSize[2] = { (float)window->getWindowSettings().width, (float)window->getWindowSettings().height };
-
-	if(compute->swap())
-	{
-		varView = compute->getVariable("ViewInverse");
-		varEye = compute->getVariable("Eye");
-		varMinDistance = compute->getVariable("StartDistance");
-		varMaxDistance = compute->getVariable("EndDistance");
-		varTime = compute->getVariable("Time");
-		varSunDirection = compute->getVariable("SunDirection");
-		varThreadOffset = compute->getVariable("ThreadOffset");
-
-		IShaderVariable* varProjection = compute->getVariable("Projection");
-		if(varProjection) varProjection->write(&transProjection);
-		IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
-		if(varScreenSize) varScreenSize->write(screenSize);
-		IShaderVariable* varNoiseGrads = compute->getVariable("permGradients");
-		if(varNoiseGrads) varNoiseGrads->write(noise->permutations1D);
-
-		compute->setTexture(0, texNoise2D);
-		for(int x = 0; x < 6; x++)
-			compute->setTexture(x + 1, texDiffuse[x]);
-	}
-
-	if(cameraCompute->swap())
-	{
-		varCamView = cameraCompute->getVariable("ViewInverse");
-		varCamEye = cameraCompute->getVariable("Eye");
-		varCamMinDistance = cameraCompute->getVariable("StartDistance");
-		varCamMaxDistance = cameraCompute->getVariable("EndDistance");
-
-		varCamResults = cameraCompute->getArray("CameraResults");
-		if(varCamResults) 
-		{
-			varCamResults->create(false, CAMERA_VIEW_RES * CAMERA_VIEW_RES);
-		}
-
-		varCamFrameData = cameraCompute->getArray("FrameData");
-		if(varCamFrameData)
-		{
-			varCamFrameData->create(true, 1);
-		}
-
-		IShaderVariable* varCamProjection = cameraCompute->getVariable("Projection");
-		if(varCamProjection) varCamProjection->write(&transProjection);
-		IShaderVariable* varCamScreenSize = cameraCompute->getVariable("ScreenSize");
-		if(varCamScreenSize) varCamScreenSize->write(screenSize);
-		IShaderVariable* varCamNoiseGrads = cameraCompute->getVariable("permGradients");
-		if(varCamNoiseGrads) varCamNoiseGrads->write(noise->permutations1D);
-
-		cameraCompute->setTexture(0, texNoise2D);
-	}
-}
-
-void Raytracer::loadComputeShader()
-{
-	ThreadSize screenThreads = {threadSizeX, threadSizeY, 1};
-	if(!compute->create("shader", "tracescreen.hlsl", "CSMain", screenThreads))
-		Logger() << "Could not create screen shader";
-
-	ThreadSize cameraThreads = {16, 16, 1};
-	if(!cameraCompute->create("shader", "camerarays.hlsl", "CSMain", cameraThreads))
-		Logger() << "Could not create camera shader";
+	terrain->reload();
 }

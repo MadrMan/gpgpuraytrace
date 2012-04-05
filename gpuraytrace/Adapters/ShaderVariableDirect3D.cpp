@@ -91,6 +91,8 @@ UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string name, int s
 
 UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string name, ID3D11UnorderedAccessView* gpuView) : IShaderArray(name), gpuView(gpuView), device(device)
 {
+	gpuView->AddRef();
+
 	stride = 0;
 	gpuBuffer = nullptr;
 	stagingBuffer = nullptr;

@@ -6,6 +6,7 @@
 
 #include "../Common/Logger.h"
 #include "../Common/CRC32.h"
+#include "../Common/VFS.h"
 
 #include "D3D11Shader.h"
 #include <fstream>
@@ -21,7 +22,13 @@ HRESULT WINAPI ShaderIncludeHandler::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR p
 	UNREFERENCED_PARAMETER(IncludeType);
 	UNREFERENCED_PARAMETER(pParentData);
 
-	std::string fullPath = directory + "/" + pFileName;
+	std::string filePath = directory + "/" + pFileName;
+	std::string fullPath;
+	if(!VFS::get()->openFile(filePath, &fullPath))
+	{
+		LOGFUNCERROR(filePath << " not found in VFS");
+		return -1;
+	}
 
 	BY_HANDLE_FILE_INFORMATION shaderFileInfo = {0};
 	DWORD shaderFileBytesRead = 0;
@@ -73,7 +80,6 @@ HRESULT WINAPI ShaderIncludeHandler::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR p
 HRESULT WINAPI ShaderIncludeHandler::Close(LPCVOID pData)
 {
 	delete[] pData;
-
 	return S_OK;
 }
 
@@ -337,7 +343,7 @@ HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std
 	checksum_t preChecksum = CRC32::hash(preprocBlob->GetBufferPointer(), preprocBlob->GetBufferSize());
 	preChecksum = CRC32::hash(&shaderFlags, sizeof(shaderFlags), preChecksum);
 
-	const std::string cachedDirectory = directory + "/cache";
+	const std::string cachedDirectory = "Media/cache/" + directory;
 	const std::string cachedFile = cachedDirectory + "/" + fileName + ".bin";
 	HANDLE hShaderCached = CreateFile(cachedFile.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
@@ -409,7 +415,7 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 	{
 		if(result != E_FAIL)
 		{
-			LOGERROR(result, "D3DCompile");
+			LOGERROR(result, "getCompiledBlob");
 		}
 
 		if(errorBlob)
@@ -553,11 +559,13 @@ void ComputeDirect3D::run(unsigned int dispatchX, unsigned int dispatchY, unsign
 
 void ComputeDirect3D::setTexture(int stage, ITexture* texture)
 {
+	ID3D11ShaderResourceView* view;
 	if(texture)
 	{
-		ID3D11ShaderResourceView* view = static_cast<TextureDirect3D*>(texture)->getView();
-		device->getImmediate()->CSSetShaderResources(stage, 1, &view);
+		view = static_cast<TextureDirect3D*>(texture)->getView();
+		if(view) device->getImmediate()->CSSetShaderResources(stage, 1, &view);
 	} else {
-		device->getImmediate()->CSSetShaderResources(stage, 1, nullptr);
+		view = nullptr;
+		device->getImmediate()->CSSetShaderResources(stage, 1, &view);
 	}
 }

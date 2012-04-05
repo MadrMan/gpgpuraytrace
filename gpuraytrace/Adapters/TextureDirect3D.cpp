@@ -25,6 +25,12 @@ bool TextureDirect3D::create(const std::string& path)
 	HRESULT result = D3DX11CreateTextureFromFile(device->getD3DDevice(), path.c_str(), nullptr, nullptr, &resource, nullptr);
 	if(FAILED(result))
 	{
+		if(result ==  D3D11_ERROR_FILE_NOT_FOUND)
+		{
+			LOGFUNCERROR(path << " not found");
+		} else {
+			LOGERROR(result, "D3DX11CreateTextureFromFile");
+		}
 		return false;
 	}
 

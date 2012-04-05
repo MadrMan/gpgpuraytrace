@@ -10,6 +10,7 @@ class ITexture;
 class Camera;
 class Noise;
 class Flyby;
+class Terrain;
 
 struct Mode;
 
@@ -28,53 +29,18 @@ public:
 	//! Blocks until the raytracer exits
 	void run(const Mode& mode);
 
-	//! Reload the compute shader
-	void loadComputeShader();
+	//! Reload the terrain
+	void reloadTerrain();
 
 private:
-	void updateTerrain(float times, const Mode& mode);
 	void updateCompute(float time, const Mode& mode);
-	void updateComputeVars();
-	void runCompute();
-
-	void calculateTileSizes();
 
 	IDevice* device;
 	IWindow* window;
-	ICompute* compute;
-	ICompute* cameraCompute;
-	ITexture* texNoise1D;
-	ITexture* texNoise2D;
 	Camera* camera;
-	Noise* noise;
 	Flyby* flyby;
-
-	//Texturing of the landscape
-	ITexture* texDiffuse[6];
-
-	//Screen vars
-	IShaderVariable* varView;
-	IShaderVariable* varEye;
-	IShaderVariable* varMinDistance;
-	IShaderVariable* varMaxDistance;
-	IShaderVariable* varTime;
-	IShaderVariable* varSunDirection;
-	IShaderVariable* varThreadOffset;
-
-	//Camera equivs
-	IShaderVariable* varCamView;
-	IShaderVariable* varCamEye;
-	IShaderVariable* varCamMinDistance;
-	IShaderVariable* varCamMaxDistance;
-	IShaderArray* varCamResults;
-	IShaderArray* varCamFrameData;
+	Terrain* terrain;
 
 	float timeOfDay;
 	float timeOfYear;
-	float curFarDist;
-
-	int threadSizeX, threadSizeY;
-	int tilesX, tilesY;
-	int dispatchSizeX, dispatchSizeY;
-	int tileSizeX, tileSizeY;
 };
