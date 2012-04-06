@@ -57,6 +57,9 @@ set (PROJ_GRAPHICS
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Camera.h
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Camera.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/IShaderVariable.h
+	${gpgpuraytrace_SOURCE_DIR}/Graphics/Terrain.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Graphics/Terrain.h
+	
 )
 
 set(PROJ_SOURCES
@@ -82,6 +85,8 @@ set(PROJ_COMMON
 	${gpgpuraytrace_SOURCE_DIR}/Common/CRC32.h
 	${gpgpuraytrace_SOURCE_DIR}/Common/CRC32.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Common/Settings.h
+	${gpgpuraytrace_SOURCE_DIR}/Common/VFS.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Common/VFS.h
 )
 
 set(PROJ_GAMEPLAY
