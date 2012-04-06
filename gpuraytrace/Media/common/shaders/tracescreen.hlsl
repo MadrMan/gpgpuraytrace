@@ -15,6 +15,10 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
 	DTid.xy += ThreadOffset;
 	PixelData pd = getPixelRay(DTid.xy);
+	float3 pdn = normalize(pd.dir);
+	
+	//texOut[DTid.xy] = pow(length(pd.dir), 3.0f) * 0.2f;
+	//return;
 	
 	float3 color = 0.0f;
 	RayResult rr = traceRay(pd.p, StartDistance, EndDistance, 1.0f, pd.dir, true, false);
@@ -22,23 +26,26 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	float skyAmount = rr.pd.w  * 0.0007f;
 	skyAmount = saturate(skyAmount * skyAmount);
 
-	SkyColor scat = getRayleighMieColor(pd.dir);
-	float3 spaceColor = getSpaceColor(pd.dir);
+	SkyColor scat = getRayleighMieColor(pdn);
+	float3 spaceColor = getSpaceColor(pdn);
 	float3 skyColor = scat.mie + scat.rayleigh + spaceColor;	
 	
 	if(rr.density > 0.0f) //we've hit something
 	{
 		float3 n = getNormal(float4(rr.pd.xyz, rr.density));
-		color = getColor(rr.pd.xyz, n, pd.dir, rr.pd.w);
+		color = getColor(rr.pd.xyz, n, pdn, rr.pd.w);
 		color = lerp(color, rr.fcolord.xyz, rr.fcolord.w);
 		
 		color = lerp(color, scat.rayleigh, skyAmount);
 	} else { //we've hit nothing
+		color = float3(1,0,0);
 		float3 scolor = 0;
 		scolor = skyColor;
 		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
 		
 		color = lerp(color, skyColor, skyAmount);
 	}
+	
+	
 	texOut[DTid.xy] = float4(color, 1.0f);
 }

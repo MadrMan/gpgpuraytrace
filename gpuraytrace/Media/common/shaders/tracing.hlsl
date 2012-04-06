@@ -28,8 +28,6 @@ struct RayResult
 const static float RAY_STEP = 0.03f;
 //const static uint RAY_STEPS = 500000;
 const static float RAY_STEP_FACTOR = 1.014f;
-//const static float3 FOG_COLOR = float3(0.7f, 0.7f, 0.7f);
-const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
 const static float RAY_FINAL_PRECISION = RAY_STEP * 0.2f;
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
 
@@ -42,7 +40,10 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	float4 f = 0.0;
 	
 	float d = 0.0f;
-	float step = RAY_STEP * stepmod - dist * (1.0f - RAY_STEP_FACTOR);
+	
+	float dirLength = length(dir);
+	float step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR);
+	dir /= dirLength;
 	
 	if(calcfog) 
 	{
@@ -107,6 +108,6 @@ PixelData getPixelRay(uint2 DTid)
 
 	PixelData pd;
 	pd.p = mul(screenLocation, ViewInverse).xyz;
-	pd.dir = normalize(pd.p - Eye.xyz);
+	pd.dir = pd.p - Eye.xyz;
 	return pd;
 }
