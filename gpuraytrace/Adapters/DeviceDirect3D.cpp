@@ -183,7 +183,7 @@ void DeviceDirect3D::present()
 		context->CopyResource(resource, swapBackBuffer);
 
 		D3D11_MAPPED_SUBRESOURCE mapped;
-		HRESULT result = context->Map(resource, 0, D3D11_MAP_READ, 0, &mapped);
+		result = context->Map(resource, 0, D3D11_MAP_READ, 0, &mapped);
 		if(SUCCEEDED(result))
 		{
 			recorder->write(mapped.pData, mapped.RowPitch);

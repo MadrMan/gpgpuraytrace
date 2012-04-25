@@ -7,7 +7,7 @@
 class ConstantBufferD3D : public IShaderBuffer
 {
 public:
-	ConstantBufferD3D(DeviceDirect3D* device, const std::string name, int size);
+	ConstantBufferD3D(DeviceDirect3D* device, const std::string& name, int size);
 	virtual ~ConstantBufferD3D();
 
 	virtual bool create(bool cpuWrite) override;
@@ -36,19 +36,26 @@ private:
 	ID3D11Buffer* gpuBuffer;
 };
 
-class UAVBufferD3D : public IShaderArray
+class ShaderArrayDirect3D : public IShaderArray
 {
 public:
-	UAVBufferD3D(DeviceDirect3D* device, const std::string name, int stride);
-	UAVBufferD3D(DeviceDirect3D* device, const std::string name, ID3D11UnorderedAccessView* gpuView);
+	ShaderArrayDirect3D(const std::string& name) : IShaderArray(name) { }
+
+};
+
+class UAVBufferD3D : public ShaderArrayDirect3D
+{
+public:
+	UAVBufferD3D(DeviceDirect3D* device, const std::string& name, int stride);
+	UAVBufferD3D(DeviceDirect3D* device, const std::string& name, ID3D11UnorderedAccessView* gpuView);
 	virtual ~UAVBufferD3D();
 
-	virtual bool create(bool cpuWrite, unsigned int elements) override;
+	virtual bool create(unsigned int elements) override;
 	virtual void write(void* data);
 	virtual void* map() override;
 	virtual void unmap() override;
 
-	ID3D11UnorderedAccessView* getView() const
+	virtual ID3D11UnorderedAccessView* getView() const
 	{ return gpuView; }
 
 private:
@@ -57,6 +64,28 @@ private:
 	ID3D11Buffer* stagingBuffer;
 	ID3D11UnorderedAccessView* gpuView;
 	UINT stride;
+};
+
+class StructuredBufferD3D : public ShaderArrayDirect3D
+{
+public:
+	StructuredBufferD3D(DeviceDirect3D* device, const std::string& name, int stride);
+	virtual ~StructuredBufferD3D();
+
+	virtual bool create(unsigned int elements);
+	virtual void* map();
+	virtual void unmap();
+	virtual void write(void* data);
+
+	virtual ID3D11ShaderResourceView* getView() const
+	{ return gpuView; }
+
+private:
+	DeviceDirect3D* device;
+	ID3D11Buffer* gpuBuffer;
+	ID3D11ShaderResourceView* gpuView;
+	UINT stride;
+	int size;
 };
 
 class ShaderVariableDirect3D : public IShaderVariable

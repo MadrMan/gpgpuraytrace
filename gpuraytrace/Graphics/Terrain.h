@@ -2,6 +2,14 @@
 
 #include "../Common/Settings.h"
 
+struct CameraVision
+{
+	float x;
+	float y;
+	float z;
+	float depth;
+};
+
 class ITexture;
 class IDevice;
 class ICompute;
@@ -20,14 +28,22 @@ public:
 	void reload();
 	void render();
 	void updateTerrain(float time, const Mode& mode);
-	void getFlybyData(Flyby* flyby);
+	void getCameraResults();
 	void setTimeOfDay(float timeOfDay);
 	void setCamera(Camera* camera);
+	
+
+	std::vector<CameraVision>& getCameraView()
+	{ return cameraView; }
 
 private:
 	void updateShaders();
 	void calculateTileSizes();
 	void loadTextures();
+	void setTargetDepths();
+	float getDepthPoint(int x, int y);
+
+	std::vector<CameraVision> cameraView;
 
 	const std::string theme;
 	Camera* camera;
@@ -50,6 +66,7 @@ private:
 	IShaderVariable* varTime;
 	IShaderVariable* varSunDirection;
 	IShaderVariable* varThreadOffset;
+	IShaderArray* varCellDistance;
 
 	//Camera equivs
 	IShaderVariable* varCamView;

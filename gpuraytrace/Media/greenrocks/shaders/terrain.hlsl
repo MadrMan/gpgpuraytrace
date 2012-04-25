@@ -29,6 +29,7 @@ float getDensity(float3 p)
 
 float4 getFog(float3 p, float dist)
 {
+	return 0.0f;
 	float fogd = 0.0f;
 	float d = 0.0001f;
 	

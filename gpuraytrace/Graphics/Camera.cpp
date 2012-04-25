@@ -37,7 +37,7 @@ void Camera::setWindow(IWindow* window)
 	const float FOV = XMConvertToRadians(75.0f);
 	const float ASPECT = (FLOAT)window->getWindowSettings().width / (FLOAT)window->getWindowSettings().height;
 
-	matProjection = XMMatrixPerspectiveFovLH(FOV, ASPECT, 0.1f, 1000.0f);
+	matProjection = XMMatrixPerspectiveFovLH(FOV, ASPECT, 0.05f, 1000.0f);
 
 	//Get input
 	input = window->getInput();

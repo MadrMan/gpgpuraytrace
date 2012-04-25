@@ -27,7 +27,7 @@ HRESULT WINAPI ShaderIncludeHandler::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR p
 	if(!VFS::get()->openFile(filePath, &fullPath))
 	{
 		LOGFUNCERROR(filePath << " not found in VFS");
-		return -1;
+		return E_FAIL;
 	}
 
 	BY_HANDLE_FILE_INFORMATION shaderFileInfo = {0};
@@ -46,10 +46,10 @@ HRESULT WINAPI ShaderIncludeHandler::Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR p
 		case ERROR_FILE_NOT_FOUND:
 		case ERROR_PATH_NOT_FOUND:
 			Logger() << "Shader file not found: " << fullPath;
-			return -1;
+			return E_FAIL;
 		default:
 			LOGERROR(err, "CreateFile");
-			return -1;
+			return E_FAIL;
 		}
 		Sleep(10);
 	}
@@ -92,16 +92,10 @@ ComputeShader3D::~ComputeShader3D()
 {	
 	if(shader) shader->Release();
 	
-	//clear buffers
-	for(auto it = constantBuffers.begin(); it != constantBuffers.end(); ++it)
+	for(auto it = resources.begin(); it != resources.end(); ++it)
 	{
-		delete *it;
-	}
-
-	//clear uavs
-	for(auto it = uavBuffers.begin(); it != uavBuffers.end(); ++it)
-	{
-		delete *it;
+		if(it->type == CSResourceType::Texture) continue;
+		delete it->resource;
 	}
 }
 		
@@ -117,55 +111,33 @@ ComputeDirect3D::~ComputeDirect3D()
 	delete newShader;
 }
 
-IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
+IResource* ComputeDirect3D::getResource(int type, const std::string& name)
 {
 	if(!shader) return nullptr;
 
-	std::vector<ShaderVariableDirect3D*>& vars = shader->getVariables();
-	for(auto it = vars.begin(); it != vars.end(); ++it)
+	for(auto it = shader->getResources().begin(); it != shader->getResources().end(); ++it)
 	{
-		IShaderVariable* buff = *it;
-		if(buff->getName() == name)
-		{
-			return buff;
-		}
+		if(it->type == CSResourceType::Texture) continue;
+		if((it->type & type) && static_cast<IShaderVariable*>(it->resource)->getName() == name)
+			return it->resource;
 	}
 
 	return nullptr;
+}
+
+IShaderVariable* ComputeDirect3D::getVariable(const std::string& name)
+{
+	return static_cast<IShaderVariable*>(getResource(CSResourceType::Variable, name));
 }
 
 IShaderArray* ComputeDirect3D::getArray(const std::string& name)
 {
-	if(!shader) return nullptr;
-
-	std::vector<UAVBufferD3D*>& vars = shader->getArrays();
-	for(auto it = vars.begin(); it != vars.end(); ++it)
-	{
-		IShaderArray* buff = *it;
-		if(buff->getName() == name)
-		{
-			return buff;
-		}
-	}
-
-	return nullptr;
+	return static_cast<IShaderArray*>(getResource(CSResourceType::SBuffer | CSResourceType::UAV, name));
 }
 
 IShaderBuffer* ComputeDirect3D::getBuffer(const std::string& name)
 {
-	if(!shader) return nullptr;
-
-	std::vector<ConstantBufferD3D*>& vars = shader->getConstantBuffers();
-	for(auto it = vars.begin(); it != vars.end(); ++it)
-	{
-		IShaderBuffer* buff = *it;
-		if(buff->getName() == name)
-		{
-			return buff;
-		}
-	}
-
-	return nullptr;
+	return static_cast<IShaderBuffer*>(getResource(CSResourceType::CBuffer, name));
 }
 
 bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int index, ComputeShader3D* createdShader)
@@ -205,7 +177,12 @@ bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int
 			shaderReflectionVarType->GetDesc(&shaderTypeDesc);
 			ShaderVariableDirect3D* shaderVariable = new ShaderVariableDirect3D(shaderVarDesc.Name, shaderVarDesc.StartOffset,  shaderVarDesc.Size, newBuffer);
 			newBuffer->addVariable(shaderVariable);
-			createdShader->getVariables().push_back(shaderVariable);
+
+			ComputeShaderResource csr;
+			csr.resource = shaderVariable;
+			csr.slot = i;
+			csr.type = CSResourceType::Variable;
+			createdShader->getResources().push_back(csr);
 	
 			//check if this variable needs to be send to the variablemanager
 			if(newBuffer->getName()[0] == VariableManager::PREFIX)
@@ -219,9 +196,14 @@ bool ComputeDirect3D::addBuffer(ID3D11ShaderReflection* reflection, unsigned int
 				v.tag = shaderVariable;
 				VariableManager::get()->registerVariable(v);
 			}
+
 		}
 
-		createdShader->getConstantBuffers().push_back(newBuffer);
+		ComputeShaderResource csr;
+		csr.resource = newBuffer;
+		csr.slot = index;
+		csr.type = CSResourceType::CBuffer;
+		createdShader->getResources().push_back(csr);
 	} 
 
 	return true;
@@ -256,28 +238,28 @@ bool ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	for(UINT x = 0; x < reflectionDesc.BoundResources; ++x)
 	{
 		reflection->GetResourceBindingDesc(x, &bindDesc);
-		std::vector<UAVBufferD3D*>& buffers = createdShader->getArrays();
 
-		UAVBufferD3D* newBuffer = nullptr;
+		ComputeShaderResource csr = {0};
 		switch(bindDesc.Type)
 		{
+		case D3D_SIT_STRUCTURED:
+			csr.resource = new StructuredBufferD3D(device, bindDesc.Name, bindDesc.NumSamples);
+			csr.type = CSResourceType::SBuffer;
+			break;
 		case D3D_SIT_UAV_RWSTRUCTURED:
-			newBuffer = new UAVBufferD3D(device, bindDesc.Name, bindDesc.NumSamples);
-			//newBuffer->addVariable().push_back(new ShaderVariableDirect3D(newBuffer->name, 0, newBuffer->size, newBuffer));
-			/*if(!newBuffer->create(true))
-			{
-				LOGFUNCERROR("UAVBufferD3D " << bindDesc.Name << "could not be created");
-			}*/
+			csr.resource = new UAVBufferD3D(device, bindDesc.Name, bindDesc.NumSamples);
+			csr.type = CSResourceType::UAV;
 			break;
 		case D3D_SIT_UAV_RWTYPED:
-			newBuffer = new UAVBufferD3D(device, bindDesc.Name, device->getSwapUAV());
+			csr.resource = new UAVBufferD3D(device, bindDesc.Name, device->getSwapUAV());
+			csr.type = CSResourceType::UAV;
 			break;
 		}
 
-		if(newBuffer)
+		if(csr.resource)
 		{
-			//buffers[bindDesc.BindPoint] = newBuffer;
-			buffers.push_back(newBuffer);
+			csr.slot = bindDesc.BindPoint;
+			createdShader->getResources().push_back(csr);
 		}
 	}
 
@@ -474,7 +456,7 @@ void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader)
 	}
 
 	//for each new buffer
-	for(auto it1 = createdShader->getConstantBuffers().begin(); it1 != createdShader->getConstantBuffers().end(); ++it1)
+	/*for(auto it1 = createdShader->getConstantBuffers().begin(); it1 != createdShader->getConstantBuffers().end(); ++it1)
 	{
 		ConstantBufferD3D* newShaderBuffer = *it1;	
 		if(newShaderBuffer->getName()[0] != VariableManager::PREFIX) continue;
@@ -502,7 +484,7 @@ void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader)
 				}
 			}
 		}
-	}
+	}*/
 }
 
 
@@ -533,39 +515,84 @@ void ComputeDirect3D::run(unsigned int dispatchX, unsigned int dispatchY, unsign
 {
 	if(!shader) return;
 
-	for(auto it = shader->getConstantBuffers().begin(); it != shader->getConstantBuffers().end(); ++it)
+	ID3D11DeviceContext* dc = device->getImmediate();
+
+	ID3D11Buffer* gpuBuffers[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT] = {0};
+	ID3D11UnorderedAccessView* uavViews[D3D11_PS_CS_UAV_REGISTER_COUNT] = {0};
+	ID3D11ShaderResourceView* gpuTextures[16] = {0};
+	int maxBuffers = 0, maxArrays = 0, maxTextures = 0;
+
+	for(auto it = shader->getResources().begin(); it != shader->getResources().end(); ++it)
 	{
-		ConstantBufferD3D* buffer = *it;
-		buffer->update(device->getImmediate());
+		switch(it->type)
+		{
+		case CSResourceType::CBuffer:
+			{
+				ConstantBufferD3D* cb = static_cast<ConstantBufferD3D*>(it->resource);
+				cb->update(dc);
+				gpuBuffers[it->slot] = cb->getGpuBuffer();
+				maxBuffers = std::max(maxBuffers, it->slot + 1);
+			} break;
+		case CSResourceType::UAV:
+			{
+				UAVBufferD3D* arr = static_cast<UAVBufferD3D*>(it->resource);
+				uavViews[it->slot] = arr->getView();
+				maxArrays = std::max(maxArrays, it->slot + 1);
+			} break;
+		case CSResourceType::SBuffer:
+			{
+				StructuredBufferD3D* sb = static_cast<StructuredBufferD3D*>(it->resource);
+				gpuTextures[it->slot] = sb->getView();
+				maxTextures = std::max(maxTextures, it->slot + 1);
+			} break;
+		case CSResourceType::Texture:
+			{
+				TextureDirect3D* tex = static_cast<TextureDirect3D*>(it->resource);
+				gpuTextures[it->slot] = tex->getView();
+				maxTextures = std::max(maxTextures, it->slot + 1);
+			} break;
+		default:
+			break;
+		}
 	}
 
-	ID3D11Buffer* gpuBuffers[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT];
-	ID3D11UnorderedAccessView* uavViews[4];
+	dc->CSSetConstantBuffers(0, maxBuffers, gpuBuffers);
+	dc->CSSetUnorderedAccessViews(0, maxArrays, uavViews, nullptr);
+	dc->CSSetShaderResources(0, maxTextures, gpuTextures);
 
-	size_t maxCB = shader->getConstantBuffers().size();
-	size_t maxUAV = shader->getArrays().size();
-	for(size_t x = 0; x < maxCB; ++x)
-		gpuBuffers[x] = shader->getConstantBuffers()[x]->getGpuBuffer();
-	for(size_t x = 0; x < maxUAV; ++x)
-		uavViews[x] = shader->getArrays()[x]->getView();
-
-	device->getImmediate()->CSSetConstantBuffers(0, maxCB, gpuBuffers);
-	device->getImmediate()->CSSetUnorderedAccessViews(0, maxUAV, uavViews, 0);
-
-	ID3D11DeviceContext* dc = device->getImmediate();
 	dc->CSSetShader(shader->getShader(), 0, 0);
 	dc->Dispatch(dispatchX, dispatchY, dispatchZ);
 }
 
 void ComputeDirect3D::setTexture(int stage, ITexture* texture)
 {
-	ID3D11ShaderResourceView* view;
-	if(texture)
+	std::vector<ComputeShaderResource>& csra = shader->getResources();
+	ComputeShaderResource* found = nullptr;
+	for(auto it = csra.begin(); it != csra.end(); ++it)
 	{
-		view = static_cast<TextureDirect3D*>(texture)->getView();
-		if(view) device->getImmediate()->CSSetShaderResources(stage, 1, &view);
+		if(it->type == CSResourceType::Texture && it->slot == stage)
+		{
+			if(!texture)
+			{
+				csra.erase(it);
+				return;
+			}
+
+			found = &*it;
+			break;
+		}
+	}
+
+	if(!texture) return;
+
+	if(!found)
+	{
+		ComputeShaderResource csr;
+		csr.slot = stage;
+		csr.type = CSResourceType::Texture;
+		csr.resource = texture;
+		csra.push_back(csr);
 	} else {
-		view = nullptr;
-		device->getImmediate()->CSSetShaderResources(stage, 1, &view);
+		found->resource = texture;
 	}
 }

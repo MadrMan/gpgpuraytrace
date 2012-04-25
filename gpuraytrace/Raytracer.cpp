@@ -99,6 +99,7 @@ void Raytracer::run(const Mode& mode)
 	//Run while not exiting
 	Logger() << "Running";
 
+
 	float frameTime = 0.0f;
 	int frames = 0;
 	bool isFlybyMode = false;
@@ -125,8 +126,7 @@ void Raytracer::run(const Mode& mode)
 			if(frameTime > 1.0f)
 			{
 				Logger() << "FPS: " << frames / frameTime;
-
-				frameTime = fmod(frameTime, 1.0f);
+				frameTime = 0.0f;
 				frames = 0;
 			}
 		}
@@ -151,9 +151,10 @@ void Raytracer::run(const Mode& mode)
 			}
 		}
 
+		//terrain->getCameraResults(flyby);
 		if(isFlybyMode)
 		{
-			flyby->fly(thisFrameTime);
+			flyby->fly(thisFrameTime, terrain);
 		} else {
 			camera->rotate();
 			camera->move();

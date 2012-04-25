@@ -4,10 +4,11 @@
 #include "../Graphics/Camera.h"
 #include "../Common/Timer.h"
 #include "../Common/Logger.h"
+#include "../Graphics/Terrain.h"
 
 Flyby::Flyby(Camera* camera) : camera(camera)
 {
-	cameraView.resize(CAMERA_VIEW_RES * CAMERA_VIEW_RES);
+	
 	resetTarget = true;
 	avgHeight = 0.0f;
 }
@@ -22,7 +23,7 @@ void Flyby::reset()
 	resetTarget = true;
 }
 
-void Flyby::fly(float time)
+void Flyby::fly(float time, Terrain* terrain)
 {
 	const float CAM_SPEED_MULT = 4.0f;
 	float camSpeed = time * CAM_SPEED_MULT;
@@ -40,7 +41,7 @@ void Flyby::fly(float time)
 	{
 		for(int x = 0; x < CAMERA_VIEW_RES; x++)
 		{
-			CameraVision* cv = cameraView.data() + y * CAMERA_VIEW_RES + x;
+			CameraVision* cv = terrain->getCameraView().data() + y * CAMERA_VIEW_RES + x;
 			XMVECTOR vec = XMVectorSet(cv->x, cv->y, cv->z, 0.0f);
 
 			float movedDepth = cv->depth;
@@ -99,9 +100,9 @@ void Flyby::fly(float time)
 	}
 
 	//Get median depth
-	auto firstIt = cameraView.begin(); 
-	auto lastIt = cameraView.end(); 
-	auto middleIt = firstIt + (size_t)((float)cameraView.size() * 0.2f);
+	auto firstIt = terrain->getCameraView().begin(); 
+	auto lastIt = terrain->getCameraView().end(); 
+	auto middleIt = firstIt + (size_t)((float)terrain->getCameraView().size() * 0.2f);
 	std::nth_element(firstIt, middleIt, lastIt, 
 		[](CameraVision& cv1, CameraVision& cv2) -> bool
 		{

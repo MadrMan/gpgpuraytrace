@@ -1,10 +1,13 @@
 #pragma once
 
 #include <string>
+#include "../Factories/IResource.h"
 
-class IShaderVariable
+class IShaderVariable : public IResource
 {
 public:
+	virtual ~IShaderVariable() { }
+
 	const std::string& getName() const
 	{ return name; }
 
@@ -19,8 +22,7 @@ public:
 protected:
 	IShaderVariable(const std::string& name, IShaderVariable* parent) : 
 		name(name), writable(false), parent(parent) { }
-		virtual ~IShaderVariable() { }
-
+		
 	void setWritable(bool writable)
 	{ this->writable = writable; }
 
@@ -33,18 +35,22 @@ private:
 class IShaderArray : public IShaderVariable
 {
 public:
-	virtual bool create(bool cpuWrite, unsigned int elements) = 0;
+	virtual ~IShaderArray() { }
+
+	virtual bool create(unsigned int elements) = 0;
 	virtual void* map() = 0;
 	virtual void unmap()= 0;
 
 protected:
 	IShaderArray(const std::string& name) : IShaderVariable(name, nullptr) { }
-	virtual ~IShaderArray() { }
+	
 };
 
 class IShaderBuffer : public IShaderVariable
 {
 public:
+	virtual ~IShaderBuffer() { }
+
 	virtual bool create(bool cpuWrite) = 0;
 
 	const std::vector<IShaderVariable*> getVariables() const
@@ -52,7 +58,6 @@ public:
 
 protected:
 	IShaderBuffer(const std::string& name) : IShaderVariable(name, nullptr) { }
-	virtual ~IShaderBuffer() { }
-
+	
 	std::vector<IShaderVariable*> variables;
 };

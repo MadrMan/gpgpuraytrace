@@ -5,7 +5,7 @@
 
 const int BUFFER_PADSIZE = 16;
 
-ConstantBufferD3D::ConstantBufferD3D(DeviceDirect3D* device, const std::string name, int size) : IShaderBuffer(name), device(device), size(size)
+ConstantBufferD3D::ConstantBufferD3D(DeviceDirect3D* device, const std::string& name, int size) : IShaderBuffer(name), device(device), size(size)
 {
 	data = new char[size];
 	ZeroMemory(data, size);
@@ -33,6 +33,12 @@ bool ConstantBufferD3D::create(bool cpuWrite)
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	} else {
 		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	}
+
+	if(bufferDesc.ByteWidth > D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * sizeof(float))
+	{
+		LOGFUNCERROR("Size of buffer exceeds maximum size");
+		return false;
 	}
 
 	D3D11_SUBRESOURCE_DATA initialData;
@@ -82,14 +88,14 @@ void ConstantBufferD3D::write(void* data)
 	write(0, data, size);
 }
 
-UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string name, int stride) : IShaderArray(name), stride(stride), device(device)
+UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string& name, int stride) : ShaderArrayDirect3D(name), stride(stride), device(device)
 {
 	gpuBuffer = nullptr;
 	stagingBuffer = nullptr;
 	gpuView = nullptr;
 }
 
-UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string name, ID3D11UnorderedAccessView* gpuView) : IShaderArray(name), gpuView(gpuView), device(device)
+UAVBufferD3D::UAVBufferD3D(DeviceDirect3D* device, const std::string& name, ID3D11UnorderedAccessView* gpuView) : ShaderArrayDirect3D(name), gpuView(gpuView), device(device)
 {
 	gpuView->AddRef();
 
@@ -105,10 +111,8 @@ UAVBufferD3D::~UAVBufferD3D()
 	if(gpuView) gpuView->Release();
 }
 
-bool UAVBufferD3D::create(bool cpuWrite, unsigned int elements)
+bool UAVBufferD3D::create(unsigned int elements)
 {
-	setWritable(cpuWrite);
-
 	if(gpuView) 
 	{
 		LOGFUNCERROR("SRV already created");
@@ -118,12 +122,6 @@ bool UAVBufferD3D::create(bool cpuWrite, unsigned int elements)
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
 	bufferDesc.ByteWidth = elements * stride; //(size % BUFFER_PADSIZE) ? size + BUFFER_PADSIZE - size % BUFFER_PADSIZE : size;
-
-	if(bufferDesc.ByteWidth > D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * sizeof(float))
-	{
-		LOGFUNCERROR("Size of buffer exceeds maximum size");
-		return false;
-	}
 
 	bufferDesc.BindFlags = 0;
 	bufferDesc.Usage = D3D11_USAGE_STAGING;
@@ -167,7 +165,7 @@ bool UAVBufferD3D::create(bool cpuWrite, unsigned int elements)
 
 void UAVBufferD3D::write(void* data)
 {
-	LOGFUNCERROR("Write to UAV not supported");
+	LOGFUNCERROR("Not supported");
 }
 
 void* UAVBufferD3D::map()
@@ -200,4 +198,82 @@ ShaderVariableDirect3D::ShaderVariableDirect3D(const std::string& name, int offs
 void ShaderVariableDirect3D::write(void* data)
 {
 	static_cast<ConstantBufferD3D*>(getParent())->write(offset, data, sizeInBytes);
+}
+
+StructuredBufferD3D::StructuredBufferD3D(DeviceDirect3D* device, const std::string& name, int stride) : ShaderArrayDirect3D(name), stride(stride), device(device)
+{
+	gpuBuffer = nullptr;
+	gpuView = nullptr;
+}
+
+StructuredBufferD3D::~StructuredBufferD3D()
+{
+	if(gpuBuffer) gpuBuffer->Release();
+	if(gpuView) gpuView->Release();
+}
+
+bool StructuredBufferD3D::create(unsigned int elements)
+{
+	if(gpuView) 
+	{
+		LOGFUNCERROR("SRV already created");
+		return false;
+	}
+
+	size = elements * stride;
+
+	D3D11_BUFFER_DESC bufferDesc;
+	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+	bufferDesc.ByteWidth = size;
+
+	bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	bufferDesc.StructureByteStride = stride;
+	bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.CPUAccessFlags = 0;
+	
+	HRESULT result = device->getD3DDevice()->CreateBuffer(&bufferDesc, nullptr, &gpuBuffer);
+	if(FAILED(result)) 
+	{
+		LOGERROR(result, "ID3D11Device::CreateBuffer Default");
+		return false;
+	}
+
+	/*D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+	ZeroMemory(&uavDesc, sizeof(uavDesc));
+	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	uavDesc.Buffer.FirstElement = 0; 
+	uavDesc.Buffer.NumElements = elements;
+	result = device->getD3DDevice()->CreateUnorderedAccessView(gpuBuffer, &uavDesc, &gpuView);
+	if(FAILED(result)) 
+	{
+		LOGERROR(result, "ID3D11Device::CreateUnorderedAccessView");
+		return false;
+	}*/
+
+	result = device->getD3DDevice()->CreateShaderResourceView(gpuBuffer, nullptr, &gpuView);
+	if(FAILED(result)) 
+	{
+		LOGERROR(result, "ID3D11Device::CreateShaderResourceView");
+		return false;
+	}
+
+	return true;
+}
+
+void* StructuredBufferD3D::map()
+{
+	LOGFUNCERROR("Not supported");
+	return nullptr;
+}
+
+void StructuredBufferD3D::unmap()
+{
+	LOGFUNCERROR("Not supported");
+}
+
+void StructuredBufferD3D::write(void* data)
+{
+	device->getImmediate()->UpdateSubresource(gpuBuffer, 0, nullptr, data, size, 0);
 }
