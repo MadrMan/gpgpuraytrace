@@ -19,9 +19,10 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	PixelData pd = getPixelRay(DTid.xy);
 	float3 pdn = normalize(pd.dir);
 	
-	
-	float2 screenPosF = (DTid.xy / ScreenSize.xy);
-	uint cellPos = floor(screenPosF.y * CAMERA_SIZE_Y) * CAMERA_SIZE_X + floor(screenPosF.x * CAMERA_SIZE_X);
+	float2 halfTileSize = (ScreenSize / CAMERA_SIZE) * 0.5f;
+	float2 pixel = DTid.xy; // - halfTileSize;
+	float2 screenPosF = (pixel / ScreenSize.xy);
+	uint cellPos = floor(screenPosF.y * CAMERA_SIZE.y) * CAMERA_SIZE.x + floor(screenPosF.x * CAMERA_SIZE.x);
 
 	//float2 plane = cellPos % 2 ? CellDistance[cellPos / 2].zw : CellDistance[cellPos / 2].xy;
 	float2 plane = CellDistance[cellPos];
@@ -47,11 +48,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		
 		color = lerp(color, scat.rayleigh, skyAmount);
 	} else { //we've hit nothing
-		color = float3(1,0,0);
-		float3 scolor = 0;
-		scolor = float3(0.0f, 0.0f, 0.7f);
-		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
-		
+		color = lerp(skyColor, rr.fcolord.xyz, rr.fcolord.w);
 		color = lerp(color, skyColor, skyAmount);
 	}
 
@@ -59,5 +56,6 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	stepColor.g -= stepColor.b;
 	stepColor.b -= stepColor.r;
 	texOut[DTid.xy] = float4(saturate(color * 0.1f + stepColor), 1.0f);*/
+	//texOut[DTid.xy] =  float4((color + plane.xyx * 0.0001f) * 0.5f, 1.0f);
 	texOut[DTid.xy] = float4(color, 1.0f);
 }

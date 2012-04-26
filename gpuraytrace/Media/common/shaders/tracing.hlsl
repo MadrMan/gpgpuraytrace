@@ -1,5 +1,4 @@
-const static uint CAMERA_SIZE_X = 16;
-const static uint CAMERA_SIZE_Y = 16;
+const static uint2 CAMERA_SIZE = uint2(32, 32);
 
 cbuffer XTweakable
 {
