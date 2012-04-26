@@ -3,13 +3,12 @@
 #include "./Common/Types.h"
 
 #if defined(_WIN32)
-	#define NOMINMAX
-	#define WIN32_LEAN_AND_MEAN
 	#include <Windows.h>
 	#include <d3d11.h>
 	#include <D3Dcompiler.h>
 	#include <process.h>
 	#include <WS2tcpip.h>
+	#include <dxgiformat.h>
 	#ifdef RT_HAS_DXSDK
 	#include <xnamath.h>
 	#else
