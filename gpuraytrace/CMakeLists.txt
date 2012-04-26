@@ -69,6 +69,8 @@ set(PROJ_SOURCES
 	${gpgpuraytrace_SOURCE_DIR}/Raytracer.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Common.h
 	${gpgpuraytrace_SOURCE_DIR}/Common.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Resource.h
+	${gpgpuraytrace_SOURCE_DIR}/Resource.rc
 )
 
 set(PROJ_COMMON

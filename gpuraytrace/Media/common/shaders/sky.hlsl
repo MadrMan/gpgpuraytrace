@@ -22,6 +22,7 @@ float3 modRayDir(float3 rayDir)
 	return  normalize(float3(rayDir.x, y, rayDir.z));
 }
 
+
 float3 getSpaceColor(float3 dir)
 {	
 	dir = modRayDir(dir);
@@ -30,11 +31,11 @@ float3 getSpaceColor(float3 dir)
 	
 	float3 space = 0.0f;
 	space = noise3d(dir * 100.445f);
-	space = noise3d(dir * 100.445f);
 	space -= abs(noise3d(dir * 13.2f));
 	space -= abs(noise3d(dir * 19.2f));
 	space -= abs(noise3d(dir * 49.2f));
 	space -= abs(noise3d(dir * 38.2f));
+	space *= 2.0f;
 	return saturate(space) * eSpace * saturate(-SunDirection.y);
 }
 

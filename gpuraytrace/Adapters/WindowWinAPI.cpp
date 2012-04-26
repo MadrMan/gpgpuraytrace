@@ -1,7 +1,7 @@
 #include <Common.h>
 #include "WindowWinAPI.h"
-
 #include "../Common/Logger.h"
+#include "resource.h"
 
 const int WINDOWLONG_THISPTR = 0;
 
@@ -59,14 +59,14 @@ bool WindowWinAPI::createWindow()
 	if(!WindowWinAPI_classAtom)
 	{
 		WNDCLASSEX wcx = {0};
- 
+		
 		// Fill in the window class structure with parameters 
 		// that describe the main window. 
 		wcx.cbSize = sizeof(wcx);          // size of structure 
 		wcx.style = CS_HREDRAW | CS_VREDRAW;
 		wcx.lpfnWndProc = SMainWndProc;
 		wcx.hInstance = hInstance;
-		wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+		wcx.hIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_MAIN_ICON), IMAGE_ICON, 0, 0, 0);
 		wcx.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wcx.lpszClassName = "RaytraceClass";	// name of window class 
 		wcx.cbWndExtra = sizeof(LONG) + sizeof(int);	//extra space for a pointer to Window
