@@ -41,7 +41,8 @@ private:
 	void calculateTileSizes();
 	void loadTextures();
 	void setTargetDepths();
-	float getDepthPoint(int x, int y);
+	float getDepth(int x, int y);
+	float getDepthInterp(int x, int y);
 
 	std::vector<CameraVision> cameraView;
 

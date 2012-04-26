@@ -10,6 +10,8 @@
 #include "Camera.h"
 #include "Noise.h"
 
+//#include "../Adapters/DeviceDirect3D.h"
+
 struct SBFrameData
 {
 	float minDistance;
@@ -107,8 +109,8 @@ void Terrain::render()
 	//Run shaders
 	//First, trace a downsampled version of the entire screen to determine distance and such
 	cameraCompute->run(
-		std::ceil(CAMERA_VIEW_RES / (float)CAMERA_THREAD_RES),
-		std::ceil(CAMERA_VIEW_RES / (float)CAMERA_THREAD_RES), 1);
+		(unsigned int)std::ceil(CAMERA_VIEW_RES / (float)CAMERA_THREAD_RES),
+		(unsigned int)std::ceil(CAMERA_VIEW_RES / (float)CAMERA_THREAD_RES), 1);
 
 	//Get results
 	getCameraResults();
@@ -124,7 +126,7 @@ void Terrain::render()
 				varThreadOffset->write(offset);
 				compute->run(dispatchSizeX, dispatchSizeY, 1);
 				
-				//device->present();
+				//static_cast<DeviceDirect3D*>(device)->getImmediate()->Flush();
 			}
 		}
 	} else {
@@ -165,6 +167,11 @@ void Terrain::updateShaders()
 		if(varNoiseGrads) varNoiseGrads->write(noise->permutations1D);
 
 		compute->setTexture(0, texNoise2D);
+
+		for(int x = 0; x < 6; x++)
+		{
+			compute->setTexture(x + 1, texDiffuse[x]);
+		}
 	}
 
 	if(cameraCompute->swap())
@@ -194,11 +201,6 @@ void Terrain::updateShaders()
 		if(varCamNoiseGrads) varCamNoiseGrads->write(noise->permutations1D);
 
 		cameraCompute->setTexture(0, texNoise2D);
-	}
-
-	for(int x = 0; x < 6; x++)
-	{
-		compute->setTexture(x + 1, texDiffuse[x]);
 	}
 }
 
@@ -341,7 +343,7 @@ struct CellDistanceStruct
 	float farz;
 };
 
-float Terrain::getDepthPoint(int x, int y)
+float Terrain::getDepth(int x, int y)
 {
 	if(x < 0) x = 0;
 	if(x >= CAMERA_VIEW_RES) x = CAMERA_VIEW_RES - 1;
@@ -350,9 +352,42 @@ float Terrain::getDepthPoint(int x, int y)
 	return cameraView[y * CAMERA_VIEW_RES + x].depth;
 }
 
+float Terrain::getDepthInterp(int x, int y)
+{
+	if(x < 0)
+	{
+		float m = getDepth(x + 1, y);
+		float d = getDepth(x + 2, y) - m;
+		return m - d;
+	}
+
+	if(x >= CAMERA_VIEW_RES)
+	{
+		float m = getDepth(x - 1, y);
+		float d = getDepth(x - 2, y) - m;
+		return m - d;
+	}
+
+	if(y < 0)
+	{
+		float m = getDepth(x, y + 1);
+		float d = getDepth(x, y + 2) - m;
+		return m - d;
+	}
+
+	if(y >= CAMERA_VIEW_RES)
+	{
+		float m = getDepth(x, y - 1);
+		float d = getDepth(x, y - 2) - m;
+		return m - d;
+	}
+
+	return getDepth(x, y);
+}
+
 void Terrain::setTargetDepths()
 {
-	const int tileRadius = 1;
+	const int tileRadius = 2;
 
 	//CellDistanceStruct depth[CAMERA_VIEW_ELEMENTS / 2];
 	CellDistanceStruct depth[CAMERA_VIEW_ELEMENTS];
@@ -363,20 +398,22 @@ void Terrain::setTargetDepths()
 		int xpos = x % CAMERA_VIEW_RES;
 		int ypos = x / CAMERA_VIEW_RES;
 
-		float dmin = getDepthPoint(xpos, ypos);
+		float dmin = getDepthInterp(xpos, ypos);
 		float dmax = dmin;
 		for(int xp = -tileRadius; xp <= tileRadius; xp++)
 		{
 			for(int yp = -tileRadius; yp <= tileRadius; yp++)
 			{
-				float d = getDepthPoint(xpos + xp, ypos + yp);
+				float d = getDepthInterp(xpos + xp, ypos + yp);
 				dmin = std::min(d, dmin);
 				dmax = std::max(d, dmax);
 			}
 		}
 
-		dmin = dmin * 0.95f - 0.1f;
-		dmax = dmax * 1.05f + 0.1f;
+		dmin = dmin * 0.9f - 0.2f;
+		dmax = dmax * 1.1f + 0.2f;
+		dmin = std::max(camera->getNearZ(), dmin);
+		dmax = std::min(camera->getFarZ(), dmax);
 
 		//if(x % 2 == 0)
 		//{

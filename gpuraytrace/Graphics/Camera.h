@@ -29,6 +29,12 @@ public:
 	void update();
 	void rotate();
 
+	float getNearZ() const
+	{ return nearZ; }
+
+	float getFarZ() const
+	{ return farZ; }
+
 //private:
 	XMVECTOR position;
 	XMVECTOR rotation;
@@ -50,4 +56,5 @@ public:
 	IWindow* window;
 
 	float rotationEuler[3];
+	float nearZ, farZ;
 };

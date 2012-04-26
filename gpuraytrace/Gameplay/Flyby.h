@@ -3,7 +3,7 @@
 class Camera;
 class Terrain;
 
-const unsigned int CAMERA_VIEW_RES = 16;
+const unsigned int CAMERA_VIEW_RES = 32;
 const unsigned int CAMERA_THREAD_RES = 16;
 
 CLASSALIGN class Flyby

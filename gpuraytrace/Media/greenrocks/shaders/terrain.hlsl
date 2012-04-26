@@ -27,6 +27,8 @@ float getDensity(float3 p)
 	//d += pow((1.0f - saturate(abs(-1.0 - p.y) * 0.3f)) * 2.0f, 2.3f);
 	//d -= saturate(-p.y) * 4.0f;
 	return d;
+	
+	//return -p.y + sin(p.x) * cos(p.z);
 }
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
 float4 getFog(float3 p, float dist)
