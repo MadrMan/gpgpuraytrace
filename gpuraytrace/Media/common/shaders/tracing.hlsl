@@ -1,3 +1,5 @@
+const static uint2 CAMERA_SIZE = uint2(32, 32);
+
 cbuffer XTweakable
 {
 	float3 SunDirection;
@@ -7,8 +9,6 @@ cbuffer CBFrame
 {
 	float4 Eye;
 	float4x4 ViewInverse;
-	float StartDistance;
-	float EndDistance;
 	float Time;
 }
 
@@ -23,12 +23,13 @@ struct RayResult
 	float4 pd; //position : 3, depth : 1
 	float4 fcolord; //fog color : 3, fog density : 1
 	float density;
+	float steps;
 };
 
 const static float RAY_STEP = 0.03f;
 //const static uint RAY_STEPS = 500000;
 const static float RAY_STEP_FACTOR = 1.014f;
-const static float RAY_FINAL_PRECISION = RAY_STEP * 0.2f;
+const static float RAY_FINAL_PRECISION = 0.2f;
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
 
 #include "noise.hlsl"
@@ -38,6 +39,7 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 {
 	RayResult rr;
 	float4 f = 0.0;
+	float totalSteps = 0.0f;
 	
 	float d = 0.0f;
 	
@@ -52,8 +54,10 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	}
 	
 	float3 rayp;
-	[loop] while(dist < enddist && (step > RAY_FINAL_PRECISION))
+	float hitlimit = RAY_FINAL_PRECISION * RAY_STEP; // * step; //-1.0f;
+	[loop] while(dist < enddist && (step > hitlimit))
 	{
+		totalSteps += 1.0f;
 		rayp = p + dir * dist;
 		
 		float4 fogstep = 0;
@@ -67,10 +71,10 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 		if(/*f.a > 1.0f ||*/ d > 0.0f) 
 		{
 			if(skiprefine) break;
-		
 			dist -= step;
 			step *= 0.4f;
 			f -= fogstep;
+			//if(hitlimit < 0.0f) hitlimit = step * RAY_FINAL_PRECISION;
 		} else {
 			step *= RAY_STEP_FACTOR;
 			dist += step;
@@ -81,6 +85,7 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	rr.pd = float4(rayp, dist);
 	rr.fcolord = f;
 	rr.density = d;
+	rr.steps = totalSteps;
 	return rr;
 }
 

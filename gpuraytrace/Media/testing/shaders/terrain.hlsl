@@ -7,8 +7,25 @@ float getDensity(float3 p)
 	
 	d += -p.y;	
 	
-	d += sin(p.x * 0.1f) * sin(p.z * 0.2f);
-	d += sin(p.z * 0.3f) * sin(p.x * 0.4f);
+	float offset = 0.9f;
+	float weight = 1.0f;
+	float gain = 2.0f;
+	float lucan = 2.0f;
+	
+	p /= 40.0f;
+	
+	float t = 0.0f;
+	for (uint oct = 0; oct < 8; oct++) 
+	{
+		float s = pow(2.0f, oct);
+		float3 sp = p * s;
+		float r = offset - abs(noise3d(float3(sp.x, sp.y * 0.1f, sp.z)));;
+		r *= r;
+		r *= weight;
+		weight = saturate(r * gain);
+		t += r / s;
+	}
+	d += t * 10.0f;
 	
 	return d;
 }

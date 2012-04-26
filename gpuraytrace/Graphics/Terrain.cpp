@@ -10,11 +10,15 @@
 #include "Camera.h"
 #include "Noise.h"
 
+//#include "../Adapters/DeviceDirect3D.h"
+
 struct SBFrameData
 {
 	float minDistance;
 	float maxDistance;
 };
+
+const unsigned int CAMERA_VIEW_ELEMENTS = CAMERA_VIEW_RES * CAMERA_VIEW_RES;
 
 Terrain::Terrain(IDevice* device, const std::string& theme) : device(device), theme(theme)
 {
@@ -33,6 +37,7 @@ Terrain::Terrain(IDevice* device, const std::string& theme) : device(device), th
 	varTime = nullptr;
 	varThreadOffset = nullptr;
 	varSunDirection = nullptr;
+	varCellDistance = nullptr;
 
 	varCamView = nullptr;
 	varCamEye = nullptr;
@@ -45,6 +50,8 @@ Terrain::Terrain(IDevice* device, const std::string& theme) : device(device), th
 	texNoise2D = nullptr;
 
 	curFarDist = 0.0f;
+
+	cameraView.resize(CAMERA_VIEW_RES * CAMERA_VIEW_RES);
 }
 
 Terrain::~Terrain()
@@ -85,11 +92,11 @@ void Terrain::create(const Mode& mode)
 
 void Terrain::reload()
 {
-	ThreadSize screenThreads = {threadSizeX, threadSizeY, 1};
+	const static ThreadSize screenThreads = {threadSizeX, threadSizeY, 1};
 	if(!compute->create("shaders", "tracescreen.hlsl", "CSMain", screenThreads))
 		Logger() << "Could not create screen shader";
 
-	ThreadSize cameraThreads = {16, 16, 1};
+	const static ThreadSize cameraThreads = {CAMERA_THREAD_RES, CAMERA_THREAD_RES, 1};
 	if(!cameraCompute->create("shaders", "camerarays.hlsl", "CSMain", cameraThreads))
 		Logger() << "Could not create camera shader";
 }
@@ -101,7 +108,12 @@ void Terrain::render()
 
 	//Run shaders
 	//First, trace a downsampled version of the entire screen to determine distance and such
-	cameraCompute->run(2, 2, 1);
+	cameraCompute->run(
+		(unsigned int)std::ceil(CAMERA_VIEW_RES / (float)CAMERA_THREAD_RES),
+		(unsigned int)std::ceil(CAMERA_VIEW_RES / (float)CAMERA_THREAD_RES), 1);
+
+	//Get results
+	getCameraResults();
 
 	//Then, draw rest of the screen in a tiled manner
 	if(varThreadOffset)
@@ -114,7 +126,7 @@ void Terrain::render()
 				varThreadOffset->write(offset);
 				compute->run(dispatchSizeX, dispatchSizeY, 1);
 				
-				//device->present();
+				//static_cast<DeviceDirect3D*>(device)->getImmediate()->Flush();
 			}
 		}
 	} else {
@@ -141,6 +153,12 @@ void Terrain::updateShaders()
 		varSunDirection = compute->getVariable("SunDirection");
 		varThreadOffset = compute->getVariable("ThreadOffset");
 
+		varCellDistance = compute->getArray("CellDistance");
+		if(varCellDistance)
+		{
+			varCellDistance->create(CAMERA_VIEW_RES * CAMERA_VIEW_RES);
+		}
+
 		IShaderVariable* varProjection = compute->getVariable("Projection");
 		if(varProjection) varProjection->write(&transProjection);
 		IShaderVariable* varScreenSize = compute->getVariable("ScreenSize");
@@ -149,6 +167,11 @@ void Terrain::updateShaders()
 		if(varNoiseGrads) varNoiseGrads->write(noise->permutations1D);
 
 		compute->setTexture(0, texNoise2D);
+
+		for(int x = 0; x < 6; x++)
+		{
+			compute->setTexture(x + 1, texDiffuse[x]);
+		}
 	}
 
 	if(cameraCompute->swap())
@@ -161,13 +184,13 @@ void Terrain::updateShaders()
 		varCamResults = cameraCompute->getArray("CameraResults");
 		if(varCamResults) 
 		{
-			varCamResults->create(false, CAMERA_VIEW_RES * CAMERA_VIEW_RES);
+			varCamResults->create(CAMERA_VIEW_RES * CAMERA_VIEW_RES);
 		}
 
 		varCamFrameData = cameraCompute->getArray("FrameData");
 		if(varCamFrameData)
 		{
-			varCamFrameData->create(true, 1);
+			varCamFrameData->create(1);
 		}
 
 		IShaderVariable* varCamProjection = cameraCompute->getVariable("Projection");
@@ -178,11 +201,6 @@ void Terrain::updateShaders()
 		if(varCamNoiseGrads) varCamNoiseGrads->write(noise->permutations1D);
 
 		cameraCompute->setTexture(0, texNoise2D);
-	}
-
-	for(int x = 0; x < 6; x++)
-	{
-		compute->setTexture(x + 1, texDiffuse[x]);
 	}
 }
 
@@ -319,15 +337,106 @@ void Terrain::updateTerrain(float time, const Mode& mode)
 	}
 }
 
-void Terrain::getFlybyData(Flyby* flyby)
+struct CellDistanceStruct
+{
+	float nearz;
+	float farz;
+};
+
+float Terrain::getDepth(int x, int y)
+{
+	if(x < 0) x = 0;
+	if(x >= CAMERA_VIEW_RES) x = CAMERA_VIEW_RES - 1;
+	if(y < 0) y = 0;
+	if(y >= CAMERA_VIEW_RES) y = CAMERA_VIEW_RES - 1;
+	return cameraView[y * CAMERA_VIEW_RES + x].depth;
+}
+
+float Terrain::getDepthInterp(int x, int y)
+{
+	if(x < 0)
+	{
+		float m = getDepth(x + 1, y);
+		float d = getDepth(x + 2, y) - m;
+		return m - d;
+	}
+
+	if(x >= CAMERA_VIEW_RES)
+	{
+		float m = getDepth(x - 1, y);
+		float d = getDepth(x - 2, y) - m;
+		return m - d;
+	}
+
+	if(y < 0)
+	{
+		float m = getDepth(x, y + 1);
+		float d = getDepth(x, y + 2) - m;
+		return m - d;
+	}
+
+	if(y >= CAMERA_VIEW_RES)
+	{
+		float m = getDepth(x, y - 1);
+		float d = getDepth(x, y - 2) - m;
+		return m - d;
+	}
+
+	return getDepth(x, y);
+}
+
+void Terrain::setTargetDepths()
+{
+	const int tileRadius = 2;
+
+	//CellDistanceStruct depth[CAMERA_VIEW_ELEMENTS / 2];
+	CellDistanceStruct depth[CAMERA_VIEW_ELEMENTS];
+	for(int x = 0; x < CAMERA_VIEW_ELEMENTS; x++)
+	{
+		int i = x;// / 2;
+
+		int xpos = x % CAMERA_VIEW_RES;
+		int ypos = x / CAMERA_VIEW_RES;
+
+		float dmin = getDepthInterp(xpos, ypos);
+		float dmax = dmin;
+		for(int xp = -tileRadius; xp <= tileRadius; xp++)
+		{
+			for(int yp = -tileRadius; yp <= tileRadius; yp++)
+			{
+				float d = getDepthInterp(xpos + xp, ypos + yp);
+				dmin = std::min(d, dmin);
+				dmax = std::max(d, dmax);
+			}
+		}
+
+		dmin = dmin * 0.9f - 0.2f;
+		dmax = dmax * 1.1f + 0.2f;
+		dmin = std::max(camera->getNearZ(), dmin);
+		dmax = std::min(camera->getFarZ(), dmax);
+
+		//if(x % 2 == 0)
+		//{
+			depth[i].nearz = dmin;
+			depth[i].farz = dmax;
+		//} else {
+		//	depth[i].nearz2 = dmin;
+		//	depth[i].farz2 = dmax;
+		//}
+	}
+
+	varCellDistance->write(depth);
+}
+
+void Terrain::getCameraResults()
 {
 	if(varCamResults)
 	{
 		float* fd = reinterpret_cast<float*>(varCamResults->map());
 		if(!fd) return;
-
-		memcpy(flyby->getCameraView().data(), fd, CAMERA_VIEW_RES * CAMERA_VIEW_RES * sizeof(CameraVision));
-
+		memcpy(cameraView.data(), fd, CAMERA_VIEW_ELEMENTS * sizeof(CameraVision));
 		varCamResults->unmap();
+
+		if(varCellDistance) setTargetDepths();
 	}
 }

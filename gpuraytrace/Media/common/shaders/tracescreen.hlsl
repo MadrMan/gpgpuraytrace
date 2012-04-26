@@ -9,7 +9,9 @@ cbuffer PerDispatch
 	uint2 ThreadOffset;
 };
 
-RWTexture2D<float4> texOut : register(u0);
+StructuredBuffer<float2> CellDistance;
+RWTexture2D<float4> texOut;
+
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
@@ -17,18 +19,26 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	PixelData pd = getPixelRay(DTid.xy);
 	float3 pdn = normalize(pd.dir);
 	
-	//texOut[DTid.xy] = pow(length(pd.dir), 3.0f) * 0.2f;
-	//return;
+	float2 halfTileSize = (ScreenSize / CAMERA_SIZE) * 0.5f;
+	float2 pixel = DTid.xy; // - halfTileSize;
+	float2 screenPosF = (pixel / ScreenSize.xy);
+	uint cellPos = floor(screenPosF.y * CAMERA_SIZE.y) * CAMERA_SIZE.x + floor(screenPosF.x * CAMERA_SIZE.x);
+
+	//float2 plane = cellPos % 2 ? CellDistance[cellPos / 2].zw : CellDistance[cellPos / 2].xy;
+	float2 plane = CellDistance[cellPos];
+	
+	//texOut[DTid.xy] =  plane.xyxy * 0.0001f;
+	//return; 
 	
 	float3 color = 0.0f;
-	RayResult rr = traceRay(pd.p, StartDistance, EndDistance, 1.0f, pd.dir, true, false);
+	RayResult rr = traceRay(pd.p, plane.x, plane.y, 1.0f, pd.dir, true, false);
 
 	float skyAmount = rr.pd.w  * 0.0007f;
 	skyAmount = saturate(skyAmount * skyAmount);
 
 	SkyColor scat = getRayleighMieColor(pdn);
 	float3 spaceColor = getSpaceColor(pdn);
-	float3 skyColor = scat.mie + scat.rayleigh + spaceColor;	
+	float3 skyColor = scat.mie + scat.rayleigh + spaceColor;
 	
 	if(rr.density > 0.0f) //we've hit something
 	{
@@ -38,14 +48,14 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		
 		color = lerp(color, scat.rayleigh, skyAmount);
 	} else { //we've hit nothing
-		color = float3(1,0,0);
-		float3 scolor = 0;
-		scolor = skyColor;
-		color = lerp(scolor, rr.fcolord.xyz, rr.fcolord.w);
-		
+		color = lerp(skyColor, rr.fcolord.xyz, rr.fcolord.w);
 		color = lerp(color, skyColor, skyAmount);
 	}
-	
-	
+
+	/*float3 stepColor = saturate(float3(rr.steps * 0.004f, rr.steps * 0.1f, rr.steps * 0.02f));
+	stepColor.g -= stepColor.b;
+	stepColor.b -= stepColor.r;
+	texOut[DTid.xy] = float4(saturate(color * 0.1f + stepColor), 1.0f);*/
+	//texOut[DTid.xy] =  float4((color + plane.xyx * 0.0001f) * 0.5f, 1.0f);
 	texOut[DTid.xy] = float4(color, 1.0f);
 }

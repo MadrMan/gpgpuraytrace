@@ -11,15 +11,8 @@ const static float SHADOW_MIP_BIAS = 3.2f;
 
 float3 getColor(float3 p, float3 n, float3 d, float dist)
 {
-	//Blend normal-based colors
-	float3 blend = abs(n) - 0.2f;
-	blend *= 7.0f;
-	blend = pow(blend, 3.0f);
-	blend = max(0, blend);
-	blend /= dot(blend, 1);
+	float4 color = float4(n * 0.5f + 0.5f, 0.3f);
 
-	float4 color = float4(blend, 0.3f);
-	
 	//Shading
 	float brightness = dot(n, SunDirection);
 	float mipf = max(0.5f * log2(dist), 0);

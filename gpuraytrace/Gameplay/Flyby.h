@@ -1,16 +1,10 @@
 #pragma once
 
 class Camera;
+class Terrain;
 
 const unsigned int CAMERA_VIEW_RES = 32;
-
-struct CameraVision
-{
-	float x;
-	float y;
-	float z;
-	float depth;
-};
+const unsigned int CAMERA_THREAD_RES = 16;
 
 CLASSALIGN class Flyby
 {
@@ -20,10 +14,7 @@ public:
 	Flyby(Camera* camera);
 	virtual ~Flyby();
 
-	void fly(float time);
-
-	std::vector<CameraVision>& getCameraView()
-	{ return cameraView; }
+	void fly(float time, Terrain* terrain);
 
 	void reset();
 
@@ -34,6 +25,5 @@ private:
 	float avgHeight;
 	float noTargetTime;
 
-	std::vector<CameraVision> cameraView;
 	Camera* camera;
 };

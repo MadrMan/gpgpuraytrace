@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "IResource.h"
+
 namespace TextureDimensions { enum T
 {
 	Texture1D,
@@ -32,7 +34,7 @@ namespace TextureBinding { enum T
 	Staging,
 };}
 
-class ITexture
+class ITexture : public IResource
 {
 public:
 	virtual ~ITexture() { }

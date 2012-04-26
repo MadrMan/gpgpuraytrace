@@ -6,6 +6,22 @@
 #include "./D3D11Shader.h"
 #include "./ShaderVariableDirect3D.h"
 
+namespace CSResourceType { enum T
+{
+	CBuffer,
+	Variable,
+	UAV,
+	SBuffer,
+	Texture
+};}
+
+struct ComputeShaderResource
+{
+	IResource* resource;
+	CSResourceType::T type;
+	int slot;
+};
+
 class ComputeShader3D
 {
 public:
@@ -13,15 +29,11 @@ public:
 	virtual ~ComputeShader3D();
 
 	ID3D11ComputeShader* getShader() { return shader; }
-	std::vector<ConstantBufferD3D*>& getConstantBuffers() { return constantBuffers; }		
-	std::vector<UAVBufferD3D*>& getArrays() { return uavBuffers; }	
-	std::vector<ShaderVariableDirect3D*>& getVariables() { return variables; }	
+	std::vector<ComputeShaderResource>& getResources() { return resources; }	
 
 private:	
 	ID3D11ComputeShader* shader;
-	std::vector<ShaderVariableDirect3D*> variables;
-	std::vector<UAVBufferD3D*> uavBuffers;
-	std::vector<ConstantBufferD3D*> constantBuffers;
+	std::vector<ComputeShaderResource> resources;
 };
 
 class ShaderIncludeHandler : public ID3DInclude
@@ -45,6 +57,7 @@ public:
 
 	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts) override;
 	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) override;
+	IResource* getResource(int type, const std::string& name);
 	virtual IShaderVariable* getVariable(const std::string& name) override;
 	virtual IShaderArray* getArray(const std::string& name) override;
 	virtual IShaderBuffer* getBuffer(const std::string& name) override;
