@@ -9,7 +9,7 @@ ENDMACRO()
 
 MACRO(DELAYLOAD_DX11)
 	if(MSVC)
-		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/DELAYLOAD:d3d11.dll /DELAYLOAD:d3dcompiler_43.dll")
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/DELAYLOAD:d3d11.dll /DELAYLOAD:d3dcompiler_43.dll /DELAYLOAD:d3dcompiler_44.dll")
 	endif(MSVC)
 ENDMACRO()
 
@@ -59,6 +59,8 @@ set (PROJ_GRAPHICS
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/IShaderVariable.h
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Terrain.cpp
 	${gpgpuraytrace_SOURCE_DIR}/Graphics/Terrain.h
+	${gpgpuraytrace_SOURCE_DIR}/Graphics/DDSTextureLoader.cpp
+	${gpgpuraytrace_SOURCE_DIR}/Graphics/DDSTextureLoader.h
 )
 
 set(PROJ_SOURCES
@@ -104,12 +106,17 @@ source_group("" FILES ${PROJ_SOURCES})
 
 include_directories("${gpgpuraytrace_SOURCE_DIR}")
 
+if(MSVC)
+	add_definitions(-DWIN32_LEAN_AND_MEAN -DNOMINMAX)
+	add_definitions(-D_WIN32_WINNT=0x601)
+endif()
 if(MSVC_VERSION LESS 1700)
 	add_definitions(-DRT_HAS_DXSDK)
 	include_directories("$ENV{DXSDK_DIR}/include")
 	link_directories("$ENV{DXSDK_DIR}/lib/x86")
 endif()
-link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib mfreadwrite.lib mfplat.lib mfuuid.lib d3dx11.lib)
+add_definitions(-DLALALALLA)
+link_libraries(d3d11.lib d3dcompiler.lib dxguid.lib ws2_32.lib mfreadwrite.lib mfplat.lib mfuuid.lib)
 
 add_executable(gpgpuraytrace ${PROJ_SOURCES} ${PROJ_ADAPTER} ${PROJ_FACTORY} ${PROJ_GRAPHICS} ${PROJ_COMMON} ${PROJ_GAMEPLAY})
 

@@ -4,7 +4,7 @@
 #include "../Common/Logger.h"
 #include "DeviceDirect3D.h"
 
-#include <D3DX11.h>
+#include "../Graphics/DDSTextureLoader.h"
 
 TextureDirect3D::TextureDirect3D(DeviceDirect3D* device) : device(device)
 {
@@ -22,21 +22,15 @@ bool TextureDirect3D::create(const std::string& path)
 {
 	UNREFERENCED_PARAMETER(path);
 
-	HRESULT result = D3DX11CreateTextureFromFile(device->getD3DDevice(), path.c_str(), nullptr, nullptr, &resource, nullptr);
+	HRESULT result = CreateDDSTextureFromFile(device->getD3DDevice(), std::wstring(path.begin(), path.end()).c_str(), &resource, &view);
 	if(FAILED(result))
 	{
-		if(result ==  D3D11_ERROR_FILE_NOT_FOUND)
+		if(HRESULT_CODE(result) == ERROR_PATH_NOT_FOUND)
 		{
 			LOGFUNCERROR(path << " not found");
 		} else {
-			LOGERROR(result, "D3DX11CreateTextureFromFile");
+			LOGERROR(result, "CreateDDSTextureFromFile");
 		}
-		return false;
-	}
-
-	result = device->getD3DDevice()->CreateShaderResourceView(resource, nullptr, &view);
-	if(FAILED(result))
-	{
 		return false;
 	}
 
