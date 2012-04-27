@@ -15,7 +15,7 @@ RWStructuredBuffer<float4> CameraResults;
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
-	uint2 pixelScaled = (uint2)((DTid.xy / (float2)CAMERA_SIZE) * ScreenSize);
+	uint2 pixelScaled = (uint2)((DTid.xy / ((float2)CAMERA_SIZE-1)) * ScreenSize);
 	PixelData pd = getPixelRay(pixelScaled);
 	
 	RayResult rr = traceRay(pd.p, CAMERA_NEAR, CAMERA_FAR, 2.0f, pd.dir, false, true);
