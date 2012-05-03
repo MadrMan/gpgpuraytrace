@@ -79,6 +79,10 @@ void Raytracer::run(const Mode& mode)
 	increaseTimeOfDay->registerKeyboard(VK_SUBTRACT, -1.0f, TriggerType::OnHold);
 	increaseTimeOfDay->registerKeyboard(VK_OEM_MINUS, -1.0f, TriggerType::OnHold);
 
+	//dump position
+	IInputAction* dumpPos = window->getInput()->createAction();	
+	dumpPos->registerKeyboard('L',1.0f);
+
 	//Create terrain
 	terrain = new Terrain(device, "greenrocks");
 	terrain->create(mode);
@@ -115,6 +119,12 @@ void Raytracer::run(const Mode& mode)
 
 	while(escape->getState() < 0.5f)
 	{
+		//position
+		if(dumpPos->getState() == 1.0f){
+			Logger() << "Position :"  << XMVectorGetX(camera->position) << " " << XMVectorGetY(camera->position) << " " << XMVectorGetZ(camera->position);
+			Logger() << "Rotation : " << camera->rotationEuler[0] << " " << camera->rotationEuler[1] << " " << camera->rotationEuler[2];
+		}
+		
 		timer->update();
 
 		float thisFrameTime = mode.fixedFrameRate ?  1.0f / TARGET_FRAME_RATE : timer->getConstant();
@@ -178,6 +188,7 @@ void Raytracer::run(const Mode& mode)
 	window->getInput()->destroyAction(escape);
 	window->getInput()->destroyAction(toggleFlyby);
 	window->getInput()->destroyAction(toggleRecording);
+	window->getInput()->destroyAction(dumpPos);
 
 	//Cleanup
 	delete camera;

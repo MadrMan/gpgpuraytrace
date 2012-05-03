@@ -82,14 +82,17 @@ bool WindowWinAPI::createWindow()
 		}
 	}
 
+	RECT rc = { 0, 0, getWindowSettings().width, getWindowSettings().height } ;
+	AdjustWindowRect(&rc,WS_OVERLAPPEDWINDOW, false);
+
     hWnd = CreateWindow( 
         reinterpret_cast<LPCSTR>(WindowWinAPI_classAtom),        // name of window class 
         "Raytracer",            // title-bar string 
         WS_OVERLAPPEDWINDOW, // top-level window 
         CW_USEDEFAULT,       // default horizontal position 
         CW_USEDEFAULT,       // default vertical position 
-		getWindowSettings().width,       // default width 
-        getWindowSettings().height,       // default height 
+		rc.right - rc.left,        // default width 
+        rc.bottom - rc.top,       // default height 
         (HWND)0,         // no owner window 
         (HMENU)0,        // use class menu 
 		hInstance,   // handle to application instance 

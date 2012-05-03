@@ -410,8 +410,8 @@ void Terrain::setTargetDepths()
 			}
 		}
 
-		dmin = dmin * 0.9f - 0.2f;
-		dmax = dmax * 1.1f + 0.2f;
+		dmin = dmin * 0.95f - 0.1f;
+		dmax = dmax * 1.12f + 0.4f;
 		dmin = std::max(camera->getNearZ(), dmin);
 		dmax = std::min(camera->getFarZ(), dmax);
 
