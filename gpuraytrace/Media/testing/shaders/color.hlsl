@@ -11,7 +11,8 @@ const static float SHADOW_MIP_BIAS = 3.2f;
 
 float3 getColor(float3 p, float3 n, float3 d, float dist)
 {
-	float4 color = float4(n * 0.5f + 0.5f, 0.3f);
+	//return n;
+	float4 color = float4(0.6, 0.7f, 0.3f, 0.1f);
 
 	//Shading
 	float brightness = dot(n, SunDirection);
@@ -33,7 +34,7 @@ float3 getColor(float3 p, float3 n, float3 d, float dist)
 	
 	//Specular
 	float fresnel = dot(-d, n);
-	float specular = pow(max(fresnel, 0.0f), 40.0f) * color.a;
+	float specular = saturate(pow(max(fresnel, 0.0f), 40.0f)) * color.a;
 	color.rgb += specular;
 
 	//Dim color based on brightness of point
