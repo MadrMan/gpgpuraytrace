@@ -82,13 +82,23 @@ bool WindowWinAPI::createWindow()
 		}
 	}
 
+	DWORD style = WS_SYSMENU | WS_BORDER | WS_CAPTION | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+	if(getWindowSettings().fullscreen)
+		style = WS_POPUP;
+
 	RECT rc = { 0, 0, getWindowSettings().width, getWindowSettings().height } ;
-	AdjustWindowRect(&rc,WS_OVERLAPPEDWINDOW, false);
+	BOOL ret = AdjustWindowRect(&rc, style, false);
+	if(!ret)
+	{
+		DWORD error = GetLastError();
+		LOGERROR(error, "AdjustWindowRect");
+		return false;
+	}
 
     hWnd = CreateWindow( 
         reinterpret_cast<LPCSTR>(WindowWinAPI_classAtom),        // name of window class 
         "Raytracer",            // title-bar string 
-        WS_OVERLAPPEDWINDOW, // top-level window 
+        style, // top-level window 
         CW_USEDEFAULT,       // default horizontal position 
         CW_USEDEFAULT,       // default vertical position 
 		rc.right - rc.left,        // default width 
