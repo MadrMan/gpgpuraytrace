@@ -1,5 +1,13 @@
 #pragma once
+#include <Common.h>
 #include "./Factories/IWindow.h"
+
+struct Landscape
+{
+	std::string name;
+};
+
+const Landscape landscapes [] = { {"greenrocks"}, {"desert"}, {"testing"} };
 
 struct Mode
 {

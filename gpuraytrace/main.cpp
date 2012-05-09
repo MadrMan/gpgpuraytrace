@@ -5,7 +5,7 @@
 #include "./Common/VariableManager.h"
 #include "./Common/Settings.h"
 
-bool processParameter(Mode* mode, const std::string& str)
+bool processParameter(Mode* mode,Landscape& landscape, const std::string& str)
 {
 	size_t p = str.find_first_of('=');
 	std::string command, value;
@@ -41,12 +41,23 @@ bool processParameter(Mode* mode, const std::string& str)
 		Logger() << "Enabled fullscreen mode";
 	} else if(command == "-t") {
 		mode->enableManager = true;
+	} else if(command == "-l") {
+		
+		for(int i =0; i < sizeof(landscapes)/sizeof(Landscape); i++)
+		{
+			if(landscapes[i].name.compare(value) == 0)
+			{
+				landscape = landscapes[i];
+			}
+		}
+
 	} else {
 		Logger() << "Usage: gpgpuraytrace [-r=123x456][-c][-f]";
 		Logger() << "-r: set resolution";
 		Logger() << "-c: capture to file";
 		Logger() << "-f: fullscreen mode";
 		Logger() << "-t: enable remote config tool";
+		Logger() << "-l: set landscape";
 		return false;
 	}
 
@@ -60,10 +71,11 @@ int main(int argc, char** argv)
 #else
 	Mode mode = MODE_RELEASE;
 #endif
+	Landscape landscape = landscapes[0];
 
 	for(int x = 1; x < argc; x++)
 	{
-		if(!processParameter(&mode, argv[x]))
+		if(!processParameter(&mode, landscape, argv[x]))
 		{
 			return 0;
 		}
@@ -74,7 +86,7 @@ int main(int argc, char** argv)
 	if(mode.enableManager) VariableManager::get()->start();
 
 	Raytracer* raytracer = new Raytracer();
-	raytracer->run(mode);
+	raytracer->run(mode, landscape);
 
 	delete raytracer;
 	return 0;

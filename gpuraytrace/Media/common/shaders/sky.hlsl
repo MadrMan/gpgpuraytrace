@@ -36,7 +36,8 @@ float3 getSpaceColor(float3 dir)
 	space -= abs(noise3d(dir * 49.2f));
 	space -= abs(noise3d(dir * 38.2f));
 	space *= 2.0f;
-	return saturate(space) * eSpace * saturate(-SunDirection.y);
+	space = saturate(space) * eSpace * saturate(-SunDirection.y);
+	return space;
 }
 
 // Scale equation by Vernier's Graphical Analysis
@@ -134,8 +135,9 @@ SkyColor getRayleighMieColor(float3 orgRayDir)
 	
 	SkyColor sc = applyPhase(mie, rayleigh ,t);
 	sc.rayleigh *= saturate((orgRayDir.y * 0.5f + 0.5f) * 4.0f); 
-	sc.rayleigh.b += 0.8f * saturate(SunDirection.y);	// brighten the day hack
-	
+	sc.rayleigh.b += 0.7f * saturate(SunDirection.y);	// brighten the day hack
+	sc.rayleigh.g += 0.3f * saturate(SunDirection.y);	
+	sc.rayleigh.r += 0.2f * saturate(SunDirection.y);	
 	return sc;
 }
 
