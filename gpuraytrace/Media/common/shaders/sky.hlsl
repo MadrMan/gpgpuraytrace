@@ -134,6 +134,8 @@ SkyColor getRayleighMieColor(float3 orgRayDir)
 	
 	SkyColor sc = applyPhase(mie, rayleigh ,t);
 	sc.rayleigh *= saturate((orgRayDir.y * 0.5f + 0.5f) * 4.0f); 
+	sc.rayleigh.b += 0.8f * saturate(SunDirection.y);	// brighten the day hack
+	
 	return sc;
 }
 

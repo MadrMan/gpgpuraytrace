@@ -3,12 +3,35 @@
 
 float getDensity(float3 p)
 {
-	//float d = -p.y + sin(p.x *0.1f) * cos(p.z*0.1f) *10.0f;
+	float d = -p.y;
 	
-	float d = -0.0001;
-	d *= sign(p.y);
-	float3 c = abs(p) - 10.0f;
-	d += -min(max(max(c.x, c.y), c.z), 0.0f);
+	//flat
+	//float n = noise3d(p *0.3f);
+	//d += sin(n); 
+	
+	//sincos
+	//d +=sin(p.x *0.1f) * cos(p.z*0.1f) *10.0f;
+		
+	//square block
+	//d = -0.0001;
+	//d *= sign(p.y);
+	//float3 c = abs(p) - 10.0f;
+	//d += -min(max(max(c.x, c.y), c.z), 0.0f);
+	
+	//rocky
+	//d += sin(p.x *0.1f) * cos(p.z*0.2f) * 8.0f;// * (noise3d(p *0.3f) *2.0f);
+	//d += sin(p.x * 0.3f) * sin(p.z * 0.4f)* 4.0f;
+	//d += cos(p.z * 0.5) * sin(p.x * 0.6f) * 2.5f;
+	
+	//sandy
+	p.y *= 0.1f;
+	float n = noise3d(p *0.006f);
+	d += sin(p.x *0.01f *n) * abs(noise3d(p * 0.01f)) * 80.0f; 
+	d += sin(noise3d(p*0.1f)); // bit of texture
+	//d += cos(p.z * 0.5) * sin(p.x * 0.6f) * 2.5f;
+	
+	
+	
 	return d;
 }
 const static float3 FOG_COLOR = float3(0.9f, 0.9f, 0.9f);
@@ -30,7 +53,7 @@ float4 getFog(float3 p, float dist)
 		fogd = abs(noise3d(p * 0.1261f)) * 0.2f + 0.8f;
 	}
 	float4 f = float4(FOG_COLOR * fogd * d, d) * dist;
-	
+	return 0.0f;
 	return f;
 }
 
