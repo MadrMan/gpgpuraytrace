@@ -168,10 +168,10 @@ void Terrain::updateShaders()
 
 		compute->setTexture(0, texNoise2D);
 
-		for(int x = 0; x < 6; x++)
+		/*for(int x = 0; x < 6; x++)
 		{
 			compute->setTexture(x + 1, texDiffuse[x]);
-		}
+		}*/
 	}
 
 	if(cameraCompute->swap())
