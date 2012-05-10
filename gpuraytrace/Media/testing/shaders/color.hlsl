@@ -12,7 +12,7 @@ const static float SHADOW_MIP_BIAS = 3.2f;
 float3 getColor(float3 p, float3 n, float3 d, float dist)
 {
 	//return n;
-	float4 color = float4(0.6, 0.7f, 0.3f, 0.1f);
+	float4 color = float4(0.6, 0.5f, 0.3f, 0.1f);
 
 	//Shading
 	float brightness = dot(n, SunDirection);
