@@ -5,7 +5,7 @@
 #include "./Common/VariableManager.h"
 #include "./Common/Settings.h"
 
-bool processParameter(Mode* mode,Landscape& landscape, const std::string& str)
+bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 {
 	size_t p = str.find_first_of('=');
 	std::string command, value;
@@ -42,15 +42,22 @@ bool processParameter(Mode* mode,Landscape& landscape, const std::string& str)
 	} else if(command == "-t") {
 		mode->enableManager = true;
 	} else if(command == "-l") {
-		
-		for(int i =0; i < sizeof(landscapes)/sizeof(Landscape); i++)
+		auto it = landscapes.begin();
+		for(; it != landscapes.end(); ++it)
 		{
-			if(landscapes[i].name.compare(value) == 0)
+			if(it->name == value)
 			{
-				landscape = landscapes[i];
+				Logger() << "Landscape " << value << " was selected";
+
+				*landscape = *it;
+				break;
 			}
 		}
 
+		if(it == landscapes.end())
+		{
+			Logger() << "Landscape " << value << " was not found";
+		}
 	} else {
 		Logger() << "Usage: gpgpuraytrace [-r=123x456][-c][-f]";
 		Logger() << "-r: set resolution";
@@ -75,7 +82,7 @@ int main(int argc, char** argv)
 
 	for(int x = 1; x < argc; x++)
 	{
-		if(!processParameter(&mode, landscape, argv[x]))
+		if(!processParameter(&mode, &landscape, argv[x]))
 		{
 			return 0;
 		}

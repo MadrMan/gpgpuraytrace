@@ -7,7 +7,8 @@ struct Landscape
 	std::string name;
 };
 
-const Landscape landscapes [] = { {"greenrocks"}, {"desert"}, {"testing"} };
+//const Landscape landscapeArray[] = { {"greenrocks"}, {"desert"}, {"testing"} };
+const std::array<Landscape, 3> landscapes = { "greenrocks", "testing", "nomadplains" };
 
 struct Mode
 {

@@ -27,6 +27,7 @@
 #include <ctime>
 #include <map>
 #include <sstream>
+#include <array>
 
 #define finline __forceinline
 
