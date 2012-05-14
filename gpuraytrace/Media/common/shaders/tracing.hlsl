@@ -91,7 +91,8 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 
 float3 getNormal(float4 pd)
 {
-	float2 normalDistance = float2(distance(pd.xyz, Eye.xyz) * 0.005f, 0.0f);
+	float dist = distance(pd.xyz, Eye.xyz);
+	float2 normalDistance = float2(dist * 0.005f, 0.0f);
 	return normalize(float3(
 		 getDensity(pd.xyz - normalDistance.xyy) - pd.w,
 		 getDensity(pd.xyz - normalDistance.yxy) - pd.w,

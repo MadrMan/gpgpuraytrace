@@ -12,7 +12,7 @@ float3 getColor(float3 p, float3 n, float3 d, float dist)
 	float mipf = max(0.5f * log2(dist), 0);
 
 	//Calculate shadow
-	float precision = max((mipf - SHADOW_MIP_BIAS) * 3.0f, 1.0f) * 8.0f;
+	/*float precision = max((mipf - SHADOW_MIP_BIAS) * 3.0f, 1.0f) * 8.0f;
 	RayResult rr = traceRay(p, 0.4f, SHADOW_LENGTH, precision, SunDirection, true, true);
 
 	if(rr.density > 0.0f)
@@ -23,7 +23,7 @@ float3 getColor(float3 p, float3 n, float3 d, float dist)
 		//If the sun can reach here OR full mist was hit
 		brightness = saturate(brightness - rr.fcolord.w);
 		//return float3(1.0f, 0.0f, 0.0f); //rr.fcolord.w;
-	}
+	}*/
 	
 	//Specular
 	float fresnel = dot(-d, n);
