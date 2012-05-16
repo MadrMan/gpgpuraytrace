@@ -27,9 +27,7 @@ struct RayResult
 };
 
 const static float RAY_STEP = 0.03f;
-//const static uint RAY_STEPS = 500000;
-const static float RAY_STEP_FACTOR = 1.014f;
-const static float RAY_FINAL_PRECISION = 0.2f;
+const static float RAY_FINAL_PRECISION = 0.02f;
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
 
 #include "noise.hlsl"
@@ -40,13 +38,12 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	RayResult rr;
 	float4 f = 0.0;
 	float totalSteps = 0.0f;
-	
 	float d = 0.0f;
-	
 	float dirLength = length(dir);
-	float step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR);
+	float step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR); 
 	dir /= dirLength;
 	
+	//step = max(0.01f , step);
 	if(calcfog) 
 	{
 		float4 middleFog = getFog(p + dir * dist * 0.5f, dist * 0.5f);

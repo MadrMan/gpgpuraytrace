@@ -21,18 +21,17 @@ class Noise;
 class Terrain
 {
 public:
-	Terrain(IDevice* device, const std::string& theme);
+	Terrain(IDevice* device, const std::string& theme, const Mode& mode);
 	virtual ~Terrain();
 
-	void create(const Mode& mode);
+	void create();
 	void reload();
 	void render();
-	void updateTerrain(float time, const Mode& mode);
+	void updateTerrain(float time);
 	void getCameraResults();
 	void setTimeOfDay(float timeOfDay);
 	void setCamera(Camera* camera);
 	
-
 	std::vector<CameraVision>& getCameraView()
 	{ return cameraView; }
 
@@ -83,4 +82,5 @@ private:
 	int dispatchSizeX, dispatchSizeY;
 	int tileSizeX, tileSizeY;
 	float curFarDist;
+	const Mode& mode;
 };

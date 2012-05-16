@@ -84,8 +84,8 @@ void Raytracer::run(const Mode& mode, const Landscape landscape)
 	dumpPos->registerKeyboard('L',1.0f);
 
 	//Create terrain
-	terrain = new Terrain(device, landscape.name);
-	terrain->create(mode);
+	terrain = new Terrain(device, landscape.name, mode);
+	terrain->create();
 	terrain->setCamera(camera);
 
 	reloadTerrain();
@@ -202,7 +202,7 @@ void Raytracer::updateCompute(float time, const Mode& mode)
 	const float secondsInDay = 300.0f;
 	if(mode.incrementDayTime) timeOfDay += time / secondsInDay;
 
-	terrain->updateTerrain(time, mode);
+	terrain->updateTerrain(time);
 	terrain->setTimeOfDay(timeOfDay);
 }
 

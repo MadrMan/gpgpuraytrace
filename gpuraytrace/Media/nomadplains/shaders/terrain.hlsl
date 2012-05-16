@@ -17,7 +17,8 @@ float getDensity(float3 p)
 	
 	float s = 0.0f;
 	
-	float detail = max(16.0f - pow(dist, 0.34f), 2.0f); //15.* .. 2
+float detail = max(16.0f - pow(dist, 0.34f), 2.0f); //15.* .. 2
+	
 	FBM_THIS(s, detail, 2.05f, noise3d(p * 0.006f * float3(SCALE, SCALE * (0.5f - 0.5f / SCALE), SCALE)) / SCALE);
 	
 	s *= 30.0f;

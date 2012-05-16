@@ -278,7 +278,7 @@ bool ComputeDirect3D::reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdSh
 	return true;
 }
 
-HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std::string& fileName, const std::string& main, ID3DBlob** shaderBlob, ID3DBlob** errorBlob)
+HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std::string& fileName, const std::string& main, ID3DBlob** shaderBlob, ID3DBlob** errorBlob, const Mode& mode)
 {
 #if defined(_DEBUG)
 	UINT shaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
@@ -306,11 +306,13 @@ HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std
 	const std::string sizeXStr = convert(threadSize.x);
 	const std::string sizeYStr = convert(threadSize.y);
 	const std::string sizeZStr = convert(threadSize.z);
+	const std::string rayStepFactor = convert(mode.step_mod);
 	D3D_SHADER_MACRO macros[] =
 	{
 		{"GROUP_SIZE_X", sizeXStr.c_str()},
 		{"GROUP_SIZE_Y", sizeYStr.c_str()},
 		{"GROUP_SIZE_Z", sizeZStr.c_str()},
+		{"RAY_STEP_FACTOR", rayStepFactor.c_str()},
 		{nullptr, nullptr}
 	};
 
@@ -383,7 +385,7 @@ HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std
 	return S_OK;
 }
 
-bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts)
+bool ComputeDirect3D::create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts, const Mode& mode)
 {
 	threadSize = ts;
 
@@ -392,7 +394,7 @@ bool ComputeDirect3D::create(const std::string& directory, const std::string& fi
 
 	ID3DBlob* shaderBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
-	HRESULT result = getCompiledBlob(directory, fileName, main, &shaderBlob, &errorBlob);
+	HRESULT result = getCompiledBlob(directory, fileName, main, &shaderBlob, &errorBlob, mode);
 	if(result != S_OK)
 	{
 		if(result != E_FAIL)

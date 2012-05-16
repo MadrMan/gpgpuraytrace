@@ -33,7 +33,7 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	float3 color = 0.0f;
 	RayResult rr = traceRay(pd.p, plane.x, plane.y, 1.0f, pd.dir, true, false);
 
-	float skyAmount = rr.pd.w  * 0.0007f;
+	float skyAmount = rr.pd.w  * 0.0005f;
 	skyAmount = saturate(skyAmount * skyAmount);
 
 	SkyColor scat = getRayleighMieColor(pdn);
@@ -52,10 +52,10 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		color = lerp(color, skyColor, skyAmount);
 	}
 
-	/*float3 stepColor = saturate(float3(rr.steps * 0.004f, rr.steps * 0.1f, rr.steps * 0.02f));
-	stepColor.g -= stepColor.b;
-	stepColor.b -= stepColor.r;
-	texOut[DTid.xy] = float4(saturate(color * 0.1f + stepColor), 1.0f);*/
+	//float3 stepColor = saturate(float3(rr.steps * 0.004f, rr.steps * 0.1f, rr.steps * 0.02f));
+	//stepColor.g -= stepColor.b;
+	//stepColor.b -= stepColor.r;
+	//texOut[DTid.xy] = float4(saturate(color * 0.1f + stepColor), 1.0f);
 	//texOut[DTid.xy] =  float4((color + plane.xyx * 0.0001f) * 0.5f, 1.0f);
 	texOut[DTid.xy] = float4(color, 1.0f);
 }
