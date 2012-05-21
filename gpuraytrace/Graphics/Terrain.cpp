@@ -20,7 +20,7 @@ struct SBFrameData
 
 const unsigned int CAMERA_VIEW_ELEMENTS = CAMERA_VIEW_RES * CAMERA_VIEW_RES;
 
-Terrain::Terrain(IDevice* device, const std::string& theme) : device(device), theme(theme)
+Terrain::Terrain(IDevice* device, const std::string& theme, const Mode& mode) : device(device), theme(theme), mode(mode)
 {
 	VFS::get()->addPath("Media/" + theme);
 
@@ -68,7 +68,7 @@ void Terrain::setCamera(Camera* camera)
 	this->camera = camera;
 }
 
-void Terrain::create(const Mode& mode)
+void Terrain::create()
 {
 	calculateTileSizes();
 
@@ -93,11 +93,11 @@ void Terrain::create(const Mode& mode)
 void Terrain::reload()
 {
 	const static ThreadSize screenThreads = {threadSizeX, threadSizeY, 1};
-	if(!compute->create("shaders", "tracescreen.hlsl", "CSMain", screenThreads))
+	if(!compute->create("shaders", "tracescreen.hlsl", "CSMain", screenThreads, mode))
 		Logger() << "Could not create screen shader";
 
 	const static ThreadSize cameraThreads = {CAMERA_THREAD_RES, CAMERA_THREAD_RES, 1};
-	if(!cameraCompute->create("shaders", "camerarays.hlsl", "CSMain", cameraThreads))
+	if(!cameraCompute->create("shaders", "camerarays.hlsl", "CSMain", cameraThreads, mode))
 		Logger() << "Could not create camera shader";
 }
 
@@ -289,7 +289,7 @@ void Terrain::setTimeOfDay(float timeOfDay)
 	}
 }
 
-void Terrain::updateTerrain(float time, const Mode& mode)
+void Terrain::updateTerrain(float time)
 {
 	XMVECTOR determinant;
 	XMMATRIX invTransView = XMMatrixTranspose(XMMatrixInverse(&determinant, camera->matView));

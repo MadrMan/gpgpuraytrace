@@ -91,7 +91,7 @@ SkyColor getRayleighMieColor(float3 orgRayDir)
 	
 	//Compute cameraHeigth
 	float camHeight	= innerRadius;	
-	camHeight += (Eye.y* 0.005f);										
+	camHeight += (Eye.y* 0.001f);										
 	camHeight = max(camHeight, 0.0f);
 	
 	const float distToTop = outerRadius - camHeight;

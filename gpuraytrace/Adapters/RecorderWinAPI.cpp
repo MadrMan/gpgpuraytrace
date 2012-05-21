@@ -79,11 +79,17 @@ bool RecorderWinAPI::create()
 	HRESULT hr = MFCreateSinkWriterFromURL(L"output.wmv", nullptr, sinkAttributes, &pSinkWriter);
 	if(FAILED(hr)) 
 	{
-		LOGERROR(hr, "MFCreateSinkWriterFromURL");
-		return false;
+		switch(hr){
+			case MF_E_NOT_FOUND:
+			LOGFUNCERROR("SetInputMediaType returned MF_E_INVALIDMEDIATYPE");
+			break;
+		default:
+			LOGERROR(hr, "MFCreateSinkWriterFromURL");
+		}
+			return false;
 	}
 
-	const GUID exportFormat = MFVideoFormat_MPEG2; //MFVideoFormat_WMV3; //MFVideoFormat_H264
+	const GUID exportFormat = MFVideoFormat_WMV3;	//MFVideoFormat_MPEG2; //MFVideoFormat_WMV3; //MFVideoFormat_H264
 	const GUID importFormat = MFVideoFormat_RGB32; //MFVideoFormat_DXGI_R8G8B8A8; //MFVideoFormat_RGB32
 
 	//Enumerate available encoders
@@ -168,6 +174,12 @@ bool RecorderWinAPI::create()
 		{
 		case MF_E_INVALIDMEDIATYPE:
 			LOGFUNCERROR("SetInputMediaType returned MF_E_INVALIDMEDIATYPE");
+			break;
+		case MF_E_INVALIDSTREAMNUMBER:
+			LOGFUNCERROR("SetInputMediaType returned MF_E_INVALIDSTREAMNUMBER");
+			break;
+		case MF_E_TOPO_CODEC_NOT_FOUND:
+			LOGFUNCERROR("SetInputMediaType returned MF_E_TOPO_CODEC_NOT_FOUND");	
 			break;
 		default:
 			LOGERROR(hr, "SetInputMediaType");

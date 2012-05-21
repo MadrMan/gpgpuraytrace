@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Graphics/IShaderVariable.h"
+#include "../Common/Settings.h"
 
 class ITexture;
 
@@ -16,7 +17,7 @@ public:
 	//! Destructor
 	virtual ~ICompute() { }
 
-	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts) = 0;
+	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts, const Mode& mode) = 0;
 
 	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) = 0;
 
