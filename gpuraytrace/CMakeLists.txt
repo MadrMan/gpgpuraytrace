@@ -106,6 +106,10 @@ source_group("" FILES ${PROJ_SOURCES})
 
 include_directories("${gpgpuraytrace_SOURCE_DIR}")
 
+include_directories("${gpgpuraytrace_SOURCE_DIR}/Library/kinect/inc")
+link_directories("${gpgpuraytrace_SOURCE_DIR}/Library/kinect/lib")
+link_libraries(KinectBesturing.lib)
+
 if(MSVC)
 	add_definitions(-DWIN32_LEAN_AND_MEAN -DNOMINMAX)
 	add_definitions(-D_WIN32_WINNT=0x601)

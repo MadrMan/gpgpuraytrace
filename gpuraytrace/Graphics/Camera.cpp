@@ -19,6 +19,13 @@ Camera::Camera()
 
 	nearZ = 0.05f;
 	farZ = 5000.0f;
+
+	kinectMove = 0.0f;
+	kinectRotate = 0.0f;
+
+	kinectFacade = new Facade();
+	kinectFacade->AttachListener(this);
+	kinectFacade->Start();
 }
 
 Camera::~Camera()
@@ -31,6 +38,17 @@ Camera::~Camera()
 	input->destroyAction(warpDrive);
 	input->destroyAction(moveUp);
 	input->destroyAction(moveDown);
+
+	kinectFacade->Stop();
+	kinectFacade->DetachListener(this);
+	delete kinectFacade;
+}
+
+void Camera::Update(float* data)
+{
+	kinectMove = data[2];
+	kinectRotate = data[0];
+	Logger() << kinectMove;
 }
 
 void Camera::setWindow(IWindow* window)
@@ -78,6 +96,8 @@ void Camera::move()
 		//Rotate camera
 		rotationEuler[0] -= rotateUD->getState() * 0.01f;
 		rotationEuler[1] -= rotateLR->getState() * 0.01f;
+
+		rotationEuler[1] += kinectRotate;
 		
 		//maximize up/down so camera control does not flip
 		rotationEuler[0] = std::max(-XM_PI * 1.5f + 0.0001f, std::min(-XM_PIDIV2 - 0.0001f, rotationEuler[0]));
@@ -88,9 +108,12 @@ void Camera::move()
 	float moveSpeed = Timer::get()->getConstant() * 5.0f;
 
 	//warpspeed
-	if(warpDrive->getState() > 0.5f) moveSpeed *= 5.0f;
+	if(warpDrive->getState() > 0.5f) moveSpeed *= 20.0f;
 
-	position = XMVectorAdd(position, front * moveForward->getState() * moveSpeed);
+	float forward = moveForward->getState();
+	forward += kinectMove * 5.0f;
+
+	position = XMVectorAdd(position, front * forward * moveSpeed);
 	if(moveUp->getState()) position = XMVectorAdd(position, XMVectorSet(0.0f, moveSpeed, 0.0f, 0.0f));
 	if(moveDown->getState()) position = XMVectorSubtract(position, XMVectorSet(0.0f, moveSpeed, 0.0f, 0.0f));
 
