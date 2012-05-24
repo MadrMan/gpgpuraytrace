@@ -2,6 +2,8 @@
 
 #include "../Common/Types.h"
 
+#include <facade.h>
+
 class IWindow;
 class IInputAction;
 class IInput;
@@ -10,7 +12,7 @@ static const XMVECTOR XM_UP = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
 static const XMVECTOR XM_FRONT = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 
 //! Camera class which is used to navigate trough the 3D scene
-CLASSALIGN class Camera
+CLASSALIGN class Camera : public IObserver<float*>
 {
 public:
 	ALLOCALIGN;
@@ -45,6 +47,9 @@ public:
 	float getFarZ() const
 	{ return farZ; }
 
+	virtual void Update(float* data) override;
+
+//private:
 	//! Move te camera to start position
 	void resetPosition();
 
@@ -72,5 +77,10 @@ private:
 	IInput* input;
 
 	IWindow* window;
+	Facade* kinectFacade;
+	float kinectMove;
+	float kinectRotate;
+
+	float rotationEuler[3];
 	float nearZ, farZ;
 };
