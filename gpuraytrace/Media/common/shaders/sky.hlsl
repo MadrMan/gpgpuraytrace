@@ -5,7 +5,7 @@ const static uint nSamples = 3;
 // The scale depth (the altitude at which the average atmospheric density is found)
 const static float scaleDepth = 0.19f;
 const static float eSpace = 1.0f;
-const static float eSun = 22.0f;
+const static float eSun = 12.0f;
 const static float kr = 0.003f;
 const static float km = 0.0025f;
 const static float pi = 3.14159265;
@@ -13,7 +13,7 @@ const static float innerRadius = 200.0f;
 const static float outerRadius = innerRadius * 1.025f; 
 const static float3 waveLength = float3(0.650f, 0.570f, 0.475f);
 const static float3 waveLength4 = pow(waveLength, 4);
-const static float g = -0.89f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
+const static float g = -0.99f;	// The Mie phase asymmetry factor  should be between -0.75 and -0.999 
 
 float3 modRayDir(float3 rayDir)
 {
@@ -135,9 +135,9 @@ SkyColor getRayleighMieColor(float3 orgRayDir)
 	
 	SkyColor sc = applyPhase(mie, rayleigh ,t);
 	sc.rayleigh *= saturate((orgRayDir.y * 0.5f + 0.5f) * 4.0f); 
-	sc.rayleigh.b += 0.7f * saturate(SunDirection.y);	// brighten the day hack
-	sc.rayleigh.g += 0.3f * saturate(SunDirection.y);	
-	sc.rayleigh.r += 0.2f * saturate(SunDirection.y);	
+	sc.rayleigh.b += 0.6f * saturate(SunDirection.y);	// brighten the day hack
+	sc.rayleigh.g += 0.4f * saturate(SunDirection.y);	
+	sc.rayleigh.r += 0.3f * saturate(SunDirection.y);	
 	return sc;
 }
 

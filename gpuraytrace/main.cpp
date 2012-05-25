@@ -84,8 +84,8 @@ bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 			return false;
 		}
 	} else if(command == "-d") {
-		mode->incrementDayTime = true;
-		Logger() << PARAM_PREFIX << "day/night cyclus enabled.";
+		mode->incrementDayTime = false;
+		Logger() << PARAM_PREFIX << "day/night cyclus disabled.";
 	} else {
 		Logger() << PARAM_PREFIX_ERROR << "Unknown command \n" ;
 		return false;

@@ -28,7 +28,7 @@ const Mode MODE_BENCHMARK = {
 	false, //fixed framerate
 	false, //random landscape
 	true, //tool enabled
-	false, //incrementDayTime
+	true, //incrementDayTime
 };
 
 const Mode MODE_RELEASE = {
