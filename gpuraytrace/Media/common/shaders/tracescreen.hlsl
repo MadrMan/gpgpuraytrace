@@ -25,12 +25,13 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	uint cellPos = floor(screenPosF.y * CAMERA_SIZE.y) * CAMERA_SIZE.x + floor(screenPosF.x * CAMERA_SIZE.x);
 
 	//float2 plane = cellPos % 2 ? CellDistance[cellPos / 2].zw : CellDistance[cellPos / 2].xy;
-	float2 plane = CellDistance[cellPos];
+	float2 plane = float2(CellDistance[cellPos].x, CAMERA_FAR);
 	
 	//texOut[DTid.xy] =  plane.xyxy * 0.0001f;
 	//return; 
 	
 	float3 color = 0.0f;
+
 	RayResult rr = traceRay(pd.p, plane.x, plane.y, 1.0f, pd.dir, true, false);
 
 	float skyAmount = rr.pd.w  * 0.0005f;
