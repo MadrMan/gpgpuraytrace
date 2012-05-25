@@ -19,12 +19,14 @@ Camera::Camera()
 	nearZ = 0.01f;
 	farZ = 5000.0f;
 
-	kinectMove = 0.0f;
-	kinectRotate = 0.0f;
+	kinectMoveForward = 0.0f;
+	kinectRotateLR = 0.0f;
+	kinectRotateUD = 0.0f;
 
-	kinectFacade = new Facade();
+	kinectFacade = new KinectControl();
 	kinectFacade->AttachListener(this);
 	kinectFacade->Start();
+	kinectFacade->Elevate(8);
 }
 
 Camera::~Camera()
@@ -45,9 +47,11 @@ Camera::~Camera()
 
 void Camera::Update(float* data)
 {
-	kinectMove = data[2];
-	kinectRotate = data[0];
-	Logger() << kinectMove;
+	kinectRotateLR = data[0];
+	kinectRotateUD = -data[1];
+	kinectMoveForward = data[2];
+
+	Logger() << kinectRotateUD;
 }
 
 void Camera::setWindow(IWindow* window)
@@ -89,14 +93,17 @@ void Camera::setWindow(IWindow* window)
 
 void Camera::move()
 {
+	float moveSpeed = Timer::get()->getConstant() * 5.0f;
+
 	//if ctrl is hold down, discard mouse move
 	if(disableMouse->getState() < 0.5f)
 	{
 		//Rotate camera
-		rotationEuler[0] -= rotateUD->getState() * 0.01f;
+		rotationEuler[0] -= rotateUD->getState() * 0.01f;			
 		rotationEuler[1] -= rotateLR->getState() * 0.01f;
-
-		rotationEuler[1] += kinectRotate;
+		
+		rotationEuler[0] += kinectRotateUD * moveSpeed;
+		rotationEuler[1] += kinectRotateLR * moveSpeed;
 		
 		//maximize up/down so camera control does not flip
 		rotationEuler[0] = std::max(-XM_PI * 1.5f + 0.0001f, std::min(-XM_PIDIV2 - 0.0001f, rotationEuler[0]));
@@ -104,13 +111,13 @@ void Camera::move()
 
 	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
 	//rotation = XMQuaternionMultiply(extraRotation, rotation);
-	float moveSpeed = Timer::get()->getConstant() * 5.0f;
+	
 
 	//warpspeed
 	if(warpDrive->getState() > 0.5f) moveSpeed *= 20.0f;
 
 	float forward = moveForward->getState();
-	forward += kinectMove * 5.0f;
+	forward += kinectMoveForward * 20.0f;
 
 	position = XMVectorAdd(position, front * forward * moveSpeed);
 	if(moveUp->getState()) position = XMVectorAdd(position, XMVectorSet(0.0f, moveSpeed, 0.0f, 0.0f));
