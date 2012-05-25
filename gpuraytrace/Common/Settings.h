@@ -7,7 +7,7 @@ struct Landscape
 	std::string name;
 };
 
-const std::array<Landscape, 3> landscapes = { "greenrocks", "testing", "nomadplains" };	//TODO create from directory
+const std::array<Landscape, 3> landscapes = { "nomadplains","greenrocks", "testing" };	//TODO create from directory
 const float STEP_MOD_NORMAL = 1.009f;	
 const float STEP_MOD_RECORD = 1.001f;	
 

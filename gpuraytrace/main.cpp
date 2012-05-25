@@ -11,7 +11,7 @@ void displayHelp()
 		Logger() << "-r: set resolution.";
 		Logger() << "-c: capture mode: enables fly-by mode and recording";
 		Logger() << "-f: fullscreen mode.";
-		Logger() << "-d: enable day/night cyclus.";
+		Logger() << "-d: disable day/night cyclus.";
 		Logger() << "-t: enable remote config tool.";
 
 		std::string commandL("-l: set landscape e.g. ");
