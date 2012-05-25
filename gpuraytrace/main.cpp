@@ -59,7 +59,6 @@ bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 	} else if(command == "-c") {
 		mode->recordMode = true;
 		mode->fixedFrameRate = true;
-		mode->step_mod = STEP_MOD_RECORD;
 		Logger() << PARAM_PREFIX << "record mode enabled.";
 	} else if(command == "-f") {
 		mode->ws.fullscreen = true;

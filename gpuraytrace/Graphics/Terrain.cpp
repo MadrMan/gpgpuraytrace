@@ -90,12 +90,15 @@ void Terrain::create()
 
 void Terrain::reload()
 {
+	std::vector<MacroType> macros;
+	if(mode.recordMode) macros.push_back(MacroType("RECORDING", "1"));
+
 	const static ThreadSize screenThreads = {threadSizeX, threadSizeY, 1};
-	if(!compute->create("shaders", "tracescreen.hlsl", "CSMain", screenThreads, mode))
+	if(!compute->create("shaders", "tracescreen.hlsl", "CSMain", screenThreads, macros))
 		Logger() << "Could not create screen shader";
 
 	const static ThreadSize cameraThreads = {CAMERA_THREAD_RES, CAMERA_THREAD_RES, 1};
-	if(!cameraCompute->create("shaders", "camerarays.hlsl", "CSMain", cameraThreads, mode))
+	if(!cameraCompute->create("shaders", "camerarays.hlsl", "CSMain", cameraThreads, macros))
 		Logger() << "Could not create camera shader";
 }
 

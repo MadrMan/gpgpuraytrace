@@ -10,6 +10,8 @@ struct ThreadSize
 	int x, y, z;
 };
 
+typedef std::pair<std::string, std::string> MacroType;
+
 //! Interfaces inherited by all devices
 class ICompute
 {
@@ -17,7 +19,7 @@ public:
 	//! Destructor
 	virtual ~ICompute() { }
 
-	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts, const Mode& mode) = 0;
+	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts, const std::vector<MacroType>& macros) = 0;
 
 	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) = 0;
 
