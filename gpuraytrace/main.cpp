@@ -11,7 +11,7 @@ void displayHelp()
 		Logger() << "-r: set resolution.";
 		Logger() << "-c: capture mode: enables fly-by mode and recording";
 		Logger() << "-f: fullscreen mode.";
-		Logger() << "-d: enable day/night cyclus.";
+		Logger() << "-d: disable day/night cyclus.";
 		Logger() << "-t: enable remote config tool.";
 
 		std::string commandL("-l: set landscape e.g. ");
@@ -59,7 +59,6 @@ bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 	} else if(command == "-c") {
 		mode->recordMode = true;
 		mode->fixedFrameRate = true;
-		mode->step_mod = STEP_MOD_RECORD;
 		Logger() << PARAM_PREFIX << "record mode enabled.";
 	} else if(command == "-f") {
 		mode->ws.fullscreen = true;
@@ -85,8 +84,8 @@ bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 			return false;
 		}
 	} else if(command == "-d") {
-		mode->incrementDayTime = true;
-		Logger() << PARAM_PREFIX << "day/night cyclus enabled.";
+		mode->incrementDayTime = false;
+		Logger() << PARAM_PREFIX << "day/night cyclus disabled.";
 	} else {
 		Logger() << PARAM_PREFIX_ERROR << "Unknown command \n" ;
 		return false;

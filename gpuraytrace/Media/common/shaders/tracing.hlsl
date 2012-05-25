@@ -1,5 +1,8 @@
 const static uint2 CAMERA_SIZE = uint2(32, 32);
 
+const static float CAMERA_NEAR = 0.05f;
+const static float CAMERA_FAR = 5000.0f;
+
 cbuffer XTweakable
 {
 	float3 SunDirection;
@@ -28,6 +31,11 @@ struct RayResult
 
 const static float RAY_STEP = 0.03f;
 const static float RAY_FINAL_PRECISION = 0.02f;
+#if RECORDING
+const static float RAY_STEP_FACTOR = 1.001f;
+#else
+const static float RAY_STEP_FACTOR = 1.009f;
+#endif
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
 
 #include "noise.hlsl"

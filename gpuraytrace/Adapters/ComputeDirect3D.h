@@ -55,7 +55,7 @@ public:
 	ComputeDirect3D(DeviceDirect3D* device);
 	virtual ~ComputeDirect3D();
 
-	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts, const Mode& mode) override;
+	virtual bool create(const std::string& directory, const std::string& fileName, const std::string& main, const ThreadSize& ts, const std::vector<MacroType>& macros) override;
 	virtual void run(unsigned int dispatchX, unsigned int dispatchY, unsigned int dispatchZ) override;
 	IResource* getResource(int type, const std::string& name);
 	virtual IShaderVariable* getVariable(const std::string& name) override;
@@ -68,7 +68,7 @@ private:
 	void createBuffer(ID3D10Blob* shaderBlob);
 	bool reflect(ID3D10Blob* shaderBlob, ComputeShader3D* createdShader);
 	bool addBuffer(ID3D11ShaderReflection* reflection, unsigned int index, ComputeShader3D* createdShader);
-	HRESULT getCompiledBlob(const std::string& directory, const std::string& fileName, const std::string& main, ID3DBlob** shaderBlob, ID3DBlob** errorBlob, const Mode& mode);
+	HRESULT getCompiledBlob(const std::string& directory, const std::string& fileName, const std::string& main, ID3DBlob** shaderBlob, ID3DBlob** errorBlob, const std::vector<MacroType>& macros);
 	
 	//!copy the var values from old shader to the new.
 	void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader);

@@ -1,8 +1,5 @@
 #include "tracing.hlsl"
 
-const static float CAMERA_NEAR = 0.05f;
-const static float CAMERA_FAR = 5000.0f;
-
 RWStructuredBuffer<float4> CameraResults;
 
 /*struct SBFrameData

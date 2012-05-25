@@ -7,9 +7,7 @@ struct Landscape
 	std::string name;
 };
 
-const std::array<Landscape, 3> landscapes = { "greenrocks", "testing", "nomadplains" };	//TODO create from directory
-const float STEP_MOD_NORMAL = 1.009f;	
-const float STEP_MOD_RECORD = 1.001f;	
+const std::array<Landscape, 3> landscapes = { "nomadplains","greenrocks", "testing" };	//TODO create from directory
 
 struct Mode
 {
@@ -19,7 +17,6 @@ struct Mode
 	bool randomLandscape;
 	bool enableManager;
 	bool incrementDayTime;
-	float step_mod;
 };
 
 const Mode MODE_BENCHMARK = {
@@ -31,8 +28,7 @@ const Mode MODE_BENCHMARK = {
 	false, //fixed framerate
 	false, //random landscape
 	true, //tool enabled
-	false, //incrementDayTime
-	STEP_MOD_NORMAL
+	true, //incrementDayTime
 };
 
 const Mode MODE_RELEASE = {
@@ -42,5 +38,4 @@ const Mode MODE_RELEASE = {
 	true, //random landscape
 	false, //tool disabled
 	true, //incrementDayTime
-	STEP_MOD_NORMAL
 };

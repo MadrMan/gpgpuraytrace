@@ -8,7 +8,6 @@
 
 Flyby::Flyby(Camera* camera) : camera(camera)
 {
-	
 	resetTarget = true;
 	avgHeight = 0.0f;
 }
@@ -45,7 +44,7 @@ void Flyby::fly(float time, Terrain* terrain)
 			XMVECTOR vec = XMVectorSet(cv->x, cv->y, cv->z, 0.0f);
 
 			float movedDepth = cv->depth;
-			if(movedDepth < 0.0002f)  //Sky is 0
+			if(movedDepth < 0.0002f || movedDepth > 2000.0f)  //Not a usable position
 			{
 				//Fake sky to be a far away piece of nearby ground (so we can target it if we need to)
 				//movedDepth = 10000.0f;
@@ -70,7 +69,7 @@ void Flyby::fly(float time, Terrain* terrain)
 			pointScore += PREF_DEPTH - abs(movedDepth - PREF_DEPTH);
 			//pointScore += (10.0f - abs(cv->y - PREF_Y)) * 50.0f;
 			float heightBonus = (cv->y - avgHeight);
-			pointScore += heightBonus * heightBonus * 10.0f;
+			pointScore += heightBonus * heightBonus;
 			//pointScore -= cv->y * 2.0f; //Don't go too high
 
 			if(pointScore > score || isnull(score))
