@@ -26,6 +26,10 @@ public:
 	//! Present the current frame to the screen
 	virtual void present() = 0;
 
+	//! Flush the buffered commands to the GPU without any delay
+	//! \note Will most likely have a detrimental effect on the performance - do not use unless required
+	virtual void flush() = 0;
+
 	//! Create a new compute program
 	virtual ICompute* createCompute() = 0;
 	

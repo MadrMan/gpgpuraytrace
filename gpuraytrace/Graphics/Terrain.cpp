@@ -10,8 +10,6 @@
 #include "Camera.h"
 #include "Noise.h"
 
-//#include "../Adapters/DeviceDirect3D.h"
-
 struct SBFrameData
 {
 	float minDistance;
@@ -126,7 +124,7 @@ void Terrain::render()
 				varThreadOffset->write(offset);
 				compute->run(dispatchSizeX, dispatchSizeY, 1);
 				
-				//static_cast<DeviceDirect3D*>(device)->getImmediate()->Flush();
+				device->flush();
 			}
 		}
 	} else {
@@ -210,11 +208,12 @@ void Terrain::calculateTileSizes()
 	int resy = device->getWindow()->getWindowSettings().height;
 
 	const int DEFAULT_THREADSIZE = 16;
-	const int DEFAULT_TILEPIXELS = 512;
+	const int DEFAULT_TILEPIXELS_X = 512;
+	const int DEFAULT_TILEPIXELS_Y = 1024;
 
 	//Calculate amount of tiles needed
-	tilesX = (int)ceilf(resx / (float)DEFAULT_TILEPIXELS);
-	tilesY = (int)ceilf(resy / (float)DEFAULT_TILEPIXELS);
+	tilesX = (int)ceilf(resx / (float)DEFAULT_TILEPIXELS_X);
+	tilesY = (int)ceilf(resy / (float)DEFAULT_TILEPIXELS_Y);
 
 	//Amount of pixels per tile
 	tileSizeX = resx / tilesX;
@@ -229,6 +228,8 @@ void Terrain::calculateTileSizes()
 	//These are the blocks to be dispatched per tile
 	dispatchSizeX = tileSizeX / threadSizeX;
 	dispatchSizeY = tileSizeY / threadSizeY;
+
+	Logger() << "Dispatch size = " << dispatchSizeX << ":" << dispatchSizeY << " Thread size = " << threadSizeX << ":" << threadSizeY << " Tiles = " << tilesX << ":" << tilesY;
 }
 
 void Terrain::loadTextures()
@@ -410,8 +411,8 @@ void Terrain::setTargetDepths()
 			}
 		}
 
-		dmin = dmin * 0.95f - 0.1f;
-		dmax = dmax * 1.12f + 0.4f;
+		dmin = dmin * 0.96f - 0.05f;
+		dmax = dmax * 1.22f + 0.4f;
 		dmin = std::max(camera->getNearZ(), dmin);
 		dmax = std::min(camera->getFarZ(), dmax);
 

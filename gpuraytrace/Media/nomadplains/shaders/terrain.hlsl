@@ -17,14 +17,15 @@ float getDensity(float3 p)
 	
 	float s = 0.0f;
 	
-float detail = max(16.0f - pow(dist, 0.34f), 2.0f); //15.* .. 2
+	float detail = max(16.0f - pow(dist, 0.33f), 2.0f); //15.* .. 2
 	
-	FBM_THIS(s, detail, 2.05f, noise3d(p * 0.006f * float3(SCALE, SCALE * (0.5f - 0.5f / SCALE), SCALE)) / SCALE);
+	FBM_THIS(s, detail, 1.96f, noise3d(p * 0.006f * float3(SCALE, SCALE * 0.35f, SCALE)) / SCALE);
 	
+	float mountains = 0.1f; //noise3d(p.xzz * 0.02828f) * 0.2f;
 	s *= 30.0f;
-	s = pow(abs(s + 1.0f) * 35.0f, 0.8f);
+	s = pow(abs(s + 1.0f) * 35.0f, 0.68f + mountains);
 	
-	float steep = saturate((noise3d(p.xzz * 0.007138f) - 0.2f) * 6.0f) * 7.5f;
+	float steep = saturate((noise3d(float3(p.xz * 0.007138f, 0.0f)) - 0.2f) * 6.0f) * 7.5f;
 	float floorsize = steep * 1.8f;
 	s -= pow(saturate((p.y - 13.0f) * steep), 2.0f) * floorsize;
 	s -= pow(saturate((p.y - 16.0f) * steep), 2.0f) * floorsize;

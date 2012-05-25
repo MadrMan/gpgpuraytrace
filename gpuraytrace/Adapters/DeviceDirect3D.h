@@ -15,6 +15,7 @@ public:
 
 	virtual bool create() override;
 	virtual void present() override;
+	virtual void flush() override;
 
 	virtual ICompute* createCompute() override;
 

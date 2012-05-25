@@ -194,6 +194,11 @@ void DeviceDirect3D::present()
 	}
 }
 
+void DeviceDirect3D::flush()
+{
+	context->Flush();
+}
+
 ICompute* DeviceDirect3D::createCompute()
 {
 	return new ComputeDirect3D(this);
