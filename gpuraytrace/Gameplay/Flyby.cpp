@@ -63,7 +63,7 @@ void Flyby::fly(float time, Terrain* terrain)
 			//Make depth a little less deep so as to prevent a wall collision as a target
 			movedDepth = std::max(movedDepth - 1.5f, 0.0f);
 
-			const float PREF_DEPTH = 60.0f;
+			const float PREF_DEPTH = 50.0f;
 			//const float PREF_Y = 2.0f;
 			float pointScore = 0.0f;
 			pointScore += PREF_DEPTH - abs(movedDepth - PREF_DEPTH);
@@ -71,6 +71,10 @@ void Flyby::fly(float time, Terrain* terrain)
 			float heightBonus = (cv->y - avgHeight);
 			pointScore += heightBonus * heightBonus;
 			//pointScore -= cv->y * 2.0f; //Don't go too high
+
+			//Bonus for a position near the middle of the screen
+			int centerScore = ((int)CAMERA_VIEW_RES / 2) - abs(x - (int)CAMERA_VIEW_RES / 2) + ((int)CAMERA_VIEW_RES / 2) - abs(y - (int)CAMERA_VIEW_RES / 2);
+			pointScore += centerScore * centerScore * 2;
 
 			if(pointScore > score || isnull(score))
 			{
