@@ -7,7 +7,7 @@ const static float3 MORE_HEIGHT = float3(1.0f, 2.5f, 1.0f);
 const static float3 LOTS_HEIGHT = float3(1.0f, 6.5f, 1.0f);
 float getDensity(float3 p)
 {
-	float dist = distance(p, Eye.xyz);
+	float dist = max(distance(p, Eye.xyz), 0.01f);
 	//float dist = 0.0f;
 	
 	float d = -p.y;
@@ -17,7 +17,7 @@ float getDensity(float3 p)
 	
 	float s = 0.0f;
 	
-	float detail = max(16.0f - pow(dist, 0.33f), 2.0f); //15.* .. 2
+	float detail = max(18.0f - pow(dist, 0.33f), 2.0f); //15.* .. 2
 	
 	FBM_THIS(s, detail, 1.96f, noise3d(p * 0.006f * float3(SCALE, SCALE * 0.35f, SCALE)) / SCALE);
 	
