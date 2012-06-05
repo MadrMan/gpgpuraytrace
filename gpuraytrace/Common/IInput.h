@@ -58,9 +58,11 @@ private:
 	virtual void update() = 0;
 };
 
+//! Interface which can create user actions
 class IInput
 {
 public:
+	//! Destructor
 	virtual ~IInput();
 
 	virtual IInputAction* createAction() = 0;

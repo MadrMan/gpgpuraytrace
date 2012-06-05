@@ -49,11 +49,17 @@ template<class T, class P>
 class ICallback : public ICallbackBase<P>
 {
 public:
+	//! Prototype for the function to call with the callback
 	typedef void (T::*Fptr)(P x);
 
+	//! Constructor
+	//! \param obj Object to call the function with
+	//! \param fptr Function to call when the callback fires
 	ICallback(T* obj, Fptr fptr) : obj(obj), fptr(fptr) 
 	{ }
 
+	//Run the callback function
+	//! \param p Argument to give to the function
 	virtual void run(P p) override
 	{ (obj->*fptr)(p); }
 
@@ -67,11 +73,16 @@ template<class T>
 class ICallback<T, void> : public ICallbackBase<void>
 {
 public:
+	//! Prototype for the function to call with the callback
 	typedef void (T::*Fptr)();
 
+	//! Constructor
+	//! \param obj Object to call the function with
+	//! \param fptr Function to call when the callback fires
 	ICallback(T* obj, Fptr fptr) : obj(obj), fptr(fptr) 
 	{ }
 
+	//Run the callback function
 	virtual void run() override
 	{ (obj->*fptr)(); }
 
@@ -80,6 +91,7 @@ private:
 	Fptr fptr;
 };
 
+//! Convert anything to a string
 template<class A>
 std::string convert(const A& value) 
 {
@@ -88,6 +100,8 @@ std::string convert(const A& value)
 	return s.str();
 };
 
+//! Convert a string to anything
+//! \return Returns true on success, false if it could not be parsed to the specified type
 template<class A>
 bool convert(const std::string& value, A* out) 
 {

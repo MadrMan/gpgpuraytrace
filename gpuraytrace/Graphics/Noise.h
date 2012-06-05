@@ -1,11 +1,16 @@
 #pragma once
 
+//! Class which can generate noise
 class Noise
 {
 public:
+	//! Constructor
 	Noise();
+
+	//! Destructor
 	virtual ~Noise();
 
+	//! Generate the noise and fill the arrays
 	void generate(bool random = true);
 
 	static const int TEXTURE_SIZE = 128;

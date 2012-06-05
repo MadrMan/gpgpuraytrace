@@ -120,7 +120,8 @@ void Raytracer::run(const Mode& mode, const Landscape landscape)
 	while(escape->getState() < 0.5f)
 	{
 		//position
-		if(dumpPos->getState() == 1.0f){
+		if(dumpPos->getState() == 1.0f)
+		{
 			Logger() << "Position :"  << XMVectorGetX(camera->position) << " " << XMVectorGetY(camera->position) << " " << XMVectorGetZ(camera->position);
 			Logger() << "Rotation : " << camera->rotationEuler[0] << " " << camera->rotationEuler[1] << " " << camera->rotationEuler[2];
 		}

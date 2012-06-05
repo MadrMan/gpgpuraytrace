@@ -15,32 +15,45 @@ CLASSALIGN class Camera
 public:
 	ALLOCALIGN;
 
+	//! Constructor
 	Camera();
+
+	//! Destructor
 	virtual ~Camera();
 
+	//! Set the window for this camera, so the perspective and input handling can be set up
 	void setWindow(IWindow* window);
 
+	//! Get the window set for this camera
 	IWindow* getWindow() const
 	{ return window; }
 
-	void setInput(IInput* input);
-
+	//! Move the camera one frame based on set movement
 	void move();
+
+	//! Update the camera movement based on the current input
 	void update();
+
+	//! Update the rotation based on movement
 	void rotate();
 
+	//! Get the near Z plane distance
 	float getNearZ() const
 	{ return nearZ; }
 
+	//! Get the far Z plane distance
 	float getFarZ() const
 	{ return farZ; }
 
-//private:
 	XMVECTOR position;
-	XMVECTOR rotation;
 	XMVECTOR front;
-	XMMATRIX matView;
 	XMMATRIX matProjection;
+	XMMATRIX matView;
+
+	float rotationEuler[3];
+
+private:
+	XMVECTOR rotation;
 	XMMATRIX matViewProjection;
 
 	IInputAction* moveSide;
@@ -54,7 +67,5 @@ public:
 	IInput* input;
 
 	IWindow* window;
-
-	float rotationEuler[3];
 	float nearZ, farZ;
 };
