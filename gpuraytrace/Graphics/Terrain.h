@@ -49,7 +49,7 @@ private:
 	Camera* camera;
 
 	IDevice* device;
-	ITexture* texDiffuse[6];
+	//ITexture* texDiffuse[6];
 	ICompute* compute;
 	ICompute* cameraCompute;
 

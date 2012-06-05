@@ -22,7 +22,7 @@ Terrain::Terrain(IDevice* device, const std::string& theme, const Mode& mode) : 
 {
 	VFS::get()->addPath("Media/" + theme);
 
-	memset(texDiffuse, 0, sizeof(texDiffuse));
+	//memset(texDiffuse, 0, sizeof(texDiffuse));
 
 	compute = nullptr;
 	cameraCompute = nullptr;
@@ -259,12 +259,12 @@ void Terrain::loadTextures()
 	//18 = forest pebblefloor
 	//19 = icey snowrock
 
-	for(int x = 0; x < 4; x++)
+	/*for(int x = 0; x < 4; x++)
 		texDiffuse[x] = device->createTexture();
 	texDiffuse[0]->create("Media/common/textures/lichen9.dds");
 	texDiffuse[1]->create("Media/common/textures/lichen13.dds");
 	texDiffuse[2]->create("Media/common/textures/lichen16.dds");
-	texDiffuse[3]->create("Media/common/textures/lichen7.dds");
+	texDiffuse[3]->create("Media/common/textures/lichen7.dds");*/
 	//texDiffuse[4]->create("Media/textures/lichen10.dds");
 	//texDiffuse[5]->create("Media/textures/lichen16.dds");
 
