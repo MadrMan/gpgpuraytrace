@@ -22,6 +22,7 @@ Camera::Camera()
 	kinectMoveForward = 0.0f;
 	kinectRotateLR = 0.0f;
 	kinectRotateUD = 0.0f;
+	kinectRoll = 0.0f;
 
 	kinectFacade = new KinectControl();
 	kinectFacade->AttachListener(this);
@@ -47,11 +48,12 @@ Camera::~Camera()
 
 void Camera::Update(float* data)
 {
-	kinectRotateLR = data[0];
+	kinectRotateLR = data[3];
 	kinectRotateUD = -data[1];
 	kinectMoveForward = data[2];
+	kinectRoll = data[0];
 
-	Logger() << kinectRotateUD;
+	Logger() << kinectRotateLR;
 }
 
 void Camera::setWindow(IWindow* window)
@@ -103,7 +105,7 @@ void Camera::move()
 		rotationEuler[1] -= rotateLR->getState() * 0.01f;
 		
 		rotationEuler[0] += kinectRotateUD * moveSpeed;
-		rotationEuler[1] += kinectRotateLR * moveSpeed;
+		rotationEuler[1] += kinectRotateLR * moveSpeed * 1.5f;
 		
 		//maximize up/down so camera control does not flip
 		rotationEuler[0] = std::max(-XM_PI * 1.5f + 0.0001f, std::min(-XM_PIDIV2 - 0.0001f, rotationEuler[0]));
@@ -137,6 +139,7 @@ void Camera::rotate()
 
 void Camera::update()
 {
+	//Logger() << kinectFacade->IsTracking();
 	//Update matrices
 	matView = XMMatrixLookToLH(position, front, XM_UP);
 	matViewProjection = XMMatrixMultiply(matView, matProjection);
