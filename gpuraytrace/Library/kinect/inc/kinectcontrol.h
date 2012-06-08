@@ -13,10 +13,12 @@ public:
 	void Start();
 	void Stop();
 	void Elevate(int angle);
-	void CurrentElevation(int *angle);
+	const int CurrentElevation();
+	const bool IsTracking();
 	void AttachListener(IKinectControlObserver<float *> *observer);
 	void DetachListener(IKinectControlObserver<float *> *observer);
 private:
 	Kinect *m_kinect;
 	Direction *m_direction;
+	bool m_started;
 };

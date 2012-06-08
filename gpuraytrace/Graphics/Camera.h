@@ -75,5 +75,6 @@ private:
 	float kinectMoveForward;
 	float kinectRotateLR;
 	float kinectRotateUD;
+	float kinectRoll;
 	float nearZ, farZ;
 };

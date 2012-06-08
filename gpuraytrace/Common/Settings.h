@@ -7,7 +7,7 @@ struct Landscape
 	std::string name;
 };
 
-const std::array<Landscape, 4> landscapes = { "nomadplains","greenrocks", "testing", "simple" };	//TODO create from directory
+const std::array<Landscape, 5> landscapes = { "nomadplains","greenrocks", "testing", "simple", "hessel2"};	//TODO create from directory
 
 struct Mode
 {
