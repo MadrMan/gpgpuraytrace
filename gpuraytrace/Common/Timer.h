@@ -1,5 +1,6 @@
 #pragma once
 
+//! Timer class to do frame based calculations
 class Timer
 {
 public:

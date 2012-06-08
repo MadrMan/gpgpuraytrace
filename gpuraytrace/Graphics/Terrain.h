@@ -2,6 +2,7 @@
 
 #include "../Common/Settings.h"
 
+//! Contains camera info for each raytraced pixel
 struct CameraVision
 {
 	float x;
@@ -18,24 +19,41 @@ class IShaderArray;
 class Flyby;
 class Camera;
 class Noise;
+
+//! Terrain class which handles creation and rendering of the landscape
 class Terrain
 {
 public:
+	//! Constructor
 	Terrain(IDevice* device, const std::string& theme, const Mode& mode);
+
+	//! Destructor
 	virtual ~Terrain();
 
+	//! Create a new instance the terrain
 	void create();
+
+	//! Reload the shaders
 	void reload();
+
+	//! Render 
 	void render();
+
+	//! Update
 	void updateTerrain(float time);
-	void getCameraResults();
+
+	//! Set the time of day
 	void setTimeOfDay(float timeOfDay);
+
+	//! Set the camera used to render the terrain with
 	void setCamera(Camera* camera);
 	
+	//! Get the array containing the view of the prepass
 	std::vector<CameraVision>& getCameraView()
 	{ return cameraView; }
 
 private:
+	void getCameraResults();
 	void updateShaders();
 	void calculateTileSizes();
 	void loadTextures();
@@ -49,7 +67,7 @@ private:
 	Camera* camera;
 
 	IDevice* device;
-	ITexture* texDiffuse[6];
+	//ITexture* texDiffuse[6];
 	ICompute* compute;
 	ICompute* cameraCompute;
 

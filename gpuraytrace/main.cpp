@@ -7,20 +7,17 @@
 
 void displayHelp()
 {
-		Logger() << "Usage: gpgpuraytrace [-r=800x600][-c][-f][-d][-t][-l=landscape]";
-		Logger() << "-r: set resolution.";
-		Logger() << "-c: capture mode: enables fly-by mode and recording";
-		Logger() << "-f: fullscreen mode.";
-		Logger() << "-d: disable day/night cyclus.";
-		Logger() << "-t: enable remote config tool.";
+	Logger() << "Usage: gpgpuraytrace [-r=800x600][-c][-f][-d][-t][-l=landscape]";
+	Logger() << "-r: set resolution.";
+	Logger() << "-c: capture mode: enables fly-by mode and recording";
+	Logger() << "-f: fullscreen mode.";
+	Logger() << "-d: disable day/night cyclus.";
+	Logger() << "-t: enable remote config tool.";
 
-		std::string commandL("-l: set landscape e.g. ");
-		auto it = landscapes.begin();
-		for(; it != landscapes.end(); ++it)
-		{
-			commandL += it->name + " ";
-		}
-		Logger() << commandL;  
+	std::string commandL("-l: set landscape e.g. ");
+	for(auto it = landscapes.begin(); it != landscapes.end(); ++it)
+		commandL += it->name + " ";
+	Logger() << commandL;  
 }
 
 
