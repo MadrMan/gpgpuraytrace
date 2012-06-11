@@ -46,6 +46,12 @@ float3 traceSample(PixelData pd, float3 pdn, float2 plane)
 	return color;
 }
 
+#if RECORDING
+const static float AA_SAMPLES = 2.0f;
+#else
+const static float AA_SAMPLES = 1.0f;
+#endif
+
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
@@ -62,12 +68,12 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	float3 color = 0.0f;
 
 	const static float samples = 1.0f; //total = samples ^ 2
-	const static float sampleStep = 1.0f / samples;
+	const static float sampleStep = 1.0f / AA_SAMPLES;
 	float2 startPosition = -0.5f;
 	
-	for(float x = 1.0f; x <= samples; x++)
+	for(float x = 1.0f; x <= AA_SAMPLES; x++)
 	{
-		for(float y = 1.0f; y <= samples; y++)
+		for(float y = 1.0f; y <= AA_SAMPLES; y++)
 		{
 			float2 offset = startPosition + float2(x, y) * sampleStep;
 			PixelData pd = getPixelRay(pixel + offset);
@@ -76,6 +82,6 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 		}
 	}
 
-	color /= samples * samples;
+	color *= rcp(AA_SAMPLES * AA_SAMPLES);
 	texOut[pixelUint] = float4(color, 1.0f);
 }

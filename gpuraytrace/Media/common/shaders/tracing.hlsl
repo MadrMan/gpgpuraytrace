@@ -1,6 +1,6 @@
 const static uint2 CAMERA_SIZE = uint2(32, 32);
 
-const static float CAMERA_NEAR = 0.05f;
+const static float CAMERA_NEAR = 0.01f;
 const static float CAMERA_FAR = 5000.0f;
 
 cbuffer XTweakable

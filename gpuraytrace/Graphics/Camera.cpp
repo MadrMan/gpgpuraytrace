@@ -17,7 +17,7 @@ Camera::Camera()
 
 	window = nullptr;
 
-	nearZ = 0.001f;
+	nearZ = 0.01f;
 	farZ = 5000.0f;
 }
 

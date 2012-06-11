@@ -95,7 +95,7 @@ void Flyby::fly(float time, Terrain* terrain)
 	if(resetTarget)
 	{
 		resetTarget = false;
-		target = position;
+		target = position + XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
 		avgHeight = XMVectorGetY(position);
 		noTargetTime = 0.0f;
 	} else {
@@ -105,18 +105,18 @@ void Flyby::fly(float time, Terrain* terrain)
 	//Get median depth
 	auto firstIt = terrain->getCameraView().begin(); 
 	auto lastIt = terrain->getCameraView().end(); 
-	auto middleIt = firstIt + (size_t)((float)terrain->getCameraView().size() * 0.2f);
+	auto middleIt = firstIt + (size_t)((float)terrain->getCameraView().size() * 0.05f);
 	std::nth_element(firstIt, middleIt, lastIt, 
 		[](CameraVision& cv1, CameraVision& cv2) -> bool
 		{
-			float d1 = isnull(cv1.depth) ? 10000.0f : cv1.depth; //Sky is high
-			float d2 = isnull(cv2.depth) ? 10000.0f : cv2.depth;
-			return d1 > d2;
+			//float d1 = isnull(cv1.depth) ? 10000.0f : cv1.depth; //Sky is high
+			//float d2 = isnull(cv2.depth) ? 10000.0f : cv2.depth;
+			return cv1.depth > cv2.depth;
 		}
 	);
 	float medianDepth = middleIt->depth;
 
-	//Stop trying to go there, cant pass - but we could also be looking at the sky (0.0)
+	//Stop trying to go there, cant pass
 	if(medianDepth > 0.01f && medianDepth < 1.4f) 
 	{
 		distance = 0.0f;
