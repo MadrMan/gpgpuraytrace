@@ -118,8 +118,8 @@ struct PixelData
 PixelData getPixelRay(float2 pixel)
 {
 	float4 screenLocation = float4(((pixel + 0.5f) / ScreenSize.xy - 0.5f) * 2.0f, 1.0f, 1.0f);
-	screenLocation.x /= Projection._m11;
-	screenLocation.y /= Projection._m22;
+	screenLocation.x *= Projection._22;
+	screenLocation.y *= Projection._11;
 
 	PixelData pd;
 	pd.p = mul(screenLocation, ViewInverse).xyz;
