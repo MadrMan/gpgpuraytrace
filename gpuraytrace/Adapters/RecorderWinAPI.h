@@ -7,7 +7,7 @@ struct IMFMediaBuffer;
 class RecorderWinAPI : public IRecorder
 {
 public:
-	RecorderWinAPI(IDevice* device, int frameRate);
+	RecorderWinAPI(IDevice* device, int frameRate, bool fixedSpeed);
 	virtual ~RecorderWinAPI();
 	
 	virtual bool create() override;
@@ -20,6 +20,7 @@ private:
 	static bool initialize();
 
 	IDevice* device;
+	bool fixedSpeed;
 	int width, height, frameRate;
 	IMFSinkWriter* pSinkWriter;
 	IMFMediaBuffer *pBuffer;

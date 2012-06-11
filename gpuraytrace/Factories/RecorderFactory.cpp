@@ -3,12 +3,12 @@
 
 #include "../Adapters/RecorderWinAPI.h"
 
-IRecorder* RecorderFactory::construct(IDevice* device, int frameRate)
+IRecorder* RecorderFactory::construct(IDevice* device, int frameRate, bool fixedSpeed)
 {
 	IRecorder* recorder = nullptr;
 
 #ifdef _WIN32
-	recorder = new RecorderWinAPI(device, frameRate);
+	recorder = new RecorderWinAPI(device, frameRate, fixedSpeed);
 #endif
 
 	if(recorder)

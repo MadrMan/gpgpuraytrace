@@ -98,7 +98,7 @@ void Raytracer::run(const Mode& mode, const Landscape landscape)
 	Timer* timer = Timer::get();
 	timer->update(); timer->update();
 
-	IRecorder* recorder = RecorderFactory::construct(device, TARGET_FRAME_RATE);
+	IRecorder* recorder = RecorderFactory::construct(device, TARGET_FRAME_RATE, mode.fixedFrameRate);
 
 	//Run while not exiting
 	Logger() << "Running";
