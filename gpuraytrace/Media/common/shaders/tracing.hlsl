@@ -33,10 +33,10 @@ const static float RAY_STEP = 0.03f;
 const static float RAY_FINAL_PRECISION = 0.02f;
 const static float RAY_MIN_LIMIT = RAY_FINAL_PRECISION * RAY_STEP;
 #if RECORDING
-const static float RAY_DENSITY_FACTOR = 0.08f;
+const static float RAY_DENSITY_FACTOR = 0.15f;
 const static float RAY_STEP_FACTOR = 1.001f;
 #else
-const static float RAY_DENSITY_FACTOR = 0.15f;
+const static float RAY_DENSITY_FACTOR = 0.35f;
 const static float RAY_STEP_FACTOR = 1.009f;
 #endif
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
