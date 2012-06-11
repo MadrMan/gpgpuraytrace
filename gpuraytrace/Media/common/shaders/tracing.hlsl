@@ -32,8 +32,10 @@ struct RayResult
 const static float RAY_STEP = 0.03f;
 const static float RAY_FINAL_PRECISION = 0.02f;
 #if RECORDING
+const static float RAY_DENSITY_FACTOR = 0.08f;
 const static float RAY_STEP_FACTOR = 1.001f;
 #else
+const static float RAY_DENSITY_FACTOR = 0.15f;
 const static float RAY_STEP_FACTOR = 1.009f;
 #endif
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
@@ -45,8 +47,8 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 {
 	RayResult rr;
 	float4 f = 0.0;
-	float totalSteps = 0.0f;
 	float d = 0.0f;
+	float totalSteps = 0.0f;
 	float dirLength = length(dir);
 	float step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR); 
 	float lastStep = step;
@@ -61,9 +63,10 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	
 	float3 rayp;
 	float hitlimit = RAY_FINAL_PRECISION * RAY_STEP; // * step; //-1.0f;
+	//bool refining = false;
 	[loop] while(dist < enddist && (step > hitlimit))
 	{
-		totalSteps += 1.0f;
+		totalSteps++;
 		rayp = p + dir * dist;
 		
 		float4 fogstep = 0;
@@ -77,17 +80,19 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 		if(/*f.a > 1.0f ||*/ d > 0.0f) 
 		{
 			if(skiprefine) break;
+			//refining = true;
 			dist -= lastStep;
 			step *= 0.4f;
+			//lastStep = step;
 			f -= fogstep;
-			//if(hitlimit < 0.0f) hitlimit = step * RAY_FINAL_PRECISION;
 		} else {
-			float stepmult = 1.0f + pow(abs(d), 0.4f);
+			float stepmult = 1.0f + pow(abs(min(d + 5.0f, 0.0f)), RAY_DENSITY_FACTOR);
 			
 			step *= RAY_STEP_FACTOR;
 			lastStep = step * stepmult;
 			dist += lastStep;
 			f += fogstep;
+			//if(!refining) step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR); 
 		}
 	}
 	
