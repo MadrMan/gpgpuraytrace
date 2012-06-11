@@ -27,8 +27,16 @@ Camera::Camera()
 
 	kinectFacade = new KinectControl();
 	kinectFacade->AttachListener(this);
+	
 	kinectFacade->Start();
-	kinectFacade->Elevate(8);
+
+	DirectionMargin& dm = kinectFacade->GetDirectionMargin();
+	dm[0] = 0.0f;
+	dm[1] = 0.0f;
+	dm[2] = 0.0f;
+	dm[3] = 0.0f;
+
+	kinectFacade->Elevate(1);
 }
 
 Camera::~Camera()
@@ -49,12 +57,15 @@ Camera::~Camera()
 
 void Camera::Update(float* data)
 {
-	kinectRotateLR = data[3];
-	kinectRotateUD = -data[1];
-	kinectMoveForward = data[2];
+	//Logger() << data[0] << " "<< data[1] << " "<< data[2] << " "<< data[3] << " ";
+	
 	kinectRoll = data[0];
+	kinectRotateUD = -data[1] ;//- 0.012f + 0.07f;
+	kinectMoveForward = data[2];
+	kinectRotateLR = data[3];
 
-	Logger() << kinectRotateLR;
+
+	//Logger() << kinectRotateLR;
 }
 
 void Camera::setWindow(IWindow* window)
@@ -105,7 +116,7 @@ void Camera::move()
 		rotationEuler[0] -= rotateUD->getState() * 0.01f;			
 		rotationEuler[1] -= rotateLR->getState() * 0.01f;
 		
-		rotationEuler[0] += kinectRotateUD * moveSpeed;
+		rotationEuler[0] += kinectRotateUD * moveSpeed * 2.0f;
 		rotationEuler[1] += kinectRotateLR * moveSpeed * 1.5f;
 		
 		//maximize up/down so camera control does not flip

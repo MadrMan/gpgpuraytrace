@@ -3,6 +3,7 @@
 #include "../Common/Types.h"
 
 #include <kinectcontrol.h>
+#include <directionmargin.h>
 
 class IWindow;
 class IInputAction;
