@@ -3,6 +3,7 @@
 
 #include "../Common/Logger.h"
 #include "../Adapters/DeviceDirect3D.h"
+#include "../Common/Timer.h"
 
 //#include <D3D9Types.h>
 #include <InitGuid.h>
@@ -28,7 +29,7 @@
 //DEFINE_MEDIATYPE_GUID(MFVideoFormat_DXGI_R8G8B8A8, DXGI_FORMAT_R8G8B8A8_UNORM);
 //DEFINE_MEDIATYPE_GUID(MFVideoFormat_DXGI_R8G8B8A8, D3DFMT_X8R8G8B8);
 
-RecorderWinAPI::RecorderWinAPI(IDevice* device, int frameRate) : device(device), frameRate(frameRate)
+RecorderWinAPI::RecorderWinAPI(IDevice* device, int frameRate, bool fixedSpeed) : device(device), frameRate(frameRate), fixedSpeed(fixedSpeed)
 {
 	width = device->getWindow()->getWindowSettings().width;
 	height = device->getWindow()->getWindowSettings().height;
@@ -258,10 +259,17 @@ void RecorderWinAPI::write(void* frame, int stride)
     CHECKHR(MFCreateSample(&pSample));
 	CHECKHR(pSample->AddBuffer(pBuffer));
 
+	UINT64 thisFrameDuration = rtDuration;
+	if(!fixedSpeed)
+	{
+		float modifier = Timer::get()->getConstant();
+		thisFrameDuration = (UINT64)(10000000.0f * modifier);
+	}
+
     // Set the time stamp and the duration.
     CHECKHR(pSample->SetSampleTime(rtStart));
-    CHECKHR(pSample->SetSampleDuration(rtDuration));
-	rtStart += rtDuration;
+    CHECKHR(pSample->SetSampleDuration(thisFrameDuration));
+	rtStart += thisFrameDuration;
 
     // Send the sample to the Sink Writer.
     CHECKHR(pSinkWriter->WriteSample(streamIndex, pSample));

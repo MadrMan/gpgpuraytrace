@@ -9,5 +9,5 @@ class RecorderFactory : private Factory
 public:
 	//! Construct a new recorder
 	//! \return nullptr if there was an error, otherwise a valid recorder
-	static IRecorder* construct(IDevice* device, int frameRate);
+	static IRecorder* construct(IDevice* device, int frameRate, bool fixedSpeed);
 };
