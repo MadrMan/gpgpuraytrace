@@ -49,6 +49,7 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	float d = 0.0f;
 	float dirLength = length(dir);
 	float step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR); 
+	float lastStep = step;
 	dir /= dirLength;
 	
 	//step = max(0.01f , step);
@@ -72,17 +73,20 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 		{
 			fogstep = getFog(rayp, dist) * step;
 		}
-
+		
 		if(/*f.a > 1.0f ||*/ d > 0.0f) 
 		{
 			if(skiprefine) break;
-			dist -= step;
+			dist -= lastStep;
 			step *= 0.4f;
 			f -= fogstep;
 			//if(hitlimit < 0.0f) hitlimit = step * RAY_FINAL_PRECISION;
 		} else {
+			float stepmult = 1.0f + pow(abs(d), 0.4f);
+			
 			step *= RAY_STEP_FACTOR;
-			dist += step;
+			lastStep = step * stepmult;
+			dist += lastStep;
 			f += fogstep;
 		}
 	}
@@ -111,9 +115,9 @@ struct PixelData
 	float3 dir;
 };
 
-PixelData getPixelRay(uint2 DTid)
+PixelData getPixelRay(float2 pixel)
 {
-	float4 screenLocation = float4((DTid / ScreenSize.xy - 0.5f) * 2.0f, 1.0f, 1.0f);
+	float4 screenLocation = float4(((pixel + 0.5f) / ScreenSize.xy - 0.5f) * 2.0f, 1.0f, 1.0f);
 	screenLocation.x /= Projection._m11;
 	screenLocation.y /= Projection._m22;
 
