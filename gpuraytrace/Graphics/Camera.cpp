@@ -31,11 +31,11 @@ Camera::Camera()
 	kinectFacade->Start();
 
 	DirectionMargin& dm = kinectFacade->GetDirectionMargin();
-	dm[0] = 0.0f;
-	dm[1] = 0.0f;
-	dm[2] = 0.0f;
-	dm[3] = 0.0f;
-
+	//dm[0] = 0.0f;
+	//dm[1] = 0.0f;
+	dm[2] = 0.03f;
+	//dm[3] = 0.0f;
+	
 	kinectFacade->Elevate(1);
 }
 
@@ -59,11 +59,15 @@ void Camera::Update(float* data)
 {
 	//Logger() << data[0] << " "<< data[1] << " "<< data[2] << " "<< data[3] << " ";
 	
-	kinectRoll = data[0];
+	//kinectRoll = data[0];
 	kinectRotateUD = -data[1] ;//- 0.012f + 0.07f;
 	kinectMoveForward = data[2];
-	kinectRotateLR = data[3];
+	kinectRotateLR = data[0];
 
+	if(kinectRotateUD < 0)
+	{
+		kinectRotateUD *= 0.4f;
+	}
 
 	//Logger() << kinectRotateLR;
 }
