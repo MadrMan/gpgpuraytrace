@@ -8,7 +8,7 @@
 
 Camera::Camera()
 {
-	position = XMVectorSet(0.0f, 50.0f, 0.0f, 0.0f);
+	position = XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f);
 	rotation = XMQuaternionRotationRollPitchYaw(0.0f, 0.0f, 0.0f);
 	
 	rotationEuler[0] = -3.0f;
@@ -17,7 +17,7 @@ Camera::Camera()
 
 	window = nullptr;
 
-	nearZ = 0.001f;
+	nearZ = 0.01f;
 	farZ = 5000.0f;
 
 	kinectMoveForward = 0.0f;
@@ -76,7 +76,7 @@ void Camera::setWindow(IWindow* window)
 {
 	this->window = window;
 
-	const float FOV = XMConvertToRadians(75.0f);
+	const float FOV = XMConvertToRadians(80.0f);
 	const float ASPECT = (FLOAT)window->getWindowSettings().width / (FLOAT)window->getWindowSettings().height;
 
 	matProjection = XMMatrixPerspectiveFovLH(FOV, ASPECT, nearZ, farZ);

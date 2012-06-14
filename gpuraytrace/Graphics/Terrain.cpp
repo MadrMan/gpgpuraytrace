@@ -210,9 +210,10 @@ void Terrain::calculateTileSizes()
 	int resx = device->getWindow()->getWindowSettings().width;
 	int resy = device->getWindow()->getWindowSettings().height;
 
+	int divisor = mode.recordMode ? 4 : 1; //Way smaller times when recording cause it is so much slower
 	const int DEFAULT_THREADSIZE = 16;
-	const int DEFAULT_TILEPIXELS_X = 512;
-	const int DEFAULT_TILEPIXELS_Y = 1024;
+	const int DEFAULT_TILEPIXELS_X = 1024 / divisor;
+	const int DEFAULT_TILEPIXELS_Y = 512 / divisor;
 
 	//Calculate amount of tiles needed
 	tilesX = (int)ceilf(resx / (float)DEFAULT_TILEPIXELS_X);
@@ -414,7 +415,7 @@ void Terrain::setTargetDepths()
 			}
 		}
 
-		dmin = dmin * 0.96f - 0.05f;
+		dmin = dmin * 0.96f - 0.01f;
 		dmax = dmax * 1.22f + 0.4f;
 		dmin = std::max(camera->getNearZ(), dmin);
 		dmax = std::min(camera->getFarZ(), dmax);

@@ -12,24 +12,8 @@ cbuffer PerDispatch
 StructuredBuffer<float2> CellDistance;
 RWTexture2D<float4> texOut;
 
-[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
-void CSMain( uint3 DTid : SV_DispatchThreadID )
+float3 traceSample(PixelData pd, float3 pdn, float2 plane)
 {
-	DTid.xy += ThreadOffset;
-	PixelData pd = getPixelRay(DTid.xy);
-	float3 pdn = normalize(pd.dir);
-	
-	float2 halfTileSize = (ScreenSize / CAMERA_SIZE) * 0.5f;
-	float2 pixel = DTid.xy; // - halfTileSize;
-	float2 screenPosF = (pixel / ScreenSize.xy);
-	uint cellPos = floor(screenPosF.y * CAMERA_SIZE.y) * CAMERA_SIZE.x + floor(screenPosF.x * CAMERA_SIZE.x);
-
-	//float2 plane = cellPos % 2 ? CellDistance[cellPos / 2].zw : CellDistance[cellPos / 2].xy;
-	float2 plane = float2(CellDistance[cellPos].x, CAMERA_FAR);
-	
-	//texOut[DTid.xy] =  plane.xyxy * 0.0001f;
-	//return; 
-	
 	float3 color = 0.0f;
 
 	RayResult rr = traceRay(pd.p, plane.x, plane.y, 1.0f, pd.dir, true, false);
@@ -58,5 +42,46 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	//stepColor.b -= stepColor.r;
 	//texOut[DTid.xy] = float4(saturate(color * 0.1f + stepColor), 1.0f);
 	//texOut[DTid.xy] =  float4((color + plane.xyx * 0.0001f) * 0.5f, 1.0f);
-	texOut[DTid.xy] = float4(color, 1.0f);
+	
+	return color;
+}
+
+#if RECORDING
+const static float AA_SAMPLES = 2.0f;
+#else
+const static float AA_SAMPLES = 1.0f;
+#endif
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void CSMain( uint3 DTid : SV_DispatchThreadID )
+{
+	uint2 pixelUint = DTid.xy + ThreadOffset;
+	float2 pixel = (float2)pixelUint;
+
+	float2 halfTileSize = (ScreenSize / CAMERA_SIZE) * 0.5f;
+	float2 screenPosF = (pixel / ScreenSize.xy);
+	uint cellPos = floor(screenPosF.y * CAMERA_SIZE.y) * CAMERA_SIZE.x + floor(screenPosF.x * CAMERA_SIZE.x);
+
+	//float2 plane = cellPos % 2 ? CellDistance[cellPos / 2].zw : CellDistance[cellPos / 2].xy;
+	float2 plane = float2(CellDistance[cellPos].x, CAMERA_FAR);
+	
+	float3 color = 0.0f;
+
+	const static float samples = 1.0f; //total = samples ^ 2
+	const static float sampleStep = 1.0f / AA_SAMPLES;
+	float2 startPosition = -0.5f;
+	
+	for(float x = 1.0f; x <= AA_SAMPLES; x++)
+	{
+		for(float y = 1.0f; y <= AA_SAMPLES; y++)
+		{
+			float2 offset = startPosition + float2(x, y) * sampleStep;
+			PixelData pd = getPixelRay(pixel + offset);
+			float3 pdn = normalize(pd.dir);
+			color += traceSample(pd, pdn, plane);
+		}
+	}
+
+	color *= rcp(AA_SAMPLES * AA_SAMPLES);
+	texOut[pixelUint] = float4(color, 1.0f);
 }

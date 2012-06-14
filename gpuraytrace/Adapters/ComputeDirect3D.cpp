@@ -520,9 +520,8 @@ bool ComputeDirect3D::swap()
 		shader = newShader;
 		newShader = nullptr;
 
-
 		//tell the variable manager to resend the variables
-		VariableManager::get()->sendAllVariables();
+		//VariableManager::get()->sendAllVariables();
 		return true;
 	}
 

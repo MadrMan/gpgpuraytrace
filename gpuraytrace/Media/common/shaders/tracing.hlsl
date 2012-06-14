@@ -1,6 +1,6 @@
 const static uint2 CAMERA_SIZE = uint2(32, 32);
 
-const static float CAMERA_NEAR = 0.05f;
+const static float CAMERA_NEAR = 0.01f;
 const static float CAMERA_FAR = 5000.0f;
 
 cbuffer XTweakable
@@ -31,9 +31,12 @@ struct RayResult
 
 const static float RAY_STEP = 0.03f;
 const static float RAY_FINAL_PRECISION = 0.02f;
+const static float RAY_MIN_LIMIT = RAY_FINAL_PRECISION * RAY_STEP;
 #if RECORDING
+const static float RAY_DENSITY_FACTOR = 0.15f;
 const static float RAY_STEP_FACTOR = 1.001f;
 #else
+const static float RAY_DENSITY_FACTOR = 0.35f;
 const static float RAY_STEP_FACTOR = 1.009f;
 #endif
 RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 dir, bool calcfog, bool skiprefine);
@@ -45,10 +48,11 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 {
 	RayResult rr;
 	float4 f = 0.0;
-	float totalSteps = 0.0f;
 	float d = 0.0f;
+	float totalSteps = 0.0f;
 	float dirLength = length(dir);
 	float step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR); 
+	float lastStep = step;
 	dir /= dirLength;
 	
 	//step = max(0.01f , step);
@@ -59,10 +63,11 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 	}
 	
 	float3 rayp;
-	float hitlimit = RAY_FINAL_PRECISION * RAY_STEP; // * step; //-1.0f;
-	[loop] while(dist < enddist && (step > hitlimit))
+	 // * step; //-1.0f;
+	//bool refining = false;
+	[loop] while(dist < enddist && (step > RAY_MIN_LIMIT))
 	{
-		totalSteps += 1.0f;
+		totalSteps++;
 		rayp = p + dir * dist;
 		
 		float4 fogstep = 0;
@@ -72,18 +77,23 @@ RayResult traceRay(float3 p, float dist, float enddist, float stepmod, float3 di
 		{
 			fogstep = getFog(rayp, dist) * step;
 		}
-
+		
 		if(/*f.a > 1.0f ||*/ d > 0.0f) 
 		{
 			if(skiprefine) break;
-			dist -= step;
-			step *= 0.4f;
+			//refining = true;
+			dist -= lastStep;
+			step *= 0.3f;
+			//lastStep = step;
 			f -= fogstep;
-			//if(hitlimit < 0.0f) hitlimit = step * RAY_FINAL_PRECISION;
 		} else {
+			float stepmult = 1.0f + pow(abs(min(d + 5.0f, 0.0f)), RAY_DENSITY_FACTOR);
+			
 			step *= RAY_STEP_FACTOR;
-			dist += step;
+			lastStep = step * stepmult;
+			dist += lastStep;
 			f += fogstep;
+			//if(!refining) step = RAY_STEP * stepmod * dirLength - dist * (1.0f - RAY_STEP_FACTOR); 
 		}
 	}
 	
@@ -111,11 +121,11 @@ struct PixelData
 	float3 dir;
 };
 
-PixelData getPixelRay(uint2 DTid)
+PixelData getPixelRay(float2 pixel)
 {
-	float4 screenLocation = float4((DTid / ScreenSize.xy - 0.5f) * 2.0f, 1.0f, 1.0f);
-	screenLocation.x /= Projection._m11;
-	screenLocation.y /= Projection._m22;
+	float4 screenLocation = float4(((pixel + 0.5f) / ScreenSize.xy - 0.5f) * 2.0f, 1.0f, 1.0f);
+	screenLocation.x *= Projection._22;
+	screenLocation.y *= Projection._11;
 
 	PixelData pd;
 	pd.p = mul(screenLocation, ViewInverse).xyz;
