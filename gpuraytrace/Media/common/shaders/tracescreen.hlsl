@@ -67,7 +67,6 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	
 	float3 color = 0.0f;
 
-	const static float samples = 1.0f; //total = samples ^ 2
 	const static float sampleStep = 1.0f / AA_SAMPLES;
 	float2 startPosition = -0.5f;
 	
