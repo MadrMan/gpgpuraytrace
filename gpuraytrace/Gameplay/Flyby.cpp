@@ -95,7 +95,7 @@ void Flyby::fly(float time, Terrain* terrain)
 	if(resetTarget)
 	{
 		resetTarget = false;
-		target = position + XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+		target = position + XMVectorSet(0.5f, -0.5f, 0.5f, 0.0f);
 		avgHeight = XMVectorGetY(position);
 		noTargetTime = 0.0f;
 	} else {
