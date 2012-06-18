@@ -26,18 +26,13 @@ float3 modRayDir(float3 rayDir)
 float3 getSpaceColor(float3 dir)
 {	
 	dir = modRayDir(dir);
-	//to remove line artifacts on horizon
 	if(dir.y <= 0.0f) return 0.0f;	
-	
 	float3 space = 0.0f;
-	space = noise3d(dir * 100.445f);
-	space -= abs(noise3d(dir * 13.2f));
-	space -= abs(noise3d(dir * 19.2f));
-	space -= abs(noise3d(dir * 49.2f));
-	space -= abs(noise3d(dir * 38.2f));
-	space *= 2.0f;
-	space = saturate(space) * eSpace * saturate(-SunDirection.y);
-	return space;
+	
+	space = noise3d(dir * 500.0f);
+	space -= noise3d(dir * 150.2f) * 0.5f +0.13f;
+	space -= noise3d(dir * 200.2f) * 0.5f +0.5f;
+	return space * eSpace * saturate(-SunDirection.y *2.7f -0.5f);
 }
 
 // Scale equation by Vernier's Graphical Analysis
