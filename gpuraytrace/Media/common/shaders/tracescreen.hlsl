@@ -1,6 +1,7 @@
 #include "tracing.hlsl"
 #include "sky.hlsl"
 #include "color.hlsl"
+#include "antialiasing.hlsl"
 
 //float3 h2r(float h,float s,float v){return lerp(saturate((abs(frac(h+float3(1,2,3)/3)*6-3)-1)),1,s)*v;}
 
@@ -46,12 +47,6 @@ float3 traceSample(PixelData pd, float3 pdn, float2 plane)
 	return color;
 }
 
-#if RECORDING
-const static float AA_SAMPLES = 2.0f;
-#else
-const static float AA_SAMPLES = 1.0f;
-#endif
-
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
 void CSMain( uint3 DTid : SV_DispatchThreadID )
 {
@@ -68,19 +63,14 @@ void CSMain( uint3 DTid : SV_DispatchThreadID )
 	float3 color = 0.0f;
 
 	const static float sampleStep = 1.0f / AA_SAMPLES;
-	float2 startPosition = -0.5f;
-	
-	for(float x = 1.0f; x <= AA_SAMPLES; x++)
+
+	for(uint aa = 0; aa < getSampleCount(); ++aa)
 	{
-		for(float y = 1.0f; y <= AA_SAMPLES; y++)
-		{
-			float2 offset = startPosition + float2(x, y) * sampleStep;
-			PixelData pd = getPixelRay(pixel + offset);
-			float3 pdn = normalize(pd.dir);
-			color += traceSample(pd, pdn, plane);
-		}
+		PixelData pd = getPixelRay(pixel + getSampleOffset(aa));
+		float3 pdn = normalize(pd.dir);
+		color += saturate(traceSample(pd, pdn, plane));
 	}
 
-	color *= rcp(AA_SAMPLES * AA_SAMPLES);
+	color /= getSampleCount();
 	texOut[pixelUint] = float4(color, 1.0f);
 }
