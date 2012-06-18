@@ -2,7 +2,7 @@
 
 //Define in program to control sample count
 #ifndef AA_SAMPLES
-#define AA_SAMPLES 2 //only one sample is default
+#define AA_SAMPLES 1 //only one sample is default
 #endif
 
 //Offsets taken from http://msdn.microsoft.com/en-us/library/windows/desktop/ff476218.aspx (D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS enumeration)
