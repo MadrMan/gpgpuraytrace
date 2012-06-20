@@ -50,6 +50,10 @@ public:
 
 	virtual void Update(float* data) override;
 
+	//! Get the tracking state of the kinect
+	bool isTracking() const
+	{ return kinect->IsTracking(); }
+
 	XMVECTOR position;
 	XMVECTOR front;
 	XMMATRIX matProjection;
@@ -72,7 +76,7 @@ private:
 	IInput* input;
 
 	IWindow* window;
-	KinectControl* kinectFacade;
+	KinectControl* kinect;
 	float kinectMoveForward;
 	float kinectRotateLR;
 	float kinectRotateUD;

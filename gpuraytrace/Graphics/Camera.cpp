@@ -25,18 +25,18 @@ Camera::Camera()
 	kinectRotateUD = 0.0f;
 	kinectRoll = 0.0f;
 
-	kinectFacade = new KinectControl();
-	kinectFacade->AttachListener(this);
+	kinect = new KinectControl();
+	kinect->AttachListener(this);
 	
-	kinectFacade->Start();
+	kinect->Start();
 
-	DirectionMargin& dm = kinectFacade->GetDirectionMargin();
+	DirectionMargin& dm = kinect->GetDirectionMargin();
 	//dm[0] = 0.0f;
 	//dm[1] = 0.0f;
 	dm[2] = 0.03f;
 	//dm[3] = 0.0f;
 	
-	kinectFacade->Elevate(1);
+	kinect->Elevate(1);
 }
 
 Camera::~Camera()
@@ -50,17 +50,14 @@ Camera::~Camera()
 	input->destroyAction(moveUp);
 	input->destroyAction(moveDown);
 
-	kinectFacade->Stop();
-	kinectFacade->DetachListener(this);
-	delete kinectFacade;
+	kinect->Stop();
+	kinect->DetachListener(this);
+	delete kinect;
 }
 
 void Camera::Update(float* data)
 {
-	//Logger() << data[0] << " "<< data[1] << " "<< data[2] << " "<< data[3] << " ";
-	
-	//kinectRoll = data[0];
-	kinectRotateUD = -data[1] ;//- 0.012f + 0.07f;
+	kinectRotateUD = -data[1];
 	kinectMoveForward = data[2];
 	kinectRotateLR = data[0];
 
@@ -68,8 +65,6 @@ void Camera::Update(float* data)
 	{
 		kinectRotateUD *= 0.4f;
 	}
-
-	//Logger() << kinectRotateLR;
 }
 
 void Camera::setWindow(IWindow* window)
@@ -129,7 +124,6 @@ void Camera::move()
 
 	//XMVECTOR extraRotation = XMQuaternionRotationRollPitchYaw(rotateUD->getState() * 0.01f, rotateLR->getState() * 0.01f, 0.0f);
 	//rotation = XMQuaternionMultiply(extraRotation, rotation);
-	
 
 	//warpspeed
 	if(warpDrive->getState() > 0.5f) moveSpeed *= 20.0f;
@@ -161,3 +155,4 @@ void Camera::update()
 
 	matViewProjection = XMMatrixMultiply(matView, matProjection);
 }
+

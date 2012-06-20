@@ -17,6 +17,7 @@ struct Mode
 	bool randomLandscape;
 	bool enableManager;
 	bool incrementDayTime;
+	bool autoFlyby;
 };
 
 const Mode MODE_BENCHMARK = {
@@ -27,8 +28,9 @@ const Mode MODE_BENCHMARK = {
 	false, //record mode
 	false, //fixed framerate
 	false, //random landscape
-	true, //tool enabled
+	false, //tool enabled
 	true, //incrementDayTime
+	false,
 };
 
 const Mode MODE_RELEASE = {
@@ -38,4 +40,5 @@ const Mode MODE_RELEASE = {
 	true, //random landscape
 	false, //tool disabled
 	true, //incrementDayTime
+	false,
 };

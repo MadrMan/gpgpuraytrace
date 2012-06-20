@@ -13,13 +13,12 @@ void displayHelp()
 	Logger() << "-f: fullscreen mode.";
 	Logger() << "-d: disable day/night cyclus.";
 	Logger() << "-t: enable remote config tool.";
-
+	Logger() << "-k: enable kinect person detection for automatic flyby.";
 	std::string commandL("-l: set landscape e.g. ");
 	for(auto it = landscapes.begin(); it != landscapes.end(); ++it)
 		commandL += it->name + " ";
 	Logger() << commandL;  
 }
-
 
 bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 {
@@ -82,8 +81,13 @@ bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 		}
 	} else if(command == "-d") {
 		mode->incrementDayTime = false;
-		Logger() << PARAM_PREFIX << "day/night cyclus disabled.";
-	} else {
+		Logger() << PARAM_PREFIX << "Day/night cyclus disabled.";
+	} else if(command == "-k") {
+		mode->autoFlyby = true;
+		Logger() << PARAM_PREFIX << "Kinect detection for flyby enabled.";
+	} 
+	
+	else {
 		Logger() << PARAM_PREFIX_ERROR << "Unknown command \n" ;
 		return false;
 	}
