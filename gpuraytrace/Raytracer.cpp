@@ -112,6 +112,9 @@ void Raytracer::run(const Mode& mode, const std::string landscape)
 	bool isFlybyMode = false;
 
 	timer->update(); //Update for loading time
+	
+	float lastTimeTrackingKinect = timer->getTime(); 
+	const float timeOutKinect = 30.0f;
 
 	if(mode.recordMode) 
 	{
@@ -137,9 +140,10 @@ void Raytracer::run(const Mode& mode, const std::string landscape)
 		}
 		
 		timer->update();
-
 		float thisFrameTime = mode.fixedFrameRate ?  1.0f / TARGET_FRAME_RATE : timer->getConstant();
-		
+		bool kinectIsTracking = camera->isTracking();
+		if(kinectIsTracking){ lastTimeTrackingKinect = timer->getTime(); }
+
 		if(!mode.fixedFrameRate)
 		{
 			frameTime += thisFrameTime;
@@ -151,11 +155,27 @@ void Raytracer::run(const Mode& mode, const std::string landscape)
 				frames = 0;
 			}
 		}
-
+		
 		if(toggleFlyby->isTriggered()) 
 		{
-			isFlybyMode = !isFlybyMode;
-			flyby->reset();
+			if(mode.autoFlyby)
+			{
+				Logger() << "Flyby mode disabled when tracking width kinect.";
+			}else{
+				isFlybyMode = !isFlybyMode;
+				flyby->reset();
+			}
+		}
+
+		if(mode.autoFlyby)
+		{
+			if(kinectIsTracking){ lastTimeTrackingKinect = timer->getTime(); }
+			if(timer->getTime() - lastTimeTrackingKinect > timeOutKinect && !isFlybyMode)
+			{
+				isFlybyMode = true;
+				flyby->reset();
+				Logger() << "Kinect did not detect a person in " << timeOutKinect << " seconds. Starting flyby.";
+			}
 		}
 
 		if(recorder && toggleRecording->isTriggered())
