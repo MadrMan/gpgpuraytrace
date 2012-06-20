@@ -63,7 +63,7 @@ void Flyby::fly(float time, Terrain* terrain)
 			//Make depth a little less deep so as to prevent a wall collision as a target
 			movedDepth = std::max(movedDepth - 1.5f, 0.0f);
 
-			const float PREF_DEPTH = 50.0f;
+			const float PREF_DEPTH = 10.0f;
 			//const float PREF_Y = 2.0f;
 			float pointScore = 0.0f;
 			pointScore += PREF_DEPTH - abs(movedDepth - PREF_DEPTH);
@@ -95,7 +95,7 @@ void Flyby::fly(float time, Terrain* terrain)
 	if(resetTarget)
 	{
 		resetTarget = false;
-		target = position + XMVectorSet(0.5f, -0.5f, 0.5f, 0.0f);
+		target = position + XMVectorSet(0.1f, -0.1f, 0.1f, 0.0f);
 		avgHeight = XMVectorGetY(position);
 		noTargetTime = 0.0f;
 	} else {
@@ -105,7 +105,7 @@ void Flyby::fly(float time, Terrain* terrain)
 	//Get median depth
 	auto firstIt = terrain->getCameraView().begin(); 
 	auto lastIt = terrain->getCameraView().end(); 
-	auto middleIt = firstIt + (size_t)((float)terrain->getCameraView().size() * 0.05f);
+	auto middleIt = firstIt + (size_t)((float)terrain->getCameraView().size() * 0.2f);
 	std::nth_element(firstIt, middleIt, lastIt, 
 		[](CameraVision& cv1, CameraVision& cv2) -> bool
 		{
@@ -126,7 +126,7 @@ void Flyby::fly(float time, Terrain* terrain)
 	}
 
 	//Logger() << "Distance to target: " << distance;
-	const float POINT_REACHED = CAM_SPEED_MULT * 0.5f;
+	const float POINT_REACHED = CAM_SPEED_MULT * 1.2f;
 	if(distance < POINT_REACHED)
 	{
 		if(isnull(score)) 
@@ -160,7 +160,7 @@ void Flyby::fly(float time, Terrain* terrain)
 					//Closest point is way too close, turn around
 					target = position - dirToBest * 2.5f;
 
-					Logger() << "Turning around";
+					Logger() << "Turning around because point is too close";
 				}
 			}
 		}
@@ -173,12 +173,12 @@ void Flyby::fly(float time, Terrain* terrain)
 	float smoothPath = std::max(distToTarget * SMOOTH_AMOUNT, 0.01f); //std::min(distToTarget * 0.2f, 6.0f);
 
 	float angleToTarget = XMVectorGetX(XMVector3AngleBetweenVectors(camera->front, target - position));
-	float aimSpeedValues = (2.0f - angleToTarget * 2.5f) + distToTarget * 0.1f;
+	float aimSpeedValues = (2.0f - angleToTarget * 1.5f) + distToTarget * 0.1f;
 
-	float aimSpeed = std::max(std::min(aimSpeedValues, 5.0f), 0.1f);
+	float aimSpeed = std::max(std::min(aimSpeedValues, 4.0f), 0.1f);
 	camSpeed *= aimSpeed;
 
-	XMVECTOR curvePoint = XMVectorCatmullRom(position, position + camera->front * smoothPath, target - orgDirToTarget * smoothPath * 0.2f, target, 0.03f);
+	XMVECTOR curvePoint = XMVectorCatmullRom(position, position + camera->front * smoothPath, target - orgDirToTarget * smoothPath * 0.2f, target, time * 0.8f);
 
 	//Set direction to next curve point
 	XMVECTOR direction = XMVector3Normalize(curvePoint - position);
