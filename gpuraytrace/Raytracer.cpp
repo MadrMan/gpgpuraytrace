@@ -83,6 +83,9 @@ void Raytracer::run(const Mode& mode, const Landscape landscape)
 	IInputAction* dumpPos = window->getInput()->createAction();	
 	dumpPos->registerKeyboard('L',1.0f);
 
+	IInputAction* resetPos = window->getInput()->createAction();	
+	resetPos->registerKeyboard('R',1.0f);
+
 	//Create terrain
 	terrain = new Terrain(device, landscape.name, mode);
 	terrain->create();
@@ -119,6 +122,13 @@ void Raytracer::run(const Mode& mode, const Landscape landscape)
 
 	while(escape->getState() < 0.5f)
 	{
+		//reset position
+		if(resetPos->isTriggered())
+		{
+			Logger() << "Camera position reset.";
+			camera->resetPosition();
+		}
+		
 		//position
 		if(dumpPos->getState() == 1.0f)
 		{
@@ -190,6 +200,7 @@ void Raytracer::run(const Mode& mode, const Landscape landscape)
 	window->getInput()->destroyAction(toggleFlyby);
 	window->getInput()->destroyAction(toggleRecording);
 	window->getInput()->destroyAction(dumpPos);
+	window->getInput()->destroyAction(resetPos);
 
 	//Cleanup
 	delete camera;

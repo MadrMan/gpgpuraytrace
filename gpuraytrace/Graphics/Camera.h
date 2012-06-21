@@ -45,14 +45,19 @@ public:
 	float getFarZ() const
 	{ return farZ; }
 
+	//! Move te camera to start position
+	void resetPosition();
+
 	XMVECTOR position;
 	XMVECTOR front;
 	XMMATRIX matProjection;
 	XMMATRIX matView;
-
 	float rotationEuler[3];
 
 private:
+	static const XMVECTOR initialPosition;
+	static const float initialRotationEuler[];
+
 	XMVECTOR rotation;
 	XMMATRIX matViewProjection;
 
