@@ -105,7 +105,7 @@ bool DeviceDirect3D::create()
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	const D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
+	const D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 /*, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0*/ };
 	DXGI_SWAP_CHAIN_DESC sd;
 	
 	ZeroMemory(&sd,sizeof(sd));
@@ -125,7 +125,8 @@ bool DeviceDirect3D::create()
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = ws.fullscreen ? FALSE : TRUE;
 	
-	HRESULT result = D3D11CreateDeviceAndSwapChain(0 , D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, featureLevels,
+	const int selectedAdapter = 0;
+	HRESULT result = D3D11CreateDeviceAndSwapChain(adapters[selectedAdapter], D3D_DRIVER_TYPE_UNKNOWN, 0, createDeviceFlags, featureLevels,
                         _countof(featureLevels), D3D11_SDK_VERSION, &sd, &swapChain, &device, &featureLevel, &context);
 
 	if(result != S_OK)
