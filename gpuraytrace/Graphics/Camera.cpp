@@ -31,10 +31,10 @@ Camera::Camera()
 	kinect->Start();
 
 	DirectionMargin& dm = kinect->GetDirectionMargin();
-	//dm[0] = 0.0f;
-	//dm[1] = 0.0f;
-	dm[2] = 0.03f;
-	//dm[3] = 0.0f;
+	dm[0] = 0.0f;
+	dm[1] = 0.0f;
+	dm[2] = 0.1f;
+	dm[3] = 0.0f;
 	
 	kinect->Elevate(1);
 }
