@@ -35,6 +35,45 @@ DeviceDirect3D::~DeviceDirect3D()
 	if(swapBackBuffer) swapBackBuffer->Release();
 }
 
+bool DeviceDirect3D::getAdapterHandle(std::vector<IDXGIAdapter1*>* adapters)
+{
+	HRESULT hr;
+
+	//Create DXGI factory
+	IDXGIFactory1* dxgiFactory;
+	hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&dxgiFactory));
+	if(FAILED(hr))
+	{
+		LOGERROR(hr, "CreateDXGIFactory1");
+		return false;
+	}
+
+	//Get all the adapters
+	UINT i = 0;
+	IDXGIAdapter1* pAdapter = nullptr;
+	while(dxgiFactory->EnumAdapters1(i, &pAdapter) != DXGI_ERROR_NOT_FOUND)
+	{ 
+		adapters->push_back(pAdapter);
+
+		DXGI_ADAPTER_DESC1 desc;
+		pAdapter->GetDesc1(&desc);
+		std::wstring descriptionw(desc.Description);
+		std::string description(descriptionw.begin(), descriptionw.end());
+		Logger() << "Adapter found: " << description;
+
+		++i;
+	}
+	dxgiFactory->Release();
+
+	if(adapters->empty())
+	{
+		LOGFUNCERROR("Your videocard does not appear to support DirectX 10 or later");
+		return false;
+	}
+
+	return true;
+}
+
 bool DeviceDirect3D::create()
 {
 	HMODULE libD3D11 = LoadLibrary("d3d11.dll");
@@ -54,6 +93,12 @@ bool DeviceDirect3D::create()
 	//Release handles
 	FreeLibrary(libD3D11);
 	FreeLibrary(libCompiler43);
+
+	std::vector<IDXGIAdapter1*> adapters;
+	if(!getAdapterHandle(&adapters))
+	{
+		return false;
+	}
 
 	UINT createDeviceFlags = 0;
 #if defined(_DEBUG)
@@ -85,7 +130,12 @@ bool DeviceDirect3D::create()
 
 	if(result != S_OK)
 	{
-		LOGERROR(result, "D3D11CreateDeviceAndSwapChain");
+		if(result == DXGI_ERROR_UNSUPPORTED)
+		{
+			LOGFUNCERROR("Your videocard does not appear to support DirectX 11");
+		} else {
+			LOGERROR(result, "D3D11CreateDeviceAndSwapChain");
+		}
 		return false;
 	}
 

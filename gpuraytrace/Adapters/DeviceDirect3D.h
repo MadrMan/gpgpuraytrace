@@ -36,6 +36,8 @@ public:
 	{ return uavSwapBuffer; }
 
 private:
+	bool getAdapterHandle(std::vector<IDXGIAdapter1*>* adapters);
+
 	ID3D11Device* device;
 	ID3D11DeviceContext* context;
 	IDXGISwapChain* swapChain;
