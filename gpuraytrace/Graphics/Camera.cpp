@@ -6,14 +6,13 @@
 #include "../Common/IInput.h"
 #include "../Common/Logger.h"
 
+const XMVECTOR Camera::initialPosition = XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f);
+const float Camera::initialRotationEuler[3]= {-3.0f,-4.6f,0.0f};
+
 Camera::Camera()
 {
-	position = XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f);
 	rotation = XMQuaternionRotationRollPitchYaw(0.0f, 0.0f, 0.0f);
-	
-	rotationEuler[0] = -3.0f;
-	rotationEuler[1] = -4.6f;
-	rotationEuler[2] = 0.0f;
+	resetPosition();
 
 	window = nullptr;
 
@@ -110,6 +109,13 @@ void Camera::update()
 {
 	//Update matrices
 	matView = XMMatrixLookToLH(position, front, XM_UP);
-
 	matViewProjection = XMMatrixMultiply(matView, matProjection);
+}
+
+void Camera::resetPosition()
+{
+	position = initialPosition; 
+	rotationEuler[0] = initialRotationEuler[0];
+	rotationEuler[1] = initialRotationEuler[1];
+	rotationEuler[2] = initialRotationEuler[2];
 }
