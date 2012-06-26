@@ -136,25 +136,64 @@ Texture2D<uint4> texPerm2D : register(t0);
 //Texture1D<float4> texPermGrad : register(t1);
 
 //3D
-float3 fade(float3 t)
+float2 fade2d(float2 t)
 {
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 //3D
-float gradperm(uint x, float3 p)
+float3 fade3d(float3 t)
+{
+	return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+//2D
+float gradperm2d(uint x, float2 p)
+{
+	//return dot(texPermGrad.SampleLevel(state, x, 0).xyz, p);
+	//return dot(texPermGrad.Load(uint2(x % TEXTURE_SIZE, 0)).xyz, p);
+	return dot(permGradients[x % TEXTURE_SIZE].xy, p);
+}
+
+//2D
+float gradperm3d(uint x, float3 p)
 {
 	//return dot(texPermGrad.SampleLevel(state, x, 0).xyz, p);
 	//return dot(texPermGrad.Load(uint2(x % TEXTURE_SIZE, 0)).xyz, p);
 	return dot(permGradients[x % TEXTURE_SIZE].xyz, p);
 }
 
+float noise2d(float2 p)
+{
+	int2 P = floor(p);
+	p -= P;
+	float2 f = fade2d(p);
+
+	uint4 Pu = uint4(
+		P.x < 0 ? (TEXTURE_SIZE - (uint)abs(P.x)) % TEXTURE_SIZE : (uint)P.x % TEXTURE_SIZE,
+		P.y < 0 ? (TEXTURE_SIZE - (uint)abs(P.y)) % TEXTURE_SIZE : (uint)P.y % TEXTURE_SIZE,
+		0,
+		0
+	);
+	
+	Pu = texPerm2D.Load(uint3(Pu.x, 0, 0)) + Pu.y;
+	//AA /= TEXTURE_SIZE;
+	
+	//Blend the 4 square corners
+	//return gradperm2d(Pu.x, p);
+  	return lerp(lerp(gradperm2d(Pu.x, p),  
+					 gradperm2d(Pu.y, p + float2(-1.0f, 0.0f)), f.x),
+                lerp(gradperm2d(Pu.x + ONE_PIXEL, p + float2(0.0f, -1.0f)),
+                     gradperm2d(Pu.y + ONE_PIXEL, p + float2(-1.0f, -1.0f)), f.x), f.y);
+}
+
+
 // 3D noise
 float noise3d(float3 p)
 {
 	int3 P = floor(p);
 	p -= P;
-	float3 f = fade(p);
+	float3 f = fade3d(p);
 
 	uint4 Pu = uint4(
 		P.x < 0 ? (TEXTURE_SIZE - (uint)abs(P.x)) % TEXTURE_SIZE : (uint)P.x % TEXTURE_SIZE,
@@ -166,16 +205,16 @@ float noise3d(float3 p)
 	Pu = texPerm2D.Load(uint3(Pu.xy, 0)) + Pu.z;
 	//AA /= TEXTURE_SIZE;
 	
-	// AND ADD BLENDED RESULTS FROM 8 CORNERS OF CUBE
-  	return lerp( lerp( lerp( gradperm(Pu.x, p ),  
-                             gradperm(Pu.z, p + float3(-1, 0, 0) ), f.x),
-                       lerp( gradperm(Pu.y, p + float3(0, -1, 0) ),
-                             gradperm(Pu.w, p + float3(-1, -1, 0) ), f.x), f.y),
+	//Blend the 8 cube corners
+  	return lerp( lerp( lerp( gradperm3d(Pu.x, p ),  
+                             gradperm3d(Pu.z, p + float3(-1, 0, 0) ), f.x),
+                       lerp( gradperm3d(Pu.y, p + float3(0, -1, 0) ),
+                             gradperm3d(Pu.w, p + float3(-1, -1, 0) ), f.x), f.y),
                              
-                 lerp( lerp( gradperm(Pu.x + ONE_PIXEL, p + float3(0, 0, -1) ),
-                             gradperm(Pu.z + ONE_PIXEL, p + float3(-1, 0, -1) ), f.x),
-                       lerp( gradperm(Pu.y + ONE_PIXEL, p + float3(0, -1, -1) ),
-                             gradperm(Pu.w + ONE_PIXEL, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
+                 lerp( lerp( gradperm3d(Pu.x + ONE_PIXEL, p + float3(0, 0, -1) ),
+                             gradperm3d(Pu.z + ONE_PIXEL, p + float3(-1, 0, -1) ), f.x),
+                       lerp( gradperm3d(Pu.y + ONE_PIXEL, p + float3(0, -1, -1) ),
+                             gradperm3d(Pu.w + ONE_PIXEL, p + float3(-1, -1, -1) ), f.x), f.y), f.z);
 }
 #endif
 
