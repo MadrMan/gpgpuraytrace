@@ -7,6 +7,7 @@ struct Landscape
 	std::string name;
 };
 
+
 struct Mode
 {
 	WindowSettings ws;

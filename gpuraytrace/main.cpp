@@ -14,6 +14,7 @@ void displayHelp()
 	Logger() << "-d: disable day/night cyclus.";
 	Logger() << "-t: enable remote config tool.";
 	Logger() << "-l: set landscape";  
+
 	Logger() << "-k: enable kinect person detection for automatic flyby.";
 }
 
