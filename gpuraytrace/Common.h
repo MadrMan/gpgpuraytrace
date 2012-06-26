@@ -15,6 +15,10 @@
 	#include <DirectXMath.h>
 	using namespace DirectX;
 	#endif
+
+	#define finline __forceinline
+#else
+	#define finline
 #endif
 
 #include <algorithm>
@@ -29,8 +33,6 @@
 #include <sstream>
 #include <array>
 
-#define finline __forceinline
-
 finline bool isnull(float f)
 {
 	return (std::fabs(f) < 0.00001f);
@@ -42,6 +44,13 @@ class ICallbackBase
 {
 public:
 	virtual void run(T) = 0;
+};
+
+template<>
+class ICallbackBase<void>
+{
+public:
+	virtual void run() = 0;
 };
 
 //! Generic callback class for callbacks with a single parameter
