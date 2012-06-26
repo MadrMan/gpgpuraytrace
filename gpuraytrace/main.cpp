@@ -13,12 +13,8 @@ void displayHelp()
 	Logger() << "-f: fullscreen mode.";
 	Logger() << "-d: disable day/night cyclus.";
 	Logger() << "-t: enable remote config tool.";
-	Logger() << "-l: set landscape e.g";  
+	Logger() << "-l: set landscape";  
 	Logger() << "-k: enable kinect person detection for automatic flyby.";
-	std::string commandL("-l: set landscape e.g. ");
-	for(auto it = landscapes.begin(); it != landscapes.end(); ++it)
-		commandL += it->name + " ";
-	Logger() << commandL;  
 }
 
 bool processParameter(Mode* mode, std::string& landscape, const std::string& str)
