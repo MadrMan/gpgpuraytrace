@@ -41,7 +41,7 @@ Raytracer::~Raytracer()
 	delete window;
 }
 
-void Raytracer::run(const Mode& mode, const Landscape landscape)
+void Raytracer::run(const Mode& mode, const std::string landscape)
 {
 	static const int TARGET_FRAME_RATE = 25;
 
@@ -87,7 +87,7 @@ void Raytracer::run(const Mode& mode, const Landscape landscape)
 	resetPos->registerKeyboard('R',1.0f);
 
 	//Create terrain
-	terrain = new Terrain(device, landscape.name, mode);
+	terrain = new Terrain(device, landscape, mode);
 	terrain->create();
 	terrain->setCamera(camera);
 

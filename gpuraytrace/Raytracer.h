@@ -27,7 +27,7 @@ public:
 
 	//! Main function for this class, does all the work needed to show the raytracer and update it
 	//! Blocks until the raytracer exits
-	void run(const Mode& mode, const Landscape landscape);
+	void run(const Mode& mode, const std::string landscape);
 
 	//! Reload the terrain
 	void reloadTerrain();

@@ -13,15 +13,11 @@ void displayHelp()
 	Logger() << "-f: fullscreen mode.";
 	Logger() << "-d: disable day/night cyclus.";
 	Logger() << "-t: enable remote config tool.";
-
-	std::string commandL("-l: set landscape e.g. ");
-	for(auto it = landscapes.begin(); it != landscapes.end(); ++it)
-		commandL += it->name + " ";
-	Logger() << commandL;  
+	Logger() << "-l: set landscape e.g";  
 }
 
 
-bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
+bool processParameter(Mode* mode, std::string& landscape, const std::string& str)
 {
 	const std::string PARAM_PREFIX = "parameter: ";
 	const std::string PARAM_PREFIX_ERROR = "parameter error: ";
@@ -64,22 +60,8 @@ bool processParameter(Mode* mode, Landscape* landscape, const std::string& str)
 		mode->enableManager = true;
 		Logger() << PARAM_PREFIX << "manager enabled.";
 	} else if(command == "-l") {
-		auto it = landscapes.begin();
-		for(; it != landscapes.end(); ++it)
-		{
-			if(it->name == value)
-			{
-				Logger() << PARAM_PREFIX << "Landscape " << value << " selected.";
-				*landscape = *it;
-				break;
-			}
-		}
-
-		if(it == landscapes.end())
-		{
-			Logger() << PARAM_PREFIX_ERROR << "Landscape " << value << " was not found.";
-			return false;
-		}
+		landscape = value;
+		Logger() << PARAM_PREFIX << "Landscape " << value << " selected.";
 	} else if(command == "-d") {
 		mode->incrementDayTime = false;
 		Logger() << PARAM_PREFIX << "day/night cyclus disabled.";
@@ -98,11 +80,11 @@ int main(int argc, char** argv)
 #else
 	Mode mode = MODE_RELEASE;
 #endif
-	Landscape landscape = landscapes[0];
+	std::string landscape = "nomadplains";
 
 	for(int x = 1; x < argc; x++)
 	{
-		if(!processParameter(&mode, &landscape, argv[x]))
+		if(!processParameter(&mode, landscape, argv[x]))
 		{
 			displayHelp();
 			return 0;
