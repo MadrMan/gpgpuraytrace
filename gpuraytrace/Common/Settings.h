@@ -18,7 +18,7 @@ struct Mode
 };
 
 const Mode MODE_BENCHMARK = {
-	{ 480, 270, false }, //window settings
+	{ 480, 270, false, -1 }, //window settings
 	//{ 800, 600, false }, 
 	//{ 960, 540, false },
 	//{ 1920, 1080, false },
@@ -30,7 +30,7 @@ const Mode MODE_BENCHMARK = {
 };
 
 const Mode MODE_RELEASE = {
-	{ 480, 270, false }, //window settings
+	{ 480, 270, false, -1 }, //window settings
 	false, //record mode
 	false, //fixed framerate
 	true, //random landscape

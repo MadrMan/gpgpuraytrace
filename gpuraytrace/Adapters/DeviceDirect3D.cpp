@@ -59,7 +59,7 @@ bool DeviceDirect3D::getAdapterHandle(std::vector<IDXGIAdapter1*>* adapters)
 		pAdapter->GetDesc1(&desc);
 		std::wstring descriptionw(desc.Description);
 		std::string description(descriptionw.begin(), descriptionw.end());
-		Logger() << "Adapter found: " << description;
+		Logger() << "Adapter found: (" << i << ") " << description;
 
 		++i;
 	}
@@ -67,7 +67,7 @@ bool DeviceDirect3D::getAdapterHandle(std::vector<IDXGIAdapter1*>* adapters)
 
 	if(adapters->empty())
 	{
-		LOGFUNCERROR("Your videocard does not appear to support DirectX 10 or later");
+		LOGFUNCERROR("Your graphics card does not appear to support DirectX 10 or later");
 		return false;
 	}
 
@@ -125,8 +125,19 @@ bool DeviceDirect3D::create()
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = ws.fullscreen ? FALSE : TRUE;
 	
-	const int selectedAdapter = 0;
-	HRESULT result = D3D11CreateDeviceAndSwapChain(adapters[selectedAdapter], D3D_DRIVER_TYPE_UNKNOWN, 0, createDeviceFlags, featureLevels,
+	int selectedAdapterId = ws.gpu;
+	IDXGIAdapter* selectedAdapter = nullptr;
+	if(selectedAdapterId >= 0) 
+	{
+		if(selectedAdapterId < (int)adapters.size())
+		{
+			selectedAdapter = adapters[selectedAdapterId];
+		} else {
+			LOGFUNCERROR("Selected graphics card " << selectedAdapterId << " does not exist");
+		}
+	}
+
+	HRESULT result = D3D11CreateDeviceAndSwapChain(selectedAdapter, selectedAdapter ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, featureLevels,
                         _countof(featureLevels), D3D11_SDK_VERSION, &sd, &swapChain, &device, &featureLevel, &context);
 
 	if(result != S_OK)

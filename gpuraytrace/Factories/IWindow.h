@@ -12,6 +12,7 @@ struct WindowSettings
 	int width;
 	int height;
 	bool fullscreen;
+	int gpu;
 };
 
 class IInput;

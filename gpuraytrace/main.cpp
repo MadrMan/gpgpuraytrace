@@ -7,13 +7,14 @@
 
 void displayHelp()
 {
-	Logger() << "Usage: gpgpuraytrace [-r=800x600][-c][-f][-d][-t][-l=landscape]";
+	Logger() << "Usage: gpgpuraytrace [-r=800x600][-c][-f][-d][-t][-l=landscape][-g=id]";
 	Logger() << "-r: set resolution.";
 	Logger() << "-c: capture mode: enables fly-by mode and recording";
 	Logger() << "-f: fullscreen mode.";
 	Logger() << "-d: disable day/night cyclus.";
 	Logger() << "-t: enable remote config tool.";
 	Logger() << "-l: set landscape e.g";  
+	Logger() << "-g: select gpu";  
 }
 
 
@@ -65,6 +66,9 @@ bool processParameter(Mode* mode, std::string& landscape, const std::string& str
 	} else if(command == "-d") {
 		mode->incrementDayTime = false;
 		Logger() << PARAM_PREFIX << "day/night cyclus disabled.";
+	} else if(command == "-g") {
+		convert(value, &mode->ws.gpu);
+		Logger() << PARAM_PREFIX << "Selected GPU: " << mode->ws.gpu;
 	} else {
 		Logger() << PARAM_PREFIX_ERROR << "Unknown command (" << command << ")\n";
 		return false;
