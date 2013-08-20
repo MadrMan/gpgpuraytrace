@@ -49,6 +49,6 @@ public:
 private:
 	LogStream* stream;
 	Logger(Logger const& ) : stream(nullptr){};
-	Logger& operator=(Logger const&){};          
+	Logger& operator=(Logger const&);
     
 };

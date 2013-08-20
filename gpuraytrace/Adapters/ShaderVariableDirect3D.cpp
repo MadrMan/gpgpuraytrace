@@ -10,6 +10,7 @@ ConstantBufferD3D::ConstantBufferD3D(DeviceDirect3D* device, const std::string& 
 	data = new char[size];
 	ZeroMemory(data, size);
 
+	dirty = true;
 	gpuBuffer = nullptr;
 }
 
@@ -202,6 +203,7 @@ void ShaderVariableDirect3D::write(void* data)
 
 StructuredBufferD3D::StructuredBufferD3D(DeviceDirect3D* device, const std::string& name, int stride) : ShaderArrayDirect3D(name), stride(stride), device(device)
 {
+	size = 0;
 	gpuBuffer = nullptr;
 	gpuView = nullptr;
 }

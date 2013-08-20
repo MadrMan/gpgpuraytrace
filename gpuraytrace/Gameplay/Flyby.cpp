@@ -10,6 +10,7 @@ Flyby::Flyby(Camera* camera) : camera(camera)
 {
 	resetTarget = true;
 	avgHeight = 0.0f;
+	noTargetTime = 0.0f;
 }
 
 Flyby::~Flyby()

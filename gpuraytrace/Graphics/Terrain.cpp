@@ -210,8 +210,13 @@ void Terrain::calculateTileSizes()
 	int resx = device->getWindow()->getWindowSettings().width;
 	int resy = device->getWindow()->getWindowSettings().height;
 
-	int divisor = mode.recordMode ? 4 : 1; //Way smaller times when recording cause it is so much slower
+	//Way smaller multiplier when recording cause it is so much slower
+	const int divisor = mode.recordMode ? 4 : 1; 
+
+	//Desired threads per tile
 	const int DEFAULT_THREADSIZE = 16;
+
+	//Default amount of pixels per tile
 	const int DEFAULT_TILEPIXELS_X = 1024 / divisor;
 	const int DEFAULT_TILEPIXELS_Y = 512 / divisor;
 
@@ -327,7 +332,7 @@ void Terrain::updateTerrain(float time)
 
 		const float MIN_DEFAULT = 5000.0f;
 		const float MAX_DEFAULT = 2.0f;
-		const float MINIMAL_DIFFERENCE = 10.0f;
+		//const float MINIMAL_DIFFERENCE = 10.0f;
 
 		fd->minDistance = MIN_DEFAULT;
 		fd->maxDistance = MAX_DEFAULT;

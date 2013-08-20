@@ -41,7 +41,7 @@ Raytracer::~Raytracer()
 	delete window;
 }
 
-void Raytracer::run(const Mode& mode, const std::string landscape)
+void Raytracer::run(const Mode& mode, const std::string& landscape)
 {
 	static const int TARGET_FRAME_RATE = 25;
 
@@ -210,8 +210,9 @@ void Raytracer::run(const Mode& mode, const std::string landscape)
 
 void Raytracer::updateCompute(float time, const Mode& mode)
 {
+	const static float secondsInDay = 300.0f;
+
 	//Scale 'time' to a proper time value
-	const float secondsInDay = 300.0f;
 	if(mode.incrementDayTime) timeOfDay += time / secondsInDay;
 
 	terrain->updateTerrain(time);

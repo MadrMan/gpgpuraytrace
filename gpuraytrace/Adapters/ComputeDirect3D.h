@@ -71,7 +71,7 @@ private:
 	HRESULT getCompiledBlob(const std::string& directory, const std::string& fileName, const std::string& main, ID3DBlob** shaderBlob, ID3DBlob** errorBlob, const std::vector<MacroType>& macros);
 	
 	//!copy the var values from old shader to the new.
-	void ComputeDirect3D::copyShaderVarsToNewShader(ComputeShader3D* createdShader);
+	void copyShaderVarsToNewShader(ComputeShader3D* createdShader);
 	void onVariableChangedCallback(const Variable& var);
 
 	//void loopShaderBuffer(ID3D11ShaderReflectionConstantBuffer* reflectionBuffer, D3D11_SHADER_BUFFER_DESC reflectionBufferDesc, int bufferPosition); 

@@ -25,6 +25,7 @@ static float g3[][3] =
 
 Noise::Noise()
 {
+	permutations = nullptr;
 	permutations2D = nullptr;
 	permutations1D = nullptr;
 }
@@ -39,9 +40,7 @@ void Noise::generate(bool random)
 {
 	unsigned int seed = 300;
 	
-	if(random){
-		seed = (unsigned int)time(0);
-	}
+	if(random) seed = (unsigned int)time(0);
 
 	srand(seed);
 	permutations = new int[TEXTURE_SIZE];

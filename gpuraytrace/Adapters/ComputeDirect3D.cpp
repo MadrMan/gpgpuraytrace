@@ -364,8 +364,7 @@ HRESULT ComputeDirect3D::getCompiledBlob(const std::string& directory, const std
 		if(preChecksum == cachedChecksum)
 		{
 			DWORD blobSize = cachedFileInfo.nFileSizeLow - sizeof(checksum_t);
-			HRESULT res = D3DCreateBlob(blobSize, shaderBlob);
-			
+			D3DCreateBlob(blobSize, shaderBlob);
 			ReadFile(hShaderCached, (*shaderBlob)->GetBufferPointer(), (*shaderBlob)->GetBufferSize(), &cacheFileBytesRead, nullptr);
 
 			CloseHandle(hShaderCached);

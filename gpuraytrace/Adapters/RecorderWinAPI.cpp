@@ -210,6 +210,8 @@ void RecorderWinAPI::start()
 	if(FAILED(hr))
 	{
 		DWORD err = GetLastError();
+
+		LOGERROR(err, "BeginWriting()");
 	}
 }
 

@@ -47,7 +47,7 @@ bool processParameter(Mode* mode, std::string& landscape, const std::string& str
 				return false;
 			}
 		} else {
-			Logger() << PARAM_PREFIX_ERROR << "Invalid value supplied to -r.";
+			Logger() << PARAM_PREFIX_ERROR << "invalid value supplied to -r.";
 			return false;
 		}
 	} else if(command == "-c") {
@@ -62,15 +62,15 @@ bool processParameter(Mode* mode, std::string& landscape, const std::string& str
 		Logger() << PARAM_PREFIX << "manager enabled.";
 	} else if(command == "-l") {
 		landscape = value;
-		Logger() << PARAM_PREFIX << "Landscape " << value << " selected.";
+		Logger() << PARAM_PREFIX << "landscape " << value << " selected.";
 	} else if(command == "-d") {
 		mode->incrementDayTime = false;
 		Logger() << PARAM_PREFIX << "day/night cyclus disabled.";
 	} else if(command == "-g") {
 		convert(value, &mode->ws.gpu);
-		Logger() << PARAM_PREFIX << "Selected GPU: " << mode->ws.gpu;
+		Logger() << PARAM_PREFIX << "selected GPU: " << mode->ws.gpu;
 	} else {
-		Logger() << PARAM_PREFIX_ERROR << "Unknown command (" << command << ")\n";
+		Logger() << PARAM_PREFIX_ERROR << "unknown command (" << command << ")\n";
 		return false;
 	}
 
